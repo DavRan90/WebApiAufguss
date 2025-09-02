@@ -19,7 +19,7 @@
         transform: scale(0.85);
         border-radius: 50%;
         background: white;
-        transition .5s;
+        transition: .3s;
     }
     input:checked {
         background: purple;
