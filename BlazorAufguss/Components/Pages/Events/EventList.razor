@@ -3,7 +3,7 @@
 
 <h1 class="mb-3">Event List</h1>
 
-@if(events == null)
+@if (events == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -25,7 +25,30 @@ else
         <tbody>
             @foreach (var evt in events)
             {
-                
+                <tr>
+                    <td>@evt.Id</td>
+                    <td>@evt.Title</td>
+                    <td>@evt.Description</td>
+                    <td>@evt.Start.ToShortDateString()</td>
+                    <td>
+                        @if (evt.AllDay)
+                        {
+                            <span class="badge rounded-pill text-bg-success">Yes</span>
+                        }
+                        else
+                        {
+                            <span class="badge rounded-pill text-bg-warning">No</span>
+                        }
+                    </td>
+                    <td style="white-space:nowrap; width:10px">
+                        <a class="btn btn-primary btn-sm" href="/Events/Edit/@evt.Id">
+                            Edit
+                        </a>
+                        <button class="btn btn-danger btn-sm">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
             }
         </tbody>
     </table>

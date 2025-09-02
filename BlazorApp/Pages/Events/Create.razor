@@ -1,0 +1,94 @@
+﻿@page "/Events/Create"
+@using System.Text.Json.Nodes
+@using BlazorApp.Models
+
+<div class="row mb-5">
+    <div class="col-lg-8">
+        <h1 class=mb-5>New Event</h1>
+
+        <div class="row mb-3">
+            <label class="col-md-4 col-form-label">Title</label>
+            <div class="col-md-8">
+                <input class="form-control" @bind="EventDtoData.Title">
+                <span class="text-danger">@Errors["Title"]?[0]</span>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label class="col-md-4 col-form-label">Start Date</label>
+            <div class="col-md-8">
+                <input type="datetime-local" class="form-control" @bind="EventDtoData.Start">
+                <span class="text-danger">@Errors["Start"]?[0]</span>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label class="col-md-4 col-form-label">End Date</label>
+            <div class="col-md-8">
+                <input type="datetime-local" class="form-control" @bind="EventDtoData.End">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label class="col-md-4 col-form-label">Description</label>
+            <div class="col-md-8">
+                <textarea class="form-control" @bind="EventDtoData.Description"></textarea>
+                <span class="text-danger">@Errors["Description"]?[0]</span>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-8 offset-md-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="gridCheck1" @bind="EventDtoData.AllDay">
+                    <label class="form-check-label" for="gridCheck1">
+                        All Day
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="offset-md-4 col-md-4 d-grid">
+                <button class="btn btn-primary" @onclick="SaveEvent">Save</button>
+            </div>
+            <div class="col-md-4 d-grid">
+                <a class="btn btn-outline-primary" href="/Events">Cancel</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@inject HttpClient http
+@inject NavigationManager navManager
+
+@code {
+    public EventDto EventDtoData { get; set; } = new();
+    public JsonNode Errors { get; set; } = new JsonObject();
+
+    private async Task SaveEvent()
+    {
+        var response = await http.PostAsJsonAsync("api/Events", EventDtoData);
+
+        if(response.IsSuccessStatusCode)
+        {
+            navManager.NavigateTo("/Events");
+        }
+
+        else
+        {
+            var strResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Json Response: \n" + strResponse);
+
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+                Errors = jsonResponse?["errors"] ?? new JsonObject();
+            }
+            catch(Exception ex)
+            {
+                
+            }
+        }
+    }
+}
