@@ -5,7 +5,7 @@
 
 
 
-<h1 class="mb-3">Evenemang</h1>
+<h1 class="mb-3">Bokningar</h1>
 <p>Visa kalender</p>
 <input type="checkbox" @bind="Value"/>
 <p></p>
@@ -18,7 +18,7 @@
 }
 else
 {
-    <a class="btn btn-primary mb-3 me-2" href="/Events/Create">Skapa</a>
+    <a class="btn btn-primary mb-3 me-2" href="/Events/Create">Skapa ny bokning</a>
 
     <table class="table mb-5">
         <thead>
@@ -42,11 +42,11 @@ else
                     <td>
                         @if(evt.Gender == 0)
                         {
-                            <span class="badge rounded-pill text-bg-primary">Herrar</span>
+                            <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
                         }
                         else
                         {
-                            <span class="badge rounded-pill text-bg-danger">Damer</span>
+                            <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
                         }
                     </td>
                     <td>@evt.Title</td>
@@ -56,11 +56,11 @@ else
                     <td>
                         @if (evt.Recurring)
                         {
-                            <span class="badge rounded-pill text-bg-success">Ja</span>
+                            <span class="badge rounded-pill text-bg-success p-2">Ja</span>
                         }
                         else
                         {
-                            <span class="badge rounded-pill text-bg-warning">Nej</span>
+                            <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
                         }
                     </td>
                     <td style="white-space:nowrap; width:10px">

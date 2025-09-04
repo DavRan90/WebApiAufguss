@@ -1,0 +1,94 @@
+﻿@page "/CreateNews"
+@using System.Text.Json.Nodes
+
+<div class="row mb-5">
+    <div class="col-lg-8">
+        <h1 class=mb-5>Lägg till nyhet</h1>
+
+
+        <div class="row mb-3">
+            <label class="col-md-4 col-form-label">Titel</label>
+            <div class="col-md-8">
+                <input class="form-control" @bind="EntryDtoData.Title">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label class="col-md-4 col-form-label">Beskrivning</label>
+            <div class="col-md-8">
+                <textarea class="form-control" @bind="EntryDtoData.Description"></textarea>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label class="col-md-4 col-form-label">Välj en bild</label>
+            <div class="col-md-8">
+                @* <input type="file"> *@
+                <input class="form-control" @bind="EntryDtoData.Image">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label class="col-md-4 col-form-label">Länk</label>
+            <div class="col-md-8">
+                <input class="form-control" @bind="EntryDtoData.Url">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="offset-md-4 col-md-4 d-grid">
+                <button class="btn btn-primary" @onclick="SaveEvent">Spara</button>
+            </div>
+            <div class="col-md-4 d-grid">
+                <a class="btn btn-outline-primary" href="/Events">Avbryt</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@inject HttpClient http
+@inject NavigationManager navManager
+
+@code {
+    public EntryDto EntryDtoData { get; set; } = new();
+    public JsonNode Errors { get; set; } = new JsonObject();
+
+    private List<Entry>? entries;
+
+    protected override async Task OnInitializedAsync()
+    {
+        entries = await http.GetFromJsonAsync<List<Entry>>("api/Entries");
+    }
+
+    private async Task DeleteEvent(int id)
+    {
+        await http.DeleteAsync("api/Entries/" + id);
+        entries = await http.GetFromJsonAsync<List<Entry>>("api/Entries");
+    }
+
+    private async Task SaveEvent()
+    {
+        var response = await http.PostAsJsonAsync("api/Entries", EntryDtoData);
+
+        if (response.IsSuccessStatusCode)
+        {
+            navManager.NavigateTo("/Entries");
+        }
+
+        else
+        {
+            var strResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Json Response: \n" + strResponse);
+
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+                Errors = jsonResponse?["errors"] ?? new JsonObject();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+    }
+}

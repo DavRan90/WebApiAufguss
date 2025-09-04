@@ -1,7 +1,41 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Startsida</PageTitle>
+
+
 
 <h1>Aufguss på Freja Bad & Gym</h1>
 
-Beskrivning, bild / alternativt möjlighet att skapa typ nyhetsinlägg om kommande aktiviteter eller liknande?
+@if(entries == null)
+{
+    <p><em>Laddar...</em></p>
+}
+
+else
+{
+    foreach(var entry in entries)
+    {
+        <h3 class="mt-5 mb-3">@entry.Title</h3>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-4 border border-1">@entry.Image</div>
+                <div class="col-6 border border-1">@entry.Description</div>
+
+                <div class="col-2 border border-1">Deadspace</div>
+            </div>
+        </div>
+    }
+    
+}
+
+
+@inject HttpClient http
+
+@code {
+    private List<Entry>? entries;
+
+    protected override async Task OnInitializedAsync()
+    {
+        entries = await http.GetFromJsonAsync<List<Entry>>("api/Entry");
+    }
+}
