@@ -1,0 +1,158 @@
+﻿@page "/Calendar"
+
+<h3>Calendar</h3>
+
+<div class="container border border-1 rounded">
+
+    @* Calender header *@
+    <div class="row p-2 mt-2">
+        <div class="col-5">
+            @* <a asp-route-showMonth="@(currentMonth-1)" class="btn btn-info rounded">←</a>
+            <a asp-route-showMonth="@(currentMonth+1)" class="btn btn-primary rounded">→</a> *@
+        </div>
+        <div class="col">
+            <h3>@DateTime.Now.Date.ToString("MMMM yyyy")</h3>
+        </div>
+
+        @* Extras *@
+        <div class="col">
+            @* <h3>@CurrentDate.FirstOfTheMonthWeekdayInteger</h3> *@
+        </div>
+        <div class="col">
+            <h3>week</h3>
+        </div>
+
+    </div>
+
+    @* Calender days *@
+    <div class="row p-2 border border-2 fw-bold">
+        <div class="col">
+            Måndag
+        </div>
+        <div class="col">
+            Tisdag
+        </div>
+        <div class="col">
+            Onsdag
+        </div>
+        <div class="col">
+            Torsdag
+        </div>
+        <div class="col">
+            Fredag
+        </div>
+        <div class="col">
+            Lördag
+        </div>
+        <div class="col">
+            Söndag
+        </div>
+    </div>
+
+    <div class="row ">
+    @* Previous months days (in all cases where the 1st isn't on a Monday) *@
+    @for (int i = 1; i < CurrentDate.FirstOfTheMonthWeekdayInteger; i++)
+    {
+        <div class="col p-2 border border-2 opacity-50">
+            <div class="date m-1 text-secondary">
+                @(CurrentDate.PreviousMonthsDay++)
+            </div>
+            <div class="alert-success p-1 border border-1 rounded">
+                <href>14:00</href>
+            </div>
+
+        </div>
+    }
+
+    @* The days of the current month in the first week *@
+    @for (int k = CurrentDate.FirstOfTheMonthWeekdayInteger; k < 8; k++)
+    {
+        <div class="col p-2 border border-2">
+            @* The current day *@
+            @if (CurrentDate.CurrentDay == DateTime.Now.Date.Day)
+            {
+                <div class="date m-1 fw-bold">
+                    @(CurrentDate.CurrentDay++)
+                </div>
+            }
+            @* Other days in the first week of current month *@
+            else
+            {
+                <div class="date m-1">
+                    @(CurrentDate.CurrentDay++)
+                </div>
+            }
+
+            @* Add actvity here *@
+            @* <div class="alert-success p-1 border border-1 rounded"> *@
+            <div>
+                <a href class="btn btn-success p-1 rounded text-decoration-none" style="width:100%; text-align:left">14:00</a href>
+            </div>
+
+        </div>
+    }
+</div>
+    
+@* Loop for the weeks except the first *@
+@for(int j = 0; j < 5; j++)
+{
+    if (CurrentDate.CurrentDay <= 31)
+    {
+        <div class="row ">
+            @for (int i = 1; i < 8; i++)
+            {
+                @* Write days of the current month *@
+                if (CurrentDate.CurrentDay <= 31)
+                {
+                    @* If current date *@
+                    @if (new DateTime(DateTime.Now.Year, DateTime.Now.Month, CurrentDate.CurrentDay) == DateTime.Now)
+                    {
+                        <div class="col p-2 " style="background-color:lightblue; border:groove; border-radius:5px; border-color:black">
+                            <div class="date m-1 fw-bold">
+                                @(CurrentDate.CurrentDay++)
+                            </div>
+                            <div class="alert-success p-1 border border-1 rounded">
+                                <href>14:00</href>
+                            </div>
+                        </div>
+                    }
+                    @* If not current day *@
+                    else
+                    {
+                            <div class="col p-2 border border-2">
+                            <div class="date m-1">
+                                @(CurrentDate.CurrentDay++)
+                            </div>
+                            <div class="alert-success p-1 border border-1 rounded">
+                                <href>14:00</href>
+                            </div>
+                        </div>
+                    }
+
+                }
+                @* If current month is over but next month fills remaining fields *@
+                else
+                {
+                    <div class="col p-2 border border-2 opacity-50">
+                        <div class="date m-1 text-secondary">
+                            @(CurrentDate.NextMonth++)
+                        </div>
+                        <div class="alert-success p-1 border border-1 rounded">
+                            <href>14:00</href>
+                        </div>
+
+                    </div>
+                }
+            }
+        </div>
+    }  
+}
+    
+    
+</div>
+
+
+@code {
+    public int StartDay { get; set; } = 1;
+    public Date? CurrentDate { get; set; }
+}

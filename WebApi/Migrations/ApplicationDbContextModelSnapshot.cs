@@ -43,6 +43,15 @@ namespace WebApi.Migrations
                     b.Property<DateTime?>("End")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("Gender")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxSlots")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Recurring")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("Start")
                         .HasColumnType("datetime2");
 

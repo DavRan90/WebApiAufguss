@@ -21,7 +21,20 @@
             </div>
 
             <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Title</label>
+                <div>
+                    <label class="col-md-4 col-form-label">Kön</label>
+                    <input type="radio" checked="@(EventDtoData.Gender == Gender.Man)"
+                    name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Man)" />
+                    <label>Herrar</label>
+
+                    <input type="radio" checked="@(EventDtoData.Gender == Gender.Woman)"
+                    name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Woman)" />
+                    <label>Damer</label>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Titel</label>
                 <div class="col-md-8">
                     <input class="form-control" @bind="EventDtoData.Title">
                     <span class="text-danger">@Errors["Title"]?[0]</span>
@@ -29,7 +42,7 @@
             </div>
 
             <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Start Date</label>
+                <label class="col-md-4 col-form-label">Datum/tid</label>
                 <div class="col-md-8">
                     <input type="datetime-local" class="form-control" @bind="EventDtoData.Start">
                     <span class="text-danger">@Errors["Start"]?[0]</span>
@@ -37,14 +50,14 @@
             </div>
 
             <div class="row mb-3">
-                <label class="col-md-4 col-form-label">End Date</label>
+                <label class="col-md-4 col-form-label">Max antal gäster</label>
                 <div class="col-md-8">
-                    <input type="datetime-local" class="form-control" @bind="EventDtoData.End">
+                    <input class="form-control" type="number" @bind="EventDtoData.MaxSlots">
                 </div>
             </div>
 
             <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Description</label>
+                <label class="col-md-4 col-form-label">Beskrivning</label>
                 <div class="col-md-8">
                     <textarea class="form-control" @bind="EventDtoData.Description"></textarea>
                     <span class="text-danger">@Errors["Description"]?[0]</span>
@@ -54,9 +67,9 @@
             <div class="row mb-3">
                 <div class="col-md-8 offset-md-4">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="gridCheck1" @bind="EventDtoData.AllDay">
+                        <input class="form-check-input" type="checkbox" id="gridCheck1" @bind="EventDtoData.Recurring">
                         <label class="form-check-label" for="gridCheck1">
-                            All Day
+                            Återkommande
                         </label>
                     </div>
                 </div>
@@ -71,7 +84,7 @@
                 </div>
             </div>
         }
-        
+
     </div>
 </div>
 
@@ -97,6 +110,9 @@
             EventDtoData.Start = eventData?.Start ?? DateTime.Now;
             EventDtoData.End = eventData?.End;
             EventDtoData.AllDay = eventData?.AllDay ?? false;
+            EventDtoData.MaxSlots = eventData?.MaxSlots ?? 0;
+            EventDtoData.Recurring = eventData?.Recurring ?? false;
+            EventDtoData.Gender = eventData?.Gender ?? Gender.Man;
         }
         catch(Exception ex)
         {

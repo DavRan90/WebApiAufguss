@@ -3,82 +3,13 @@
 @using System.Globalization
 
 
+
+
 <h1 class="mb-3">Evenemang</h1>
 <p>Visa kalender</p>
 <input type="checkbox" @bind="Value"/>
 <p></p>
 <p></p>
-
-@* <div class="container border border-1 rounded">
-    <div class="row p-2 mt-2">
-        <div class="col-5">
-            <a asp-route-showMonth="@(11)" class="btn btn-info rounded">←</a>
-            <a asp-route-showMonth="@(10)" class="btn btn-primary rounded">→</a>
-        </div>
-        <div class="col">
-            <h3>@DateTime.Now.ToString("MMMM yyyy")</h3>
-        </div>
-
-        <div class="col">
-            <h3>firstDayOfMonth</h3>
-        </div>
-        <div class="col">
-            <h3>week</h3>
-        </div>
-
-    </div>
-    <div class="row p-2 border border-2 fw-bold">
-        <div class="col">
-            Måndag
-        </div>
-        <div class="col">
-            Tisdag
-        </div>
-        <div class="col">
-            Onsdag
-        </div>
-        <div class="col">
-            Torsdag
-        </div>
-        <div class="col">
-            Fredag
-        </div>
-        <div class="col">
-            Lördag
-        </div>
-        <div class="col">
-            Söndag
-        </div>
-    </div>
-
-    <div class="row ">
-        
-        @for (int k = StartDay; k < 8; k++)
-        {
-            <div class="col p-2 border border-2">
-                @if (StartDay == DateTime.Now.Date.Day)
-                {
-                    <div class="date m-1 fw-bold">
-                        @(StartDay++)
-                    </div>
-                }
-                else
-                {
-                    <div class="date m-1">
-                        @(StartDay++)
-                    </div>
-                }
-
-                <div>
-                    <a href class="btn btn-success p-1 rounded text-decoration-none" style="width:100%; text-align:left">14:00</a href>
-                </div>
-
-            </div>
-        }
-    </div>
-
-</div> *@
-
 
 
 @if (events == null)
@@ -93,11 +24,14 @@ else
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Kön</th>
                 <th>Titel</th>
                 <th>Beskrivning</th>
+
+                <th>Platser</th>
                 <th>Datum</th>
-                <th>All Day</th>
-                <th>Ändra</th>
+                <th>Återkommande</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -105,17 +39,28 @@ else
             {
                 <tr>
                     <td>@evt.Id</td>
-                    <td>@evt.Title</td>
-                    <td>@evt.Description</td>
-                    <td>@evt.Start.ToShortDateString()</td>
                     <td>
-                        @if (evt.AllDay)
+                        @if(evt.Gender == 0)
                         {
-                            <span class="badge rounded-pill text-bg-success">Yes</span>
+                            <span class="badge rounded-pill text-bg-primary">Herrar</span>
                         }
                         else
                         {
-                            <span class="badge rounded-pill text-bg-warning">No</span>
+                            <span class="badge rounded-pill text-bg-danger">Damer</span>
+                        }
+                    </td>
+                    <td>@evt.Title</td>
+                    <td>@evt.Description</td>
+                    <td>@evt.MaxSlots</td>
+                    <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                    <td>
+                        @if (evt.Recurring)
+                        {
+                            <span class="badge rounded-pill text-bg-success">Ja</span>
+                        }
+                        else
+                        {
+                            <span class="badge rounded-pill text-bg-warning">Nej</span>
                         }
                     </td>
                     <td style="white-space:nowrap; width:10px">
@@ -137,6 +82,8 @@ else
 @inject HttpClient http
 
 @code {
+    
+
     [Parameter]
     public EventCallback<bool> ValueChanged { get; set; }
 

@@ -48,6 +48,9 @@ namespace WebApi.Controllers
                 End = eventDto.End,
                 AllDay = eventDto.AllDay,
                 CreatedAt = DateTime.Now,
+                MaxSlots = eventDto.MaxSlots,
+                Recurring = eventDto.Recurring,
+                Gender = eventDto.Gender,
             };
 
             context.Events.Add(evt);
@@ -70,6 +73,9 @@ namespace WebApi.Controllers
             evt.Start = eventDto.Start;
             evt.End = eventDto.End;
             evt.AllDay = eventDto.AllDay;
+            evt.MaxSlots = eventDto.MaxSlots;
+            evt.Recurring = eventDto.Recurring;
+            evt.Gender = eventDto.Gender;
 
             context.SaveChanges();
 
