@@ -7,11 +7,11 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class EntryController : ControllerBase
+    public class EntriesController : ControllerBase
     {
         private readonly ApplicationDbContext context;
 
-        public EntryController(ApplicationDbContext context)
+        public EntriesController(ApplicationDbContext context)
         {
             this.context = context;
         }
