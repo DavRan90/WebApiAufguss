@@ -1,0 +1,151 @@
+﻿@page "/Bokningar/Book/{id:int}"
+@using System.Text.Json.Nodes
+
+<div class="row mb-5">
+    <div class="col-lg-8">
+        <h1 class=mb-5>Boka sittning @EventDtoData.Start.ToString("dd-MMMM")</h1>
+
+        @if (eventData == null)
+        {
+            <p><em>Loading...</em></p>
+        }
+
+        else
+        {
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Id</label>
+                <div class="col-md-8">
+                    <input class="form-control-plaintext" readonly value="@Id">
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div>
+                    <label class="col-md-4 col-form-label">Kön</label>
+                    @if(EventDtoData.Gender == Gender.Man)
+                    {
+                        <label class="badge rounded-pill text-bg-primary p-3 fs-5">Herrar</label>
+                    }
+                    else
+                    {
+                        <label class="badge rounded-pill text-bg-danger p-3 fs-5">Damer</label>
+                    }
+
+
+
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Titel</label>
+                <div class="col-md-8">
+                    <input class="form-control" @bind="EventDtoData.Title" readonly>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div>
+                    <label class="col-md-4 col-form-label">Platser kvar</label>
+                    @if (EventDtoData.MaxSlots > 6)
+                    {
+                        <label class="badge rounded-pill text-bg-success p-3 fs-5">@EventDtoData.MaxSlots</label>
+                    }
+                    else if (EventDtoData.MaxSlots <= 6 && EventDtoData.MaxSlots >= 1)
+                    {
+                        <label class="badge rounded-pill text-bg-warning p-3 fs-5">@EventDtoData.MaxSlots</label>
+                    }
+                    else
+                    {
+                        <label class="badge rounded-pill text-bg-danger p-3 fs-5">@EventDtoData.MaxSlots</label>
+                    }
+                </div>
+                
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Beskrivning</label>
+                <div class="col-md-8">
+                    <textarea class="form-control" @bind="EventDtoData.Description" readonly></textarea>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Datum/tid</label>
+                <div class="col-md-8">
+                    <input type="datetime-local" class="form-control" @bind="EventDtoData.Start" readonly>
+                    <span class="text-danger">@Errors["Start"]?[0]</span>
+                </div>
+            </div>
+
+            <div>
+                <h2 class="mt-4 mb-4">Kontaktuppgifter</h2>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Namn</label>
+                <div class="col-md-8">
+                    <input class="form-control" type="text" @bind="EventDtoData.MaxSlots">
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">E-post</label>
+                <div class="col-md-8">
+                    <input class="form-control" type="email" @bind="EventDtoData.MaxSlots">
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Telefon</label>
+                <div class="col-md-8">
+                    <input class="form-control" type="tel" @bind="EventDtoData.MaxSlots">
+                </div>
+            </div>
+
+            
+
+            <div class="row">
+                <div class="offset-md-4 col-md-4 d-grid">
+                    <button class="btn btn-primary">Boka</button>
+                </div>
+                <div class="col-md-4 d-grid">
+                    <a class="btn btn-outline-primary" href="/Bokningar">Avbryt</a>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+
+@inject HttpClient http
+@inject NavigationManager navManager
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    public Event? eventData { get; set; } = null;
+    public EventDto EventDtoData { get; set; } = new();
+    public JsonNode Errors { get; set; } = new JsonObject();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            eventData = await http.GetFromJsonAsync<Event>("api/Events/" + Id);
+            EventDtoData.Title = eventData?.Title ?? "";
+            EventDtoData.Description = eventData?.Description ?? "";
+            EventDtoData.Start = eventData?.Start ?? DateTime.Now;
+            EventDtoData.End = eventData?.End;
+            EventDtoData.AllDay = eventData?.AllDay ?? false;
+            EventDtoData.MaxSlots = eventData?.MaxSlots ?? 0;
+            EventDtoData.Recurring = eventData?.Recurring ?? false;
+            EventDtoData.Gender = eventData?.Gender ?? Gender.Man;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+}
