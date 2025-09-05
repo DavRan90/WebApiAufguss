@@ -23,8 +23,8 @@
         <div class="row mb-3">
             <label class="col-md-4 col-form-label">Välj en bild</label>
             <div class="col-md-8">
-                @* <input type="file"> *@
-                <input class="form-control" @bind="EntryDtoData.Image">
+                <InputFile OnChange="UploadFile" accept="image/*" />
+                @* <input class="form-control" @bind="EntryDtoData.Image"> *@
             </div>
         </div>
 
@@ -37,10 +37,10 @@
 
         <div class="row">
             <div class="offset-md-4 col-md-4 d-grid">
-                <button class="btn btn-primary" @onclick="SaveEvent">Spara</button>
+                <button class="btn btn-primary" @onclick="SaveEntry">Spara</button>
             </div>
             <div class="col-md-4 d-grid">
-                <a class="btn btn-outline-primary" href="/Events">Avbryt</a>
+                <a class="btn btn-outline-primary" href="/CreateNews">Avbryt</a>
             </div>
         </div>
     </div>
@@ -60,19 +60,59 @@
         entries = await http.GetFromJsonAsync<List<Entry>>("api/Entries");
     }
 
+    private string statusMessage = "";
+
+    private async Task UploadFile(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        if (file is null)
+        {
+            statusMessage = "No file selected.";
+            return;
+        }
+
+        var content = new MultipartFormDataContent();
+        var stream = file.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5); // 5MB limit
+        var fileContent = new StreamContent(stream);
+
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+
+        // "file" is the name of the parameter expected by the API
+        content.Add(content: fileContent, name: "file", fileName: file.Name);
+
+        try
+        {
+            var response = await http.PostAsync("api/upload", content);
+            if (response.IsSuccessStatusCode)
+            {
+                statusMessage = "File uploaded successfully!";
+                EntryDtoData.Image = file.Name;
+            }
+            else
+            {
+                statusMessage = $"Upload failed: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error: {ex.Message}";
+        }
+    }
+
     private async Task DeleteEvent(int id)
     {
         await http.DeleteAsync("api/Entries/" + id);
         entries = await http.GetFromJsonAsync<List<Entry>>("api/Entries");
     }
 
-    private async Task SaveEvent()
+    private async Task SaveEntry()
     {
         var response = await http.PostAsJsonAsync("api/Entries", EntryDtoData);
 
         if (response.IsSuccessStatusCode)
         {
-            navManager.NavigateTo("/Entries");
+            navManager.NavigateTo("/");
         }
 
         else

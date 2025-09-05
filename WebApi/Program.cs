@@ -34,6 +34,7 @@ namespace WebApi
 
             app.UseAuthorization();
 
+            app.UseStaticFiles(); // Serves wwwroot/*
 
             app.MapControllers();
 

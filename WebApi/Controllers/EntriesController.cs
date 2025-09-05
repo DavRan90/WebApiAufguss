@@ -24,7 +24,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetEvent(int id)
+        public IActionResult GetEntry(int id)
         {
             var entry = context.Entries.Find(id);
             if (entry == null)
@@ -36,7 +36,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateEvent(EntryDto entryDto)
+        public IActionResult CreateEntry(EntryDto entryDto)
         {
             var entry = new Entry
             {
@@ -54,7 +54,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult EditEvent(int id, EntryDto entryDto)
+        public IActionResult EditEntry(int id, EntryDto entryDto)
         {
             var entry = context.Entries.Find(id);
             if (entry == null)
@@ -73,7 +73,7 @@ namespace WebApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteEvent(int id)
+        public IActionResult DeleteEntry(int id)
         {
             var entry = context.Entries.Find(id);
             if (entry == null)
