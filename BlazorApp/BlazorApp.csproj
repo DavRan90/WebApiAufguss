@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Pages\Bookings\" />
     <Folder Include="wwwroot\userImages\" />
   </ItemGroup>
 

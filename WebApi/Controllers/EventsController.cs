@@ -51,6 +51,7 @@ namespace WebApi.Controllers
                 MaxSlots = eventDto.MaxSlots,
                 Recurring = eventDto.Recurring,
                 Gender = eventDto.Gender,
+                Hidden = eventDto.Hidden,
             };
 
             context.Events.Add(evt);
@@ -76,6 +77,7 @@ namespace WebApi.Controllers
             evt.MaxSlots = eventDto.MaxSlots;
             evt.Recurring = eventDto.Recurring;
             evt.Gender = eventDto.Gender;
+            evt.Hidden = eventDto.Hidden;
 
             context.SaveChanges();
 

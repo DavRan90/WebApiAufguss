@@ -1,6 +1,7 @@
 ﻿@page "/Events"
 @using BlazorApp.Models
 @using System.Globalization
+@using System.Text.Json.Nodes
 
 
 
@@ -31,6 +32,7 @@ else
                 <th>Platser</th>
                 <th>Datum</th>
                 <th>Återkommande</th>
+                <th>Dold</th>
                 <th></th>
             </tr>
         </thead>
@@ -63,6 +65,18 @@ else
                             <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
                         }
                     </td>
+                    <td>
+                        @if (evt.Hidden)
+                        {
+                            @* <a class="badge rounded-pill text-bg-success p-2" @onclick="SaveEvent(evt.Id)>Ja</a> *@
+                            @* <button class="btn btn-primary" @onclick="SaveEvent()">Ja</button> *@
+                            <button class="border border-0 badge rounded-pill text-bg-success p-2" @onclick="async () => await SaveEvent(evt.Id)">Ja</button>
+                        }
+                        else
+                        {
+                            <button class="border border-0 badge rounded-pill text-bg-warning p-2" @onclick="async () => await SaveEvent(evt.Id)">Nej</button>
+                        }
+                    </td>
                     <td style="white-space:nowrap; width:10px">
                         <a class="btn btn-primary btn-sm" href="/Events/Edit/@evt.Id">
                             Ändra
@@ -78,11 +92,11 @@ else
 }
 
 
-
+@inject NavigationManager navManager
 @inject HttpClient http
 
 @code {
-    
+    public JsonNode Errors { get; set; } = new JsonObject();
 
     [Parameter]
     public EventCallback<bool> ValueChanged { get; set; }
@@ -113,5 +127,41 @@ else
     {
         await http.DeleteAsync("api/Events/" + id);
         events = await http.GetFromJsonAsync<List<Event>>("api/Events");
+    }
+
+    private async Task SaveEvent(int id)
+    {
+        var evt = events.Where(e => e.Id == id).SingleOrDefault();
+        if(evt.Hidden == false)
+        {
+            evt.Hidden = true;
+        }
+        else
+        {
+            evt.Hidden = false;
+        }
+
+        var response = await http.PutAsJsonAsync("api/Events/" + id, evt);
+
+        if (response.IsSuccessStatusCode)
+        {
+            navManager.NavigateTo("/Events");
+        }
+
+        else
+        {
+            var strResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Json Response: \n" + strResponse);
+
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+                Errors = jsonResponse?["errors"] ?? new JsonObject();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
     }
 }

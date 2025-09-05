@@ -9,6 +9,7 @@ namespace BlazorApp.Models
         public DateTime Start { get; set; } = DateTime.Now;
         public DateTime? End { get; set; }
         public bool AllDay { get; set; }
+        public bool Hidden { get; set; }
         public bool Recurring { get; set; }
         public int MaxSlots { get; set; }
         public Gender Gender { get; set; }

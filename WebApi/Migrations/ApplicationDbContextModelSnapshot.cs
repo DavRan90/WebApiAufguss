@@ -82,6 +82,9 @@ namespace WebApi.Migrations
                     b.Property<int>("Gender")
                         .HasColumnType("int");
 
+                    b.Property<bool>("Hidden")
+                        .HasColumnType("bit");
+
                     b.Property<int>("MaxSlots")
                         .HasColumnType("int");
 

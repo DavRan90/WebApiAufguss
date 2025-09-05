@@ -8,6 +8,7 @@
         public DateTime Start { get; set; }
         public DateTime? End { get; set; }
         public bool AllDay { get; set; }
+        public bool Hidden { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool Recurring { get; set; }
         public int MaxSlots { get; set; }
