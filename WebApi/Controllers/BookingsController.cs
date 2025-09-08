@@ -38,6 +38,7 @@ namespace WebApi.Controllers
         [HttpPost]
         public IActionResult CreateBooking(BookingDto bookingDto)
         {
+
             var booking = new Booking
             {
                 Name = bookingDto.Name,
@@ -47,11 +48,37 @@ namespace WebApi.Controllers
                 EventId = bookingDto.EventId,
             };
 
+            if(bookingDto.Reserve == true)
+            {
+                booking.Reserve = true;
+                booking.ReserveAt = DateTime.Now;
+            }
+
             context.Bookings.Add(booking);
             context.SaveChanges();
 
             return Ok(booking);
         }
+
+        //[HttpPost]
+        //public IActionResult CreateReservation(BookingDto bookingDto)
+        //{
+        //    var booking = new Booking
+        //    {
+        //        Name = bookingDto.Name,
+        //        Email = bookingDto.Email,
+        //        Tel = bookingDto.Tel,
+        //        Reserve = true,
+        //        ReserveAt = DateTime.Now,
+        //        BookedAt = DateTime.Now,
+        //        EventId = bookingDto.EventId,
+        //    };
+
+        //    context.Bookings.Add(booking);
+        //    context.SaveChanges();
+
+        //    return Ok(booking);
+        //}
 
         [HttpPut("{id}")]
         public IActionResult EditBooking(int id, BookingDto bookingDto)
@@ -74,7 +101,7 @@ namespace WebApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteBookingt(int id)
+        public IActionResult DeleteBooking(int id)
         {
             var booking = context.Bookings.Find(id);
             if (booking == null)
