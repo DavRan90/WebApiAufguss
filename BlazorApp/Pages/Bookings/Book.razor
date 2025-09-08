@@ -1,4 +1,4 @@
-﻿@page "/Bokningar/Book/{id:int}"
+﻿@page "/Bookings/Book/{id:int}"
 @using System.Text.Json.Nodes
 
 <div class="row mb-5">
@@ -109,7 +109,7 @@
                     <button class="btn btn-primary" @onclick="SaveBooking">Boka</button>
                 </div>
                 <div class="col-md-4 d-grid">
-                    <a class="btn btn-outline-primary" href="/Bokningar">Avbryt</a>
+                    <a class="btn btn-outline-primary" href="/Bookings">Avbryt</a>
                 </div>
             </div>
         }
@@ -164,7 +164,7 @@
 
         if (response.IsSuccessStatusCode)
         {
-            navManager.NavigateTo("/Bokningar");
+            navManager.NavigateTo("/Bookings");
         }
 
         else

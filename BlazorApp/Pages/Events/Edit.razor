@@ -125,19 +125,22 @@
                         <a class="btn btn-primary btn-sm">
                             Ändra
                         </a>
-                        <button class="btn btn-danger btn-sm">
+                        <button class="btn btn-danger btn-sm" @onclick="async () => await DeleteBooking(booking.Id)">
                             Ta bort
                         </button>
+                        <button class="btn btn-warning btn-sm" @onclick="async () => await ShowAlert(booking.Id)">Alert</button>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
 
-    <a class="btn btn-primary mb-3 me-2" href="/Bokningar/Book">Skapa ny bokning</a>
+    <a class="btn btn-primary mb-3 me-2" href="/Bookings/Book/@Id">Lägg till deltagare</a>
+    <a class="btn btn-primary mb-3 me-2" @onclick="async () => await AddGuest(Id)">Lägg till deltagare med alert</a>
 }
 
-
+@inject IJSRuntime JS
+@inject SweetAlertService Swal
 @inject HttpClient http
 @inject NavigationManager navManager
 
@@ -198,6 +201,48 @@
             {
 
             }
+        }
+    }
+
+    private async Task DeleteBooking(int id)
+    {
+        await http.DeleteAsync("api/Bookings/" + id);
+        var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+        Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
+    }
+
+    private async Task ShowAlert(int id)
+    {
+        // await JS.InvokeVoidAsync("alert", "This is a Blazor alert!");
+        var result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Bekräfta borttagning",
+                Text = $"Vill du ta bort bokning med ID {id}?",
+                ShowCancelButton = true,
+                ConfirmButtonText = "Ja, ta bort",
+                CancelButtonText = "Nej, ta inte bort",
+            });
+        if(result.IsConfirmed)
+        {
+            await DeleteBooking(id);
+        }
+    }
+
+    private async Task AddGuest(int id)
+    {
+        // await JS.InvokeVoidAsync("alert", "This is a Blazor alert!");
+        var result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Lägg till gäst",
+                Text = $"Vill du ta bort bokning med ID {id}?",
+                Input = 
+                ShowCancelButton = true,
+                ConfirmButtonText = "Ja, ta bort",
+                CancelButtonText = "Nej, ta inte bort",
+            });
+        if (result.IsConfirmed)
+        {
+            await DeleteBooking(id);
         }
     }
 }
