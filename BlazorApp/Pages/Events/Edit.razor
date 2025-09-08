@@ -1,12 +1,13 @@
 ﻿@page "/Events/Edit/{id:int}"
 @using BlazorApp.Models
 @using System.Text.Json.Nodes
+@using System.Text.Json
 
 <div class="row mb-5">
     <div class="col-lg-8">
         <h1 class=mb-5>Ändra aktivitet</h1>
 
-        @if(eventData == null)
+        @if (eventData == null)
         {
             <p><em>Loading...</em></p>
         }
@@ -24,11 +25,11 @@
                 <div>
                     <label class="col-md-4 col-form-label">Kön</label>
                     <input type="radio" checked="@(EventDtoData.Gender == Gender.Man)"
-                    name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Man)" />
+                           name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Man)" />
                     <label>Herrar</label>
 
                     <input type="radio" checked="@(EventDtoData.Gender == Gender.Woman)"
-                    name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Woman)" />
+                           name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Woman)" />
                     <label>Damer</label>
                 </div>
             </div>
@@ -99,7 +100,7 @@
     </div>
 </div>
 
-@if(Bookings != null)
+@if (Bookings != null)
 {
     <table class="table mb-5">
         <thead>
@@ -172,7 +173,7 @@
             var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
             Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Console.WriteLine("Exception: " + ex.Message);
         }
@@ -222,7 +223,7 @@
                 ConfirmButtonText = "Ja, ta bort",
                 CancelButtonText = "Nej, ta inte bort",
             });
-        if(result.IsConfirmed)
+        if (result.IsConfirmed)
         {
             await DeleteBooking(id);
         }
@@ -230,19 +231,30 @@
 
     private async Task AddGuest(int id)
     {
-        // await JS.InvokeVoidAsync("alert", "This is a Blazor alert!");
-        var result = await Swal.FireAsync(new SweetAlertOptions
-            {
-                Title = "Lägg till gäst",
-                Text = $"Vill du ta bort bokning med ID {id}?",
-                Input = 
-                ShowCancelButton = true,
-                ConfirmButtonText = "Ja, ta bort",
-                CancelButtonText = "Nej, ta inte bort",
-            });
-        if (result.IsConfirmed)
+        int eventId = id; // or get it from your component context
+        string json = await JS.InvokeAsync<string>("showBookingForm", eventId);
+
+        if (!string.IsNullOrEmpty(json))
         {
-            await DeleteBooking(id);
+            try
+            {
+                var booking = JsonSerializer.Deserialize<Booking>(json, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                var response = await http.PostAsJsonAsync("api/Bookings", booking);
+                if (response.IsSuccessStatusCode)
+                {
+                    await JS.InvokeVoidAsync("Swal.fire", "Success", "Ny gäst tillagd!", "success");
+                    var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+                    Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
+                }
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"Error deserializing booking: {ex.Message}");
+            }
         }
     }
 }
