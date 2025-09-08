@@ -19,7 +19,7 @@ namespace WebApi.Controllers
         [HttpGet]
         public IActionResult GetBookings()
         {
-            var bookings = context.Bookings.OrderByDescending(b => b.Id).ToList();
+            var bookings = context.Bookings.OrderBy(b => b.Id).ToList();
             return Ok(bookings);
         }
 
@@ -60,26 +60,6 @@ namespace WebApi.Controllers
             return Ok(booking);
         }
 
-        //[HttpPost]
-        //public IActionResult CreateReservation(BookingDto bookingDto)
-        //{
-        //    var booking = new Booking
-        //    {
-        //        Name = bookingDto.Name,
-        //        Email = bookingDto.Email,
-        //        Tel = bookingDto.Tel,
-        //        Reserve = true,
-        //        ReserveAt = DateTime.Now,
-        //        BookedAt = DateTime.Now,
-        //        EventId = bookingDto.EventId,
-        //    };
-
-        //    context.Bookings.Add(booking);
-        //    context.SaveChanges();
-
-        //    return Ok(booking);
-        //}
-
         [HttpPut("{id}")]
         public IActionResult EditBooking(int id, BookingDto bookingDto)
         {
@@ -110,6 +90,14 @@ namespace WebApi.Controllers
             }
 
             context.Bookings.Remove(booking);
+            var reserveList = context.Bookings.Where(b => b.Reserve == true).OrderBy(b => b.ReserveAt).ToList();
+
+            if(reserveList != null)
+            {
+                reserveList[0].Reserve = false;
+                reserveList[0].BookedAt = DateTime.Now;
+            }
+
             context.SaveChanges();
 
             return Ok();

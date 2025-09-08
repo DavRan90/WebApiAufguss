@@ -114,7 +114,7 @@
                 else
                 {
                     <div class="offset-md-4 col-md-4 d-grid">
-                        <button class="btn btn-primary" @onclick="ReserveBooking">Reservlista</button>
+                        <button class="btn btn-primary" @onclick="async () => await ReserveBooking(true)">Reservlista</button>
                     </div>
                 }
                 <div class="col-md-4 d-grid">
@@ -193,9 +193,10 @@
         }
     }
 
-    private async Task ReserveBooking()
+    private async Task ReserveBooking(bool reserve)
     {
         BookingDtoData.EventId = Id;
+        BookingDtoData.Reserve = reserve;
         var response = await http.PostAsJsonAsync("api/Bookings", BookingDtoData);
 
         if (response.IsSuccessStatusCode)

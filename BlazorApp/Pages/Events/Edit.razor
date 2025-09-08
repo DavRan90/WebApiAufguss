@@ -110,6 +110,7 @@
                 <th>Email</th>
                 <th>Telefon</th>
                 <th>Datum</th>
+                <th>Reserv</th>
                 <th></th>
             </tr>
         </thead>
@@ -122,6 +123,16 @@
                     <td>@booking.Email</td>
                     <td>@booking.Tel</td>
                     <td>@booking.BookedAt.ToString("dd/MM/yyyy | HH:mm")</td>
+                    <td>
+                        @if(booking.Reserve)
+                        {
+                            <span class="badge rounded-pill text-bg-primary p-2">Ja</span>
+                        }
+                        else
+                        {
+                            <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
+                        }
+                    </td>
                     <td style="white-space:nowrap; width:10px">
                         <a class="btn btn-primary btn-sm">
                             Ändra

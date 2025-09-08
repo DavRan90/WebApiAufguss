@@ -44,6 +44,12 @@ namespace WebApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("Reserve")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ReserveAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Tel")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
