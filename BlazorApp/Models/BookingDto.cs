@@ -1,0 +1,14 @@
+﻿namespace BlazorApp.Models
+{
+    public class BookingDto
+    {
+        public string Name { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Tel { get; set; } = "";
+        public DateTime BookedAt { get; set; }
+        public DateTime? UnbookedAt { get; set; }
+        public bool? Unbooked { get; set; } = false;
+        public int? UserId { get; set; }
+        public int EventId { get; set; }
+    }
+}

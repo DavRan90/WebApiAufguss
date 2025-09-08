@@ -1,0 +1,93 @@
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using WebApi.Models;
+using WebApi.Services;
+
+namespace WebApi.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class BookingsController : ControllerBase
+    {
+        private readonly ApplicationDbContext context;
+
+        public BookingsController(ApplicationDbContext context)
+        {
+            this.context = context;
+        }
+
+        [HttpGet]
+        public IActionResult GetBookings()
+        {
+            var bookings = context.Bookings.OrderByDescending(b => b.Id).ToList();
+            return Ok(bookings);
+        }
+
+        [HttpGet("{id}")]
+        public IActionResult GetBooking(int id)
+        {
+            var booking = context.Bookings.Find(id);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(booking);
+        }
+
+        [HttpPost]
+        public IActionResult CreateBooking(BookingDto bookingDto)
+        {
+            var booking = new Booking
+            {
+                Name = bookingDto.Name,
+                Email = bookingDto.Email,
+                Tel = bookingDto.Tel,
+                BookedAt = DateTime.Now,
+                EventId = bookingDto.EventId,
+            };
+
+            context.Bookings.Add(booking);
+            context.SaveChanges();
+
+            return Ok(booking);
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult EditBooking(int id, BookingDto bookingDto)
+        {
+            var booking = context.Bookings.Find(id);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            booking.Name = bookingDto.Name;
+            booking.Email = bookingDto.Email;
+            booking.Tel = bookingDto.Tel;
+            booking.BookedAt = bookingDto.BookedAt;
+            booking.EventId = bookingDto.EventId;
+
+            context.SaveChanges();
+
+            return Ok(booking);
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteBookingt(int id)
+        {
+            var booking = context.Bookings.Find(id);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            context.Bookings.Remove(booking);
+            context.SaveChanges();
+
+            return Ok();
+        }
+
+    }
+
+}

@@ -99,6 +99,44 @@
     </div>
 </div>
 
+@if(Bookings != null)
+{
+    <table class="table mb-5">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Namn</th>
+                <th>Email</th>
+                <th>Telefon</th>
+                <th>Datum</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var booking in Bookings)
+            {
+                <tr>
+                    <td>@booking.Id</td>
+                    <td>@booking.Name</td>
+                    <td>@booking.Email</td>
+                    <td>@booking.Tel</td>
+                    <td>@booking.BookedAt.ToString("dd/MM/yyyy | HH:mm")</td>
+                    <td style="white-space:nowrap; width:10px">
+                        <a class="btn btn-primary btn-sm">
+                            Ändra
+                        </a>
+                        <button class="btn btn-danger btn-sm">
+                            Ta bort
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <a class="btn btn-primary mb-3 me-2" href="/Bokningar/Book">Skapa ny bokning</a>
+}
+
 
 @inject HttpClient http
 @inject NavigationManager navManager
@@ -106,6 +144,8 @@
 @code {
     [Parameter]
     public int Id { get; set; }
+
+    public List<Booking> Bookings { get; set; } = new();
 
     public Event? eventData { get; set; } = null;
     public EventDto EventDtoData { get; set; } = new();
@@ -125,6 +165,9 @@
             EventDtoData.Recurring = eventData?.Recurring ?? false;
             EventDtoData.Gender = eventData?.Gender ?? Gender.Man;
             EventDtoData.Hidden = eventData?.Hidden ?? false;
+
+            var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+            Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
         }
         catch(Exception ex)
         {

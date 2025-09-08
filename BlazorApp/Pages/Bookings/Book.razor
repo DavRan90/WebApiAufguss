@@ -46,20 +46,20 @@
             <div class="row mb-3">
                 <div>
                     <label class="col-md-4 col-form-label">Platser kvar</label>
-                    @if (EventDtoData.MaxSlots > 6)
+                    @if (EventDtoData.MaxSlots - Bookings.Count > 5)
                     {
-                        <label class="badge rounded-pill text-bg-success p-3 fs-5">@EventDtoData.MaxSlots</label>
+                        <label class="badge rounded-pill text-bg-success p-3 fs-5">@(EventDtoData.MaxSlots - Bookings.Count)</label>
                     }
-                    else if (EventDtoData.MaxSlots <= 6 && EventDtoData.MaxSlots >= 1)
+                    else if (EventDtoData.MaxSlots - Bookings.Count <= 5 && EventDtoData.MaxSlots >= 1)
                     {
-                        <label class="badge rounded-pill text-bg-warning p-3 fs-5">@EventDtoData.MaxSlots</label>
+                        <label class="badge rounded-pill text-bg-warning p-3 fs-5">@(EventDtoData.MaxSlots - Bookings.Count)</label>
                     }
                     else
                     {
-                        <label class="badge rounded-pill text-bg-danger p-3 fs-5">@EventDtoData.MaxSlots</label>
+                        <label class="badge rounded-pill text-bg-danger p-3 fs-5">@(EventDtoData.MaxSlots - Bookings.Count)</label>
                     }
                 </div>
-                
+
             </div>
 
             <div class="row mb-3">
@@ -84,29 +84,29 @@
             <div class="row mb-3">
                 <label class="col-md-4 col-form-label">Namn</label>
                 <div class="col-md-8">
-                    <input class="form-control" type="text" @bind="EventDtoData.MaxSlots">
+                    <input class="form-control" type="text" @bind="BookingDtoData.Name">
                 </div>
             </div>
 
             <div class="row mb-3">
                 <label class="col-md-4 col-form-label">E-post</label>
                 <div class="col-md-8">
-                    <input class="form-control" type="email" @bind="EventDtoData.MaxSlots">
+                    <input class="form-control" type="email" @bind="BookingDtoData.Email">
                 </div>
             </div>
 
             <div class="row mb-3">
                 <label class="col-md-4 col-form-label">Telefon</label>
                 <div class="col-md-8">
-                    <input class="form-control" type="tel" @bind="EventDtoData.MaxSlots">
+                    <input class="form-control" type="tel" @bind="BookingDtoData.Tel">
                 </div>
             </div>
 
-            
+
 
             <div class="row">
                 <div class="offset-md-4 col-md-4 d-grid">
-                    <button class="btn btn-primary">Boka</button>
+                    <button class="btn btn-primary" @onclick="SaveBooking">Boka</button>
                 </div>
                 <div class="col-md-4 d-grid">
                     <a class="btn btn-outline-primary" href="/Bokningar">Avbryt</a>
@@ -125,6 +125,11 @@
     [Parameter]
     public int Id { get; set; }
 
+    public List<Booking> Bookings { get; set; } = new();
+
+    public Booking? booking { get; set; }
+    public BookingDto BookingDtoData { get; set; } = new();
+
     public Event? eventData { get; set; } = null;
     public EventDto EventDtoData { get; set; } = new();
     public JsonNode Errors { get; set; } = new JsonObject();
@@ -142,10 +147,40 @@
             EventDtoData.MaxSlots = eventData?.MaxSlots ?? 0;
             EventDtoData.Recurring = eventData?.Recurring ?? false;
             EventDtoData.Gender = eventData?.Gender ?? Gender.Man;
+
+            var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+            Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
         }
         catch (Exception ex)
         {
             Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+
+    private async Task SaveBooking()
+    {
+        BookingDtoData.EventId = Id;
+        var response = await http.PostAsJsonAsync("api/Bookings", BookingDtoData);
+
+        if (response.IsSuccessStatusCode)
+        {
+            navManager.NavigateTo("/Bokningar");
+        }
+
+        else
+        {
+            var strResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Json Response: \n" + strResponse);
+
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+                Errors = jsonResponse?["errors"] ?? new JsonObject();
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
     }
 }
