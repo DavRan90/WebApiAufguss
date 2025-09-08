@@ -68,17 +68,42 @@ namespace WebApi.Controllers
             {
                 return NotFound();
             }
-
-            booking.Name = bookingDto.Name;
-            booking.Email = bookingDto.Email;
-            booking.Tel = bookingDto.Tel;
-            booking.BookedAt = bookingDto.BookedAt;
-            booking.EventId = bookingDto.EventId;
+            if(bookingDto.Unbooked == true)
+            {
+                booking.Unbooked = true;
+                booking.UnbookedAt = DateTime.Now;
+            }
+            else
+            {
+                booking.Name = bookingDto.Name;
+                booking.Email = bookingDto.Email;
+                booking.Tel = bookingDto.Tel;
+                booking.BookedAt = bookingDto.BookedAt;
+                booking.EventId = bookingDto.EventId;
+            }
+                
 
             context.SaveChanges();
 
             return Ok(booking);
         }
+
+        //[HttpPut("Unbook/{id}")]
+        //public IActionResult EditBooking(int id, Booking bookingData, bool unbooked)
+        //{
+        //    var booking = context.Bookings.Find(id);
+        //    if (booking == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    booking.Unbooked = bookingData.Unbooked;
+        //    booking.UnbookedAt = bookingData.UnbookedAt;
+
+        //    context.SaveChanges();
+
+        //    return Ok(booking);
+        //}
 
         [HttpDelete("{id}")]
         public IActionResult DeleteBooking(int id)

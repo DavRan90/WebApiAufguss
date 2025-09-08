@@ -100,6 +100,10 @@
     </div>
 </div>
 
+<p>Visa avbokade</p>
+<input type="checkbox" @bind="Value" />
+<p></p>
+
 @if (Bookings != null)
 {
     <table class="table mb-5">
@@ -111,11 +115,13 @@
                 <th>Telefon</th>
                 <th>Datum</th>
                 <th>Reserv</th>
+                <th>Avbokad</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var booking in Bookings)
+            @* @foreach (var booking in Bookings.Where(b => b.Unbooked == Value)) *@
+            @foreach (var booking in Bookings.Where(b => !b.Unbooked || (Value && b.Unbooked)))
             {
                 <tr>
                     <td>@booking.Id</td>
@@ -124,7 +130,17 @@
                     <td>@booking.Tel</td>
                     <td>@booking.BookedAt.ToString("dd/MM/yyyy | HH:mm")</td>
                     <td>
-                        @if(booking.Reserve)
+                        @if (booking.Reserve)
+                        {
+                            <span class="badge rounded-pill text-bg-primary p-2">Ja</span>
+                        }
+                        else
+                        {
+                            <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
+                        }
+                    </td>
+                    <td>
+                        @if (booking.Unbooked)
                         {
                             <span class="badge rounded-pill text-bg-primary p-2">Ja</span>
                         }
@@ -137,10 +153,12 @@
                         <a class="btn btn-primary btn-sm">
                             Ändra
                         </a>
-                        <button class="btn btn-danger btn-sm" @onclick="async () => await DeleteBooking(booking.Id)">
+                        <button class="btn btn-danger btn-sm" @onclick="async () => await Unbook(booking.Id)">
+                            Avboka
+                        </button>
+                        <button class="btn btn-warning btn-sm" @onclick="async () => await ShowAlert(booking.Id)">
                             Ta bort
                         </button>
-                        <button class="btn btn-warning btn-sm" @onclick="async () => await ShowAlert(booking.Id)">Alert</button>
                     </td>
                 </tr>
             }
@@ -158,9 +176,27 @@
 
 @code {
     [Parameter]
+    public EventCallback<bool> ValueChanged { get; set; }
+
+    private bool _value;
+    [Parameter]
+    public bool Value
+    {
+        get { return _value; }
+        set
+        {
+            if (_value != value)
+                _value = value;
+            ValueChanged.InvokeAsync(_value);
+        }
+    }
+
+
+    [Parameter]
     public int Id { get; set; }
 
     public List<Booking> Bookings { get; set; } = new();
+    public BookingDto BookingDtoData { get; set; } = new();
 
     public Event? eventData { get; set; } = null;
     public EventDto EventDtoData { get; set; } = new();
@@ -216,6 +252,38 @@
         }
     }
 
+    private async Task Unbook(int id)
+    {
+        BookingDtoData.Unbooked = true;
+        var response = await http.PutAsJsonAsync("api/Bookings/" + id, BookingDtoData);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Avbokad",
+                    Text = $"Bokning med id {id} är avbokad",
+                    Icon = SweetAlertIcon.Warning,
+                });
+        }
+
+        else
+        {
+            var strResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Json Response: \n" + strResponse);
+
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+                Errors = jsonResponse?["errors"] ?? new JsonObject();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+    }
+
     private async Task DeleteBooking(int id)
     {
         await http.DeleteAsync("api/Bookings/" + id);
@@ -245,7 +313,7 @@
         int eventId = id; // or get it from your component context
         var bookings = Bookings.Count();
         var limit = EventDtoData.MaxSlots;
-        if(Bookings.Count() < EventDtoData.MaxSlots)
+        if (Bookings.Count() < EventDtoData.MaxSlots)
         {
             string json = await JS.InvokeAsync<string>("showBookingForm", eventId);
 
@@ -271,7 +339,7 @@
                     Console.WriteLine($"Error deserializing booking: {ex.Message}");
                 }
             }
-            
+
         }
         else
         {
@@ -280,10 +348,10 @@
                     Title = "Fullbokat",
                     Text = "Passet är fullbokat",
                     Icon = SweetAlertIcon.Warning,
-                    
+
                 });
 
         }
-        
+
     }
 }
