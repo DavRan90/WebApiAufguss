@@ -1,0 +1,176 @@
+﻿@page "/CreateFaq"
+@using Aufguss.Models
+@using System.Text.Json.Nodes
+
+<div class="row mb-5">
+    <div class="col-lg-8">
+        <h1 class=mb-5>Lägg till FAQ</h1>
+
+
+        <div class="row mb-3">
+            <label class="col-md-4 col-form-label">Fråga</label>
+            <div class="col-md-8">
+                <input class="form-control" @bind="FaqDtoData.Question">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label class="col-md-4 col-form-label">Svar</label>
+            <div class="col-md-8">
+                <textarea class="form-control" @bind="FaqDtoData.Answer"></textarea>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="offset-md-4 col-md-4 d-grid">
+                <button class="btn btn-primary" @onclick="SaveFaq">Spara</button>
+            </div>
+            <div class="col-md-4 d-grid">
+                <a class="btn btn-outline-primary" href="/CreateFaq">Avbryt</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p></p>
+@if (faqs == null)
+{
+    <p><em>Laddar...</em></p>
+}
+
+else
+{
+    <div class="accordion" id="accordionExample">
+        @foreach (var faq in faqs)
+        {
+
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-9">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading+@count">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse+@count" aria-expanded="true" aria-controls="collapse+@count">
+                                    @faq.Question
+                                </button>
+                            </h2>
+                            <div id="collapse+@count" class="accordion-collapse collapse" aria-labelledby="heading+@count" data-bs-parent="#accordionExample">
+                                <div class="accordion-body">
+                                    - @faq.Answer
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-auto">
+                        <button class="btn btn-primary" @onclick="async () => await EditFaq(faq.Id, -1)">↑</button>
+                    </div>
+                    <div class="col-sm-auto">
+                        <button class="btn btn-danger" @onclick="async () => await ShowAlert(faq.Id)">Ta bort</button>
+                    </div>
+                    <div class="col-sm">
+                        <button class="btn btn-primary" @onclick="async () => await EditFaq(faq.Id, 1)">↓</button>
+                    </div>
+                </div>
+            </div>
+            count++;
+        }
+    </div>
+}
+@inject SweetAlertService Swal
+@inject HttpClient http
+@inject NavigationManager navManager
+
+@code {
+    int count = 0;
+    public FaqDto FaqDtoData { get; set; } = new();
+    public JsonNode Errors { get; set; } = new JsonObject();
+
+    private List<Faq>? faqs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        faqs = await http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+    }
+
+    private async Task DeleteFaq(int id)
+    {
+        await http.DeleteAsync("api/Faqs/" + id);
+        faqs = await http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+    }
+
+    private async Task EditFaq(int id, int move)
+    {
+        var faq = faqs.Where(f => f.Id == id).SingleOrDefault();
+        int newPos = faq.Position + move;
+        var faqOnNewPos = faqs.Where(f => f.Id == 4).SingleOrDefault();
+
+        
+        faqOnNewPos.Position = 1;
+        faq.Position = newPos;
+
+        var response = await http.PutAsJsonAsync("api/Faqs/" + id, faq);
+
+        if (response.IsSuccessStatusCode)
+        {
+            faqs = await http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+        }
+
+        else
+        {
+            var strResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Json Response: \n" + strResponse);
+
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+                Errors = jsonResponse?["errors"] ?? new JsonObject();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+    }
+
+    private async Task SaveFaq()
+    {
+        var response = await http.PostAsJsonAsync("api/Faqs", FaqDtoData);
+
+        if (response.IsSuccessStatusCode)
+        {
+            faqs = await http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+            navManager.NavigateTo("/CreateFaq");
+        }
+
+        else
+        {
+            var strResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Json Response: \n" + strResponse);
+
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+                Errors = jsonResponse?["errors"] ?? new JsonObject();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+    }
+
+    private async Task ShowAlert(int id)
+    {
+        var result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Bekräfta borttagning",
+                Text = $"Vill du ta bort FAQ med ID {id}?",
+                ShowCancelButton = true,
+                ConfirmButtonText = "Ja, ta bort",
+                CancelButtonText = "Nej, ta inte bort",
+            });
+        if (result.IsConfirmed)
+        {
+            await DeleteFaq(id);
+        }
+    }
+}

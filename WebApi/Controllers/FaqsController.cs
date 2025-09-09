@@ -19,7 +19,7 @@ namespace WebApi.Controllers
         [HttpGet]
         public IActionResult GetFaqs()
         {
-            var faqs = context.Faqs.OrderBy(f => f.AddedAt).ToList();
+            var faqs = context.Faqs.OrderBy(f => f.Position).ToList();
             return Ok(faqs);
         }
 
@@ -38,11 +38,12 @@ namespace WebApi.Controllers
         [HttpPost]
         public IActionResult CreateFaq(FaqDto faqDto)
         {
+            var count = context.Faqs.Count();
             var faq = new Faq
             {
                 Question = faqDto.Question,
                 Answer = faqDto.Answer,
-                Position = faqDto.Position,
+                Position = count,
                 ShowQuestion = faqDto.ShowQuestion,
                 AddedAt = DateTime.Now
             };
