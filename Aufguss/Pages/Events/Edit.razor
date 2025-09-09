@@ -151,9 +151,9 @@
                         }
                     </td>
                     <td style="white-space:nowrap; width:10px">
-                        <a class="btn btn-primary btn-sm">
+                        <button class="btn btn-primary btn-sm" @onclick="async () => await EditBooking(booking.Id)">
                             Ändra
-                        </a>
+                        </button>
                         <button class="btn btn-danger btn-sm" @onclick="async () => await Unbook(booking.Id)">
                             Avboka
                         </button>
@@ -307,9 +307,76 @@
         Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
     }
 
+    private async Task EditBooking(int id)
+    {
+        // var bookings = Bookings.Count();
+        var getBooking = await http.GetFromJsonAsync<Booking>("api/Bookings/" + id);
+        string json = await JS.InvokeAsync<string>("showFormAlert", getBooking);
+
+        if (!string.IsNullOrEmpty(json))
+        {
+            try
+            {
+                var booking = JsonSerializer.Deserialize<BookingDto>(json, new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+                booking.EventId = Id;
+                var response = await http.PutAsJsonAsync($"api/Bookings/{id}", booking);
+                if (response.IsSuccessStatusCode)
+                    {
+                        await JS.InvokeVoidAsync("Swal.fire", "Success", "Bokning ändrad!", "success");
+                        var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+                        Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    Console.WriteLine($"Error deserializing booking: {ex.Message}");
+                }
+            }
+
+        
+    }
+
+
+    // private async Task EditBooking(int id)
+    // {
+    //     var booking = await http.GetFromJsonAsync<Booking>("api/Bookings/" + id);
+    //     BookingDto bookingDto = new BookingDto
+    //         {
+    //             Name = booking.Name,
+    //             Email = booking.Email,
+    //             Tel = booking.Tel,
+    //             Unbooked = booking.Unbooked,
+    //             EventId = booking.EventId,
+    //             BookedAt = booking.BookedAt,
+
+    //         };
+    //     BookingDto result = await JS.InvokeAsync<BookingDto>("showFormAlert", bookingDto);
+
+
+    //     if (result is not null)
+    //     {
+    //         var response = await http.PutAsJsonAsync($"api/Bookings/{id}", result);
+
+    //         if (response.IsSuccessStatusCode)
+    //         {
+    //             navManager.NavigateTo($"/Events/Edit/{Id}");
+    //         }
+    //         else
+    //         {
+    //             var error = await response.Content.ReadAsStringAsync();
+    //             Console.WriteLine("Update failed: " + error);
+    //         }
+    //     }
+
+    // }
+
     private async Task ShowAlert(int id)
     {
         // await JS.InvokeVoidAsync("alert", "This is a Blazor alert!");
+
         var result = await Swal.FireAsync(new SweetAlertOptions
             {
                 Title = "Bekräfta borttagning",
@@ -327,7 +394,7 @@
     private async Task AddGuest(int id)
     {
         int eventId = id; // or get it from your component context
-        var bookings = Bookings.Count();
+        // var bookings = Bookings.Count();
         var limit = EventDtoData.MaxSlots;
         if (Bookings.Where(b => b.Unbooked == false).Count() < EventDtoData.MaxSlots)
         {

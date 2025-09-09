@@ -1,24 +1,40 @@
-﻿function showFormAlert() {
+﻿function showFormAlert(booking) {
     return Swal.fire({
         title: 'User Info',
         html:
-            `<input id="swal-name" class="swal2-input" placeholder="Name">` +
-            `<input id="swal-email" class="swal2-input" placeholder="Email">` +
-            `<input id="swal-tel" class="swal2-input" placeholder="Tel">`,
+            `<input id="swal-name" class="swal2-input" value="${booking.name || ''}" placeholder="Name">` +
+            `<input id="swal-email" class="swal2-input" value="${booking.email || ''}" placeholder="Email">` +
+            `<input id="swal-tel" class="swal2-input" value="${booking.tel || ''}" placeholder="Tel">` +
+            `<div style="margin-top: 1rem; text-align: left;">` +
+            `<label><input type="checkbox" id="swal-unbooked" ${booking.unbooked ? 'checked' : ''}> Avbokad</label>` +
+            `</div>`,
         focusConfirm: false,
         showCancelButton: true,
+        confirmButtonText: 'Submit',
         preConfirm: () => {
             const name = document.getElementById('swal-name').value;
             const email = document.getElementById('swal-email').value;
             const tel = document.getElementById('swal-tel').value;
+            const unbooked = document.getElementById('swal-unbooked').checked;
 
             if (!name || !email || !tel) {
-                Swal.showValidationMessage('Alla fält  behöver fyllas i');
+                Swal.showValidationMessage('Alla fält behöver fyllas i');
                 return false;
             }
 
-            return { name, email, tel};
+            return JSON.stringify({
+                name: name,
+                email: email,
+                tel: tel,
+                unbooked: unbooked
+            });
         }
+    }).then(result => {
+        if (result.isConfirmed) {
+            return result.value;
+        }
+        return null;
+
     });
 }
 

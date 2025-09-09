@@ -88,23 +88,6 @@ namespace WebApi.Controllers
             return Ok(booking);
         }
 
-        //[HttpPut("Unbook/{id}")]
-        //public IActionResult EditBooking(int id, Booking bookingData, bool unbooked)
-        //{
-        //    var booking = context.Bookings.Find(id);
-        //    if (booking == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    booking.Unbooked = bookingData.Unbooked;
-        //    booking.UnbookedAt = bookingData.UnbookedAt;
-
-        //    context.SaveChanges();
-
-        //    return Ok(booking);
-        //}
-
         [HttpDelete("{id}")]
         public IActionResult DeleteBooking(int id)
         {
