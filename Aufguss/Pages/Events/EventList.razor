@@ -80,7 +80,7 @@ else
                         <a class="btn btn-primary btn-sm" href="/Events/Edit/@evt.Id">
                             Ändra
                         </a>
-                        <button class="btn btn-danger btn-sm" @onclick="async () => await DeleteEvent(evt.Id)">
+                        <button class="btn btn-danger btn-sm" @onclick="async () => await ShowAlert(evt.Id)">
                             Ta bort
                         </button>
                     </td>
@@ -90,7 +90,7 @@ else
     </table>
 }
 
-
+@inject SweetAlertService Swal
 @inject NavigationManager navManager
 @inject HttpClient http
 
@@ -126,6 +126,22 @@ else
     {
         await http.DeleteAsync("api/Events/" + id);
         events = await http.GetFromJsonAsync<List<Event>>("api/Events");
+    }
+
+    private async Task ShowAlert(int id)
+    {
+        var result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Bekräfta borttagning",
+                Text = $"Vill du ta bort sittning med ID {id}?",
+                ShowCancelButton = true,
+                ConfirmButtonText = "Ja, ta bort",
+                CancelButtonText = "Nej, ta inte bort",
+            });
+        if (result.IsConfirmed)
+        {
+            await DeleteEvent(id);
+        }
     }
 
     private async Task SaveEvent(int id)
