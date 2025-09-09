@@ -1,0 +1,80 @@
+﻿@page "/Bookings"
+
+<h3>Bokningar</h3>
+
+@if (events == null)
+{
+    <p><em>Laddar...</em></p>
+}
+else
+{
+
+    <table class="table mb-5">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Kön</th>
+                <th>Titel</th>
+                <th>Beskrivning</th>
+
+                <th>Platser</th>
+                <th>Datum</th>
+                <th>Återkommande</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var evt in events)
+            {
+                if(evt.Hidden == false)
+                {
+                    <tr>
+                        <td>@evt.Id</td>
+                        <td>
+                            @if (evt.Gender == 0)
+                            {
+                                <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
+                            }
+                            else
+                            {
+                                <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
+                            }
+                        </td>
+                        <td>@evt.Title</td>
+                        <td>@evt.Description</td>
+                        <td>@evt.MaxSlots</td>
+                        <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                        <td>
+                            @if (evt.Recurring)
+                            {
+                                <span class="badge rounded-pill text-bg-success p-2">Ja</span>
+                            }
+                            else
+                            {
+                                <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
+                            }
+                        </td>
+                        <td style="white-space:nowrap; width:10px">
+                            <a class="btn btn-primary btn-sm" href="/Bookings/Book/@evt.Id">
+                                Boka
+                            </a>
+                        </td>
+                    </tr>
+                }
+                
+            }
+        </tbody>
+    </table>
+}
+
+
+@inject HttpClient http
+
+@code {
+    private List<Event>? events;
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = await http.GetFromJsonAsync<List<Event>>("api/Events");
+    }
+}

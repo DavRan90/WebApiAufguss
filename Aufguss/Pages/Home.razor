@@ -1,0 +1,69 @@
+﻿@page "/"
+
+<PageTitle>Startsida</PageTitle>
+
+
+
+<h1 class="m-2">Aktuellt på Freja Bad & Gym</h1>
+
+@if(entries == null)
+{
+    <p><em>Laddar...</em></p>
+}
+
+else
+{
+    foreach(var entry in entries)
+    {
+        <div class="card m-2 w-50 mt-5">
+            <h2 class="card-header">@entry.Title</h2>
+            <img class="card-img-top" src="@String.Concat(@fileLocation + @entry.Image)" />
+            <div class="card-body">
+                <p class="card-text linebreak">@entry.Description</p>
+
+                    
+                <button class="btn btn-danger" @onclick="async () => await DeleteEntry(entry.Id)">Ta bort</button>
+                
+            </div>
+            <p class="card-footer">Publicerad: @entry.CreatedAt.ToString("dd/MM/yyyy | HH:mm")</p>
+        </div>
+    }
+
+}
+
+
+@inject HttpClient http
+
+@code {
+    private List<Entry>? entries;
+
+    private string base64Image;
+
+    private string imagePathFromDb = "";
+    private string fileLocation = "";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        entries = await http.GetFromJsonAsync<List<Entry>>("api/Entries");
+
+        fileLocation = $"https://localhost:7162/api/upload/";
+
+    
+
+        // var fileName = "flower.jpg"; // from DB or wherever
+        // var response = await http.GetAsync($"api/upload/{fileName}");
+
+        // if (response.IsSuccessStatusCode)
+        // {
+        //     var imageBytes = await response.Content.ReadAsByteArrayAsync();
+        //     base64Image = $"data:image/jpeg;base64,{Convert.ToBase64String(imageBytes)}";
+        // }
+    }
+
+    private async Task DeleteEntry(int id)
+    {
+        await http.DeleteAsync("api/Entries/" + id);
+        entries = await http.GetFromJsonAsync<List<Entry>>("api/Entries");
+    }
+}

@@ -13,7 +13,7 @@
             const tel = document.getElementById('swal-tel').value;
 
             if (!name || !email || !tel) {
-                Swal.showValidationMessage('Both fields required');
+                Swal.showValidationMessage('Alla fält  behöver fyllas i');
                 return false;
             }
 
@@ -37,7 +37,7 @@ function showBookingForm(eventId) {
             const tel = document.getElementById('swal-tel').value;
 
             if (!name || !email) {
-                Swal.showValidationMessage('Please enter name, email and telephone');
+                Swal.showValidationMessage('Fyll i namn, email och telefonnummer');
                 return false;
             }
 

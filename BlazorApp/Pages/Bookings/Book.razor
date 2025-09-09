@@ -46,17 +46,17 @@
             <div class="row mb-3">
                 <div>
                     <label class="col-md-4 col-form-label">Platser kvar</label>
-                    @if (EventDtoData.MaxSlots - Bookings.Count > 5)
+                    @if (SpotsRemaining > 5)
                     {
-                        <label class="badge rounded-pill text-bg-success p-3 fs-5">@(EventDtoData.MaxSlots - Bookings.Count)</label>
+                        <label class="badge rounded-pill text-bg-success p-3 fs-5">@SpotsRemaining</label>
                     }
-                    else if (EventDtoData.MaxSlots - Bookings.Count <= 5 && EventDtoData.MaxSlots - Bookings.Count >= 1)
+                    else if (SpotsRemaining <= 5 && SpotsRemaining >= 1)
                     {
-                        <label class="badge rounded-pill text-bg-warning p-3 fs-5">@(EventDtoData.MaxSlots - Bookings.Count)</label>
+                        <label class="badge rounded-pill text-bg-warning p-3 fs-5">@SpotsRemaining</label>
                     }
                     else
                     {
-                        <label class="badge rounded-pill text-bg-danger p-3 fs-5">@(EventDtoData.MaxSlots - Bookings.Count)</label>
+                        <label class="badge rounded-pill text-bg-danger p-3 fs-5">@SpotsRemaining</label>
                     }
                 </div>
 
@@ -105,7 +105,7 @@
 
 
             <div class="row">
-                @if (EventDtoData.MaxSlots - Bookings.Count > 0)
+                @if (SpotsRemaining > 0)
                 {
                     <div class="offset-md-4 col-md-4 d-grid">
                         <button class="btn btn-primary" @onclick="SaveBooking">Boka</button>
@@ -131,6 +131,8 @@
 @inject NavigationManager navManager
 
 @code {
+
+    public int SpotsRemaining { get; set; }
     [Parameter]
     public int Id { get; set; }
 
@@ -159,6 +161,8 @@
 
             var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
             Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
+
+            SpotsRemaining = EventDtoData.MaxSlots - Bookings.Where(b => b.Unbooked == false && b.Reserve == false).Count();
         }
         catch (Exception ex)
         {

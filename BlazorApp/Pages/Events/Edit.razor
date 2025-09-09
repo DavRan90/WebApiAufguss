@@ -103,6 +103,9 @@
 <p>Visa avbokade</p>
 <input type="checkbox" @bind="Value" />
 <p></p>
+<p>Visa reservlista</p>
+<input type="checkbox" @bind="ShowReserve" />
+<p></p>
 
 @if (Bookings != null)
 {
@@ -120,8 +123,7 @@
             </tr>
         </thead>
         <tbody>
-            @* @foreach (var booking in Bookings.Where(b => b.Unbooked == Value)) *@
-            @foreach (var booking in Bookings.Where(b => !b.Unbooked || (Value && b.Unbooked)))
+            @foreach (var booking in Bookings.Where(b => !b.Unbooked && !b.Reserve || (Value && b.Unbooked) || (ShowReserve && b.Reserve)))
             {
                 <tr>
                     <td>@booking.Id</td>
@@ -191,6 +193,21 @@
         }
     }
 
+    [Parameter]
+    public EventCallback<bool> ShowReserveChanged { get; set; }
+
+    private bool _showReserve;
+    [Parameter]
+    public bool ShowReserve
+    {
+        get { return _showReserve; }
+        set
+        {
+            if (_showReserve != value)
+                _showReserve = value;
+            ShowReserveChanged.InvokeAsync(_showReserve);
+        }
+    }
 
     [Parameter]
     public int Id { get; set; }
@@ -313,7 +330,7 @@
         int eventId = id; // or get it from your component context
         var bookings = Bookings.Count();
         var limit = EventDtoData.MaxSlots;
-        if (Bookings.Count() < EventDtoData.MaxSlots)
+        if (Bookings.Where(b => b.Unbooked == false).Count() < EventDtoData.MaxSlots)
         {
             string json = await JS.InvokeAsync<string>("showBookingForm", eventId);
 

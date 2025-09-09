@@ -1,0 +1,134 @@
+﻿@page "/CreateNews"
+@using System.Text.Json.Nodes
+
+<div class="row mb-5">
+    <div class="col-lg-8">
+        <h1 class=mb-5>Lägg till nyhet</h1>
+
+
+        <div class="row mb-3">
+            <label class="col-md-4 col-form-label">Titel</label>
+            <div class="col-md-8">
+                <input class="form-control" @bind="EntryDtoData.Title">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label class="col-md-4 col-form-label">Beskrivning</label>
+            <div class="col-md-8">
+                <textarea class="form-control" @bind="EntryDtoData.Description"></textarea>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label class="col-md-4 col-form-label">Välj en bild</label>
+            <div class="col-md-8">
+                <InputFile OnChange="UploadFile" accept="image/*" />
+                @* <input class="form-control" @bind="EntryDtoData.Image"> *@
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label class="col-md-4 col-form-label">Länk</label>
+            <div class="col-md-8">
+                <input class="form-control" @bind="EntryDtoData.Url">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="offset-md-4 col-md-4 d-grid">
+                <button class="btn btn-primary" @onclick="SaveEntry">Spara</button>
+            </div>
+            <div class="col-md-4 d-grid">
+                <a class="btn btn-outline-primary" href="/CreateNews">Avbryt</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@inject HttpClient http
+@inject NavigationManager navManager
+
+@code {
+    public EntryDto EntryDtoData { get; set; } = new();
+    public JsonNode Errors { get; set; } = new JsonObject();
+
+    private List<Entry>? entries;
+
+    protected override async Task OnInitializedAsync()
+    {
+        entries = await http.GetFromJsonAsync<List<Entry>>("api/Entries");
+    }
+
+    private string statusMessage = "";
+
+    private async Task UploadFile(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        if (file is null)
+        {
+            statusMessage = "No file selected.";
+            return;
+        }
+
+        var content = new MultipartFormDataContent();
+        var stream = file.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5); // 5MB limit
+        var fileContent = new StreamContent(stream);
+
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+
+        // "file" is the name of the parameter expected by the API
+        content.Add(content: fileContent, name: "file", fileName: file.Name);
+
+        try
+        {
+            var response = await http.PostAsync("api/upload", content);
+            if (response.IsSuccessStatusCode)
+            {
+                statusMessage = "File uploaded successfully!";
+                EntryDtoData.Image = file.Name;
+            }
+            else
+            {
+                statusMessage = $"Upload failed: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteEvent(int id)
+    {
+        await http.DeleteAsync("api/Entries/" + id);
+        entries = await http.GetFromJsonAsync<List<Entry>>("api/Entries");
+    }
+
+    private async Task SaveEntry()
+    {
+        var response = await http.PostAsJsonAsync("api/Entries", EntryDtoData);
+
+        if (response.IsSuccessStatusCode)
+        {
+            navManager.NavigateTo("/");
+        }
+
+        else
+        {
+            var strResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Json Response: \n" + strResponse);
+
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+                Errors = jsonResponse?["errors"] ?? new JsonObject();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+    }
+}

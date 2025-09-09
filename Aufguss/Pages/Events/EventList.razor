@@ -1,0 +1,166 @@
+﻿@page "/Events"
+@using System.Globalization
+@using System.Text.Json.Nodes
+
+
+
+
+<h1 class="mb-3">Bokningar</h1>
+<p>Visa kalender</p>
+<input type="checkbox" @bind="Value"/>
+<p></p>
+<p></p>
+
+
+@if (events == null)
+{
+    <p><em>Laddar...</em></p>
+}
+else
+{
+    <a class="btn btn-primary mb-3 me-2" href="/Events/Create">Skapa ny bokning</a>
+
+    <table class="table mb-5">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Kön</th>
+                <th>Titel</th>
+                <th>Beskrivning</th>
+
+                <th>Platser</th>
+                <th>Datum</th>
+                <th>Återkommande</th>
+                <th>Dold</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var evt in events)
+            {
+                <tr>
+                    <td>@evt.Id</td>
+                    <td>
+                        @if(evt.Gender == 0)
+                        {
+                            <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
+                        }
+                        else
+                        {
+                            <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
+                        }
+                    </td>
+                    <td>@evt.Title</td>
+                    <td>@evt.Description</td>
+                    <td>@evt.MaxSlots</td>
+                    <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                    <td>
+                        @if (evt.Recurring)
+                        {
+                            <span class="badge rounded-pill text-bg-success p-2">Ja</span>
+                        }
+                        else
+                        {
+                            <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
+                        }
+                    </td>
+                    <td>
+                        @if (evt.Hidden)
+                        {
+                            @* <a class="badge rounded-pill text-bg-success p-2" @onclick="SaveEvent(evt.Id)>Ja</a> *@
+                            @* <button class="btn btn-primary" @onclick="SaveEvent()">Ja</button> *@
+                            <button class="border border-0 badge rounded-pill text-bg-success p-2" @onclick="async () => await SaveEvent(evt.Id)">Ja</button>
+                        }
+                        else
+                        {
+                            <button class="border border-0 badge rounded-pill text-bg-warning p-2" @onclick="async () => await SaveEvent(evt.Id)">Nej</button>
+                        }
+                    </td>
+                    <td style="white-space:nowrap; width:10px">
+                        <a class="btn btn-primary btn-sm" href="/Events/Edit/@evt.Id">
+                            Ändra
+                        </a>
+                        <button class="btn btn-danger btn-sm" @onclick="async () => await DeleteEvent(evt.Id)">
+                            Ta bort
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@inject NavigationManager navManager
+@inject HttpClient http
+
+@code {
+    public JsonNode Errors { get; set; } = new JsonObject();
+
+    [Parameter]
+    public EventCallback<bool> ValueChanged { get; set; }
+
+    private bool _value;
+    [Parameter]
+    public bool Value
+    {
+        get { return _value; }
+        set
+        {
+            if(_value != value)
+                _value = value;
+            ValueChanged.InvokeAsync(_value);
+        }
+    }
+
+    public int StartDay { get; set; } = 1;
+
+    private List<Event>? events;
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = await http.GetFromJsonAsync<List<Event>>("api/Events");
+    }
+
+    private async Task DeleteEvent(int id)
+    {
+        await http.DeleteAsync("api/Events/" + id);
+        events = await http.GetFromJsonAsync<List<Event>>("api/Events");
+    }
+
+    private async Task SaveEvent(int id)
+    {
+        var evt = events.Where(e => e.Id == id).SingleOrDefault();
+        if(evt.Hidden == false)
+        {
+            evt.Hidden = true;
+        }
+        else
+        {
+            evt.Hidden = false;
+        }
+
+        var response = await http.PutAsJsonAsync("api/Events/" + id, evt);
+
+        if (response.IsSuccessStatusCode)
+        {
+            navManager.NavigateTo("/Events");
+        }
+
+        else
+        {
+            var strResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Json Response: \n" + strResponse);
+
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+                Errors = jsonResponse?["errors"] ?? new JsonObject();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+    }
+}

@@ -1,0 +1,20 @@
+﻿@inherits LayoutComponentBase
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 auth">
+            <LoginDisplay />
+            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">Om</a>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+    
+</div>
+@* <div class="bot-row ps-3 p-5 bg-secondary position-relative" style="height: 120px">
+    </div> *@

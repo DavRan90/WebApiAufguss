@@ -1,0 +1,373 @@
+﻿@page "/Events/Edit/{id:int}"
+@using System.Text.Json.Nodes
+@using System.Text.Json
+
+<div class="row mb-5">
+    <div class="col-lg-8">
+        <h1 class=mb-5>Ändra aktivitet</h1>
+
+        @if (eventData == null)
+        {
+            <p><em>Loading...</em></p>
+        }
+
+        else
+        {
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Id</label>
+                <div class="col-md-8">
+                    <input class="form-control-plaintext" readonly value="@Id">
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div>
+                    <label class="col-md-4 col-form-label">Kön</label>
+                    <input type="radio" checked="@(EventDtoData.Gender == Gender.Man)"
+                    name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Man)" />
+                    <label>Herrar</label>
+
+                    <input type="radio" checked="@(EventDtoData.Gender == Gender.Woman)"
+                    name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Woman)" />
+                    <label>Damer</label>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Titel</label>
+                <div class="col-md-8">
+                    <input class="form-control" @bind="EventDtoData.Title">
+                    <span class="text-danger">@Errors["Title"]?[0]</span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Datum/tid</label>
+                <div class="col-md-8">
+                    <input type="datetime-local" class="form-control" @bind="EventDtoData.Start">
+                    <span class="text-danger">@Errors["Start"]?[0]</span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Max antal gäster</label>
+                <div class="col-md-8">
+                    <input class="form-control" type="number" @bind="EventDtoData.MaxSlots">
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Beskrivning</label>
+                <div class="col-md-8">
+                    <textarea class="form-control" @bind="EventDtoData.Description"></textarea>
+                    <span class="text-danger">@Errors["Description"]?[0]</span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-8 offset-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="gridCheck1" @bind="EventDtoData.Recurring">
+                        <label class="form-check-label" for="gridCheck1">
+                            Återkommande
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-8 offset-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="gridCheck1" @bind="EventDtoData.Hidden">
+                        <label class="form-check-label" for="gridCheck1">
+                            Dold
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="offset-md-4 col-md-4 d-grid">
+                    <button class="btn btn-primary" @onclick="SaveEvent">Spara</button>
+                </div>
+                <div class="col-md-4 d-grid">
+                    <a class="btn btn-outline-primary" href="/Events">Avbryt</a>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+<p>Visa avbokade</p>
+<input type="checkbox" @bind="Value" />
+<p></p>
+<p>Visa reservlista</p>
+<input type="checkbox" @bind="ShowReserve" />
+<p></p>
+
+@if (Bookings != null)
+{
+    <table class="table mb-5">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Namn</th>
+                <th>Email</th>
+                <th>Telefon</th>
+                <th>Datum</th>
+                <th>Reserv</th>
+                <th>Avbokad</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var booking in Bookings.Where(b => !b.Unbooked && !b.Reserve || (Value && b.Unbooked) || (ShowReserve && b.Reserve)))
+            {
+                <tr>
+                    <td>@booking.Id</td>
+                    <td>@booking.Name</td>
+                    <td>@booking.Email</td>
+                    <td>@booking.Tel</td>
+                    <td>@booking.BookedAt.ToString("dd/MM/yyyy | HH:mm")</td>
+                    <td>
+                        @if (booking.Reserve)
+                        {
+                            <span class="badge rounded-pill text-bg-primary p-2">Ja</span>
+                        }
+                        else
+                        {
+                            <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
+                        }
+                    </td>
+                    <td>
+                        @if (booking.Unbooked)
+                        {
+                            <span class="badge rounded-pill text-bg-primary p-2">Ja</span>
+                        }
+                        else
+                        {
+                            <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
+                        }
+                    </td>
+                    <td style="white-space:nowrap; width:10px">
+                        <a class="btn btn-primary btn-sm">
+                            Ändra
+                        </a>
+                        <button class="btn btn-danger btn-sm" @onclick="async () => await Unbook(booking.Id)">
+                            Avboka
+                        </button>
+                        <button class="btn btn-warning btn-sm" @onclick="async () => await ShowAlert(booking.Id)">
+                            Ta bort
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <a class="btn btn-primary mb-3 me-2" href="/Bookings/Book/@Id">Lägg till deltagare</a>
+    <a class="btn btn-primary mb-3 me-2" @onclick="async () => await AddGuest(Id)">Lägg till deltagare med alert</a>
+}
+
+@inject IJSRuntime JS
+@inject SweetAlertService Swal
+@inject HttpClient http
+@inject NavigationManager navManager
+
+@code {
+    [Parameter]
+    public EventCallback<bool> ValueChanged { get; set; }
+
+    private bool _value;
+    [Parameter]
+    public bool Value
+    {
+        get { return _value; }
+        set
+        {
+            if (_value != value)
+                _value = value;
+            ValueChanged.InvokeAsync(_value);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<bool> ShowReserveChanged { get; set; }
+
+    private bool _showReserve;
+    [Parameter]
+    public bool ShowReserve
+    {
+        get { return _showReserve; }
+        set
+        {
+            if (_showReserve != value)
+                _showReserve = value;
+            ShowReserveChanged.InvokeAsync(_showReserve);
+        }
+    }
+
+    [Parameter]
+    public int Id { get; set; }
+
+    public List<Booking> Bookings { get; set; } = new();
+    public BookingDto BookingDtoData { get; set; } = new();
+
+    public Event? eventData { get; set; } = null;
+    public EventDto EventDtoData { get; set; } = new();
+    public JsonNode Errors { get; set; } = new JsonObject();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            eventData = await http.GetFromJsonAsync<Event>("api/Events/" + Id);
+            EventDtoData.Title = eventData?.Title ?? "";
+            EventDtoData.Description = eventData?.Description ?? "";
+            EventDtoData.Start = eventData?.Start ?? DateTime.Now;
+            EventDtoData.End = eventData?.End;
+            EventDtoData.AllDay = eventData?.AllDay ?? false;
+            EventDtoData.MaxSlots = eventData?.MaxSlots ?? 0;
+            EventDtoData.Recurring = eventData?.Recurring ?? false;
+            EventDtoData.Gender = eventData?.Gender ?? Gender.Man;
+            EventDtoData.Hidden = eventData?.Hidden ?? false;
+
+            var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+            Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+
+    private async Task SaveEvent()
+    {
+        var response = await http.PutAsJsonAsync("api/Events/" + Id, EventDtoData);
+
+        if (response.IsSuccessStatusCode)
+        {
+            navManager.NavigateTo("/Events");
+        }
+
+        else
+        {
+            var strResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Json Response: \n" + strResponse);
+
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+                Errors = jsonResponse?["errors"] ?? new JsonObject();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+    }
+
+    private async Task Unbook(int id)
+    {
+        BookingDtoData.Unbooked = true;
+        var response = await http.PutAsJsonAsync("api/Bookings/" + id, BookingDtoData);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Avbokad",
+                    Text = $"Bokning med id {id} är avbokad",
+                    Icon = SweetAlertIcon.Warning,
+                });
+        }
+
+        else
+        {
+            var strResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Json Response: \n" + strResponse);
+
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+                Errors = jsonResponse?["errors"] ?? new JsonObject();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+    }
+
+    private async Task DeleteBooking(int id)
+    {
+        await http.DeleteAsync("api/Bookings/" + id);
+        var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+        Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
+    }
+
+    private async Task ShowAlert(int id)
+    {
+        // await JS.InvokeVoidAsync("alert", "This is a Blazor alert!");
+        var result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Bekräfta borttagning",
+                Text = $"Vill du ta bort bokning med ID {id}?",
+                ShowCancelButton = true,
+                ConfirmButtonText = "Ja, ta bort",
+                CancelButtonText = "Nej, ta inte bort",
+            });
+        if (result.IsConfirmed)
+        {
+            await DeleteBooking(id);
+        }
+    }
+
+    private async Task AddGuest(int id)
+    {
+        int eventId = id; // or get it from your component context
+        var bookings = Bookings.Count();
+        var limit = EventDtoData.MaxSlots;
+        if (Bookings.Where(b => b.Unbooked == false).Count() < EventDtoData.MaxSlots)
+        {
+            string json = await JS.InvokeAsync<string>("showBookingForm", eventId);
+
+            if (!string.IsNullOrEmpty(json))
+            {
+                try
+                {
+                    var booking = JsonSerializer.Deserialize<Booking>(json, new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+
+                    var response = await http.PostAsJsonAsync("api/Bookings", booking);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        await JS.InvokeVoidAsync("Swal.fire", "Success", "Ny gäst tillagd!", "success");
+                        var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+                        Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    Console.WriteLine($"Error deserializing booking: {ex.Message}");
+                }
+            }
+
+        }
+        else
+        {
+            var result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Fullbokat",
+                    Text = "Passet är fullbokat",
+                    Icon = SweetAlertIcon.Warning,
+
+                });
+
+        }
+
+    }
+}
