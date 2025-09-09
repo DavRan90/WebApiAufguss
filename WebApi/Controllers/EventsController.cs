@@ -92,6 +92,12 @@ namespace WebApi.Controllers
             {
                 return NotFound();
             }
+            // Also remove all associated bookings
+            var bookings = context.Bookings.Where(b => b.EventId == id).ToList();
+            foreach(var booking in bookings)
+            {
+                context.Bookings.Remove(booking);
+            }
 
             context.Events.Remove(evt);
             context.SaveChanges();
