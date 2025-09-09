@@ -13,5 +13,6 @@ namespace WebApi.Services
         public required DbSet<Event> Events { get; set; }
         public required DbSet<Entry> Entries { get; set; }
         public required DbSet<Booking> Bookings { get; set; }
+        public required DbSet<Faq> Faqs { get; set; }
     }
 }

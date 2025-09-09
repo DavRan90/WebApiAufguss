@@ -1,6 +1,6 @@
 ﻿function showFormAlert(booking) {
     return Swal.fire({
-        title: 'User Info',
+        title: 'Ändra deltagare',
         html:
             `<input id="swal-name" class="swal2-input" value="${booking.name || ''}" placeholder="Name">` +
             `<input id="swal-email" class="swal2-input" value="${booking.email || ''}" placeholder="Email">` +
