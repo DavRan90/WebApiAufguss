@@ -165,7 +165,6 @@
             }
         </tbody>
     </table>
-
     <a class="btn btn-primary mb-3 me-2" href="/Bookings/Book/@Id">Lägg till deltagare</a>
     <a class="btn btn-primary mb-3 me-2" @onclick="async () => await AddGuest(Id)">Lägg till deltagare med alert</a>
 }
@@ -338,8 +337,6 @@
                 Console.WriteLine($"Error deserializing booking: {ex.Message}");
             }
         }
-
-
     }
 
     private async Task ShowAlert(int id)

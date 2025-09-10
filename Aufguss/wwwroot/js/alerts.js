@@ -38,6 +38,38 @@
     });
 }
 
+function showFaqAlert(faq) {
+    return Swal.fire({
+        title: 'Ändra FAQ',
+        html:
+            `<input id="swal-question" class="swal2-input" value="${faq.question || ''}" placeholder="Question">` +
+            `<textarea style="height: 200px; padding-top: 0.5em" id="swal-answer" class="swal2-input" placeholder="Answer">${faq.answer || ''}</textarea>`,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Submit',
+        preConfirm: () => {
+            const question = document.getElementById('swal-question').value;
+            const answer = document.getElementById('swal-answer').value;
+
+            if (!question || !answer) {
+                Swal.showValidationMessage('Alla fält behöver fyllas i');
+                return false;
+            }
+
+            return JSON.stringify({
+                question: question,
+                answer: answer,
+            });
+        }
+    }).then(result => {
+        if (result.isConfirmed) {
+            return result.value;
+        }
+        return null;
+
+    });
+}
+
 function showBookingForm(eventId) {
     return Swal.fire({
         title: 'Lägg till deltagare',

@@ -76,13 +76,19 @@ namespace WebApi.Controllers
         [HttpDelete("{id}")]
         public IActionResult DeleteFaq(int id)
         {
-            var faq = context.Faqs.Find(id);
-            if (faq == null)
+            var faqToBeRemoved = context.Faqs.Find(id);
+            if (faqToBeRemoved == null)
             {
                 return NotFound();
             }
 
-            context.Faqs.Remove(faq);
+            var faqs = context.Faqs.Where(f => f.Position > faqToBeRemoved.Position).ToList();
+            foreach(var faq in faqs)
+            {
+                faq.Position--;
+            }
+
+            context.Faqs.Remove(faqToBeRemoved);
             context.SaveChanges();
 
             return Ok();

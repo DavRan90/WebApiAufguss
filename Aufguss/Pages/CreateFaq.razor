@@ -1,6 +1,7 @@
 ﻿@page "/CreateFaq"
 @using Aufguss.Models
 @using System.Text.Json.Nodes
+@using System.Text.Json
 
 <div class="row mb-5">
     <div class="col-lg-8">
@@ -17,7 +18,7 @@
         <div class="row mb-3">
             <label class="col-md-4 col-form-label">Svar</label>
             <div class="col-md-8">
-                <textarea class="form-control" @bind="FaqDtoData.Answer"></textarea>
+                <textarea rows="4" class="form-control" @bind="FaqDtoData.Answer"></textarea>
             </div>
         </div>
 
@@ -43,11 +44,82 @@ else
     <div class="accordion" id="accordionExample">
         @foreach (var faq in faqs)
         {
+            <div class="container mb-3">
+                <div class="row flex-column flex-md-row align-items-start">
+                    <!-- Top Buttons (Up/Down) -->
+                    <div class="col-12 col-md-auto mb-2 mb-md-0 text-center mt-2">
+                        @if (faq.Position > 0)
+                        {
+                            <button class="btn btn-success btn-sm me-1" @onclick="async () => await EditFaq(faq.Id, -1)">↑</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-danger btn-sm me-1" disabled>↑</button>
+                        }
+                        @if (faq.Position < faqs.Count - 1)
+                        {
+                            <button class="btn btn-primary btn-sm me-1" @onclick="async () => await EditFaq(faq.Id, 1)">↓</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-danger btn-sm me-1" disabled>↓</button>
+                        }
+                    </div>
+
+                    <!-- Accordion -->
+                    <div class="col-12 col-md-8 ">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading@count">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@count" aria-expanded="false" aria-controls="collapse@count">
+                                    @faq.Question
+                                </button>
+                            </h2>
+                            <div id="collapse@count" class="accordion-collapse collapse" aria-labelledby="heading@count" data-bs-parent="#accordionExample">
+                                <div class="accordion-body">
+                                    - @faq.Answer
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Buttons (Delete/Edit) -->
+                    <div class="col-12 col-md-auto mt-md-2 text-center mt-2">
+                        <button class="btn btn-warning btn-sm" @onclick="async () => await EditAlert(faq.Id)">Ändra</button>
+                        <button class="btn btn-danger btn-sm me-1" @onclick="async () => await ShowRemoveAlert(faq.Id)">Ta bort</button>
+                    </div>
+                </div>
+            </div>
+            count++;
+        }
+    </div>
+    @* <div class="accordion" id="accordionExample">
+        @foreach (var faq in faqs)
+        {
 
             <div class="container">
                 <div class="row">
-                    <div class="col-sm-9">
-                        <div class="accordion-item">
+                    <div class="col-sm-auto">
+                        <div class="col-sm-auto mt-2">
+                        @if (faq.Position > 0)
+                        {
+                                <button class="btn btn-success btn-lg me-1" @onclick="async () => await EditFaq(faq.Id, -1)">↑</button>   
+                        }
+                        else
+                        {
+                                <button class="btn btn-danger btn-lg me-1" @onclick="async () => await EditFaq(faq.Id, -1)" disabled>↑</button>
+                        }
+                        @if (faq.Position < faqs.Count - 1)
+                        {
+                                <button class="btn btn-primary btn-lg me-1" @onclick="async () => await EditFaq(faq.Id, 1)">↓</button>
+                        }
+                        else
+                        {
+                                <button class="btn btn-danger btn-lg me-1" @onclick="async () => await EditFaq(faq.Id, 1)" disabled>↓</button>
+                        }
+                        </div>
+                    </div>
+                    <div class="col-sm-8">
+                        <div class="accordion-item m-1">
                             <h2 class="accordion-header" id="heading+@count">
                                 <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse+@count" aria-expanded="true" aria-controls="collapse+@count">
                                     @faq.Question
@@ -60,21 +132,17 @@ else
                             </div>
                         </div>
                     </div>
-                    <div class="col-sm-auto">
-                        <button class="btn btn-primary" @onclick="async () => await EditFaq(faq.Id, -1)">↑</button>
-                    </div>
-                    <div class="col-sm-auto">
-                        <button class="btn btn-danger" @onclick="async () => await ShowAlert(faq.Id)">Ta bort</button>
-                    </div>
-                    <div class="col-sm">
-                        <button class="btn btn-primary" @onclick="async () => await EditFaq(faq.Id, 1)">↓</button>
+                    <div class="col-sm-auto mt-1">
+                        <button class="btn btn-danger btn-lg" @onclick="async () => await ShowRemoveAlert(faq.Id)">Ta bort</button>
+                        <button class="btn btn-warning btn-lg" @onclick="async () => await EditAlert(faq.Id)">Ändra</button>
                     </div>
                 </div>
             </div>
             count++;
         }
-    </div>
+    </div> *@
 }
+@inject IJSRuntime JS
 @inject SweetAlertService Swal
 @inject HttpClient http
 @inject NavigationManager navManager
@@ -101,15 +169,16 @@ else
     {
         var faq = faqs.Where(f => f.Id == id).SingleOrDefault();
         int newPos = faq.Position + move;
-        var faqOnNewPos = faqs.Where(f => f.Id == 4).SingleOrDefault();
+        var faqOnNewPos = faqs.Where(f => f.Position == newPos).SingleOrDefault();
 
         
-        faqOnNewPos.Position = 1;
+        faqOnNewPos.Position -= move;
         faq.Position = newPos;
 
         var response = await http.PutAsJsonAsync("api/Faqs/" + id, faq);
+        var response2 = await http.PutAsJsonAsync("api/Faqs/" + faqOnNewPos.Id, faqOnNewPos);
 
-        if (response.IsSuccessStatusCode)
+        if (response.IsSuccessStatusCode && response2.IsSuccessStatusCode)
         {
             faqs = await http.GetFromJsonAsync<List<Faq>>("api/Faqs");
         }
@@ -157,8 +226,35 @@ else
             }
         }
     }
+    private async Task EditAlert(int id)
+    {
+        // var bookings = Bookings.Count();
+        var getFaq = await http.GetFromJsonAsync<Faq>("api/Faqs/" + id);
+        string json = await JS.InvokeAsync<string>("showFaqAlert", getFaq);
 
-    private async Task ShowAlert(int id)
+        if (!string.IsNullOrEmpty(json))
+        {
+            try
+            {
+                var faq = JsonSerializer.Deserialize<FaqDto>(json, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                var response = await http.PutAsJsonAsync($"api/Faqs/{id}", faq);
+                if (response.IsSuccessStatusCode)
+                {
+                    await JS.InvokeVoidAsync("Swal.fire", "Lyckades", "FAQ ändrad!", "success");
+                    faqs = await http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+                }
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"Error deserializing booking: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task ShowRemoveAlert(int id)
     {
         var result = await Swal.FireAsync(new SweetAlertOptions
             {
