@@ -1,13 +1,16 @@
 ﻿window.initializeSortable = (elementId, dotNetHelper) => {
     const el = document.getElementById(elementId);
-    if (!el) return;
+    if (!el) {
+        console.warn("Element not found:", elementId);
+        return;
+    }
 
     new Sortable(el, {
         animation: 150,
-        handle: '.accordion-header',
-        onEnd: function (evt) {
-            const order = [...el.children].map(child => child.getAttribute('data-id'));
-            dotNetHelper.invokeMethodAsync('UpdateOrder', order);
+        handle: '.drag-handle',
+        onEnd: function () {
+            const order = [...el.children].map(item => item.getAttribute("data-id"));
+            dotNetHelper.invokeMethodAsync("UpdateOrder", order);
         }
     });
 };

@@ -55,8 +55,8 @@ namespace WebApi.Controllers
             return Ok(faq);
         }
 
-        [HttpPost("update-order")]
-        public async Task<IActionResult> UpdateFaqOrder([FromBody] List<FaqOrderUpdateDto> faqs)
+        [HttpPut("update-order")]
+        public async Task<IActionResult> UpdateFaqOrder([FromBody] List<Faq> faqs)
         {
             foreach (var item in faqs)
             {

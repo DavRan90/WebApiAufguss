@@ -1,0 +1,82 @@
+﻿@page "/TestDragDrop"
+@inject IJSRuntime JS
+@inject HttpClient Http
+
+
+<h3>Test Drag & Drop</h3>
+@if (faqs == null)
+{
+    <p><em>Laddar...</em></p>
+}
+else
+{
+    <div id="faqAccordion" class="accordion">
+        @foreach (var faq in faqs)
+        {
+            <div class="accordion-item mb-2" data-id="@faq.Id">
+                <div class="accordion-header d-flex align-items-center" style="user-select:none;">
+                    <div class="drag-handle me-2"
+                         style="cursor: grab; padding: 0 8px;"
+                    @onclick:stopPropagation
+                    @onmousedown:stopPropagation>
+                        ☰
+                    </div>
+                    <button class="accordion-button collapsed flex-grow-1"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#collapse-@faq.Id"
+                            aria-expanded="false"
+                            aria-controls="collapse-@faq.Id">
+                        @faq.Question
+                    </button>
+                </div>
+                <div id="collapse-@faq.Id"
+                     class="accordion-collapse collapse"
+                     aria-labelledby="heading-@faq.Id"
+                     data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        @faq.Answer
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+
+    private List<Models.Faq>? faqs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        faqs = await Http.GetFromJsonAsync<List<Models.Faq>>("api/Faqs") ?? new List<Models.Faq>();
+    }
+
+
+    private bool sortableInitialized = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!sortableInitialized && faqs != null)
+        {
+            sortableInitialized = true;
+            var objRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("initializeSortable", "faqAccordion", objRef);
+        }
+    }
+
+    [JSInvokable]
+    public async Task UpdateOrder(string[] newOrder)
+    {
+        Console.WriteLine("Updated Order: " + string.Join(",", newOrder));
+
+        for (int i = 0; i < newOrder.Length; i++)
+        {
+            var id = int.Parse(newOrder[i]);
+            var faq = faqs.First(f => f.Id == id);
+            faq.Position = i;
+        }
+
+        await Http.PutAsJsonAsync("api/Faqs/update-order", faqs);
+    }
+}
