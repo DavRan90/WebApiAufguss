@@ -1,0 +1,46 @@
+﻿@page "/register"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<h3>Registrera dig</h3>
+
+<EditForm Model="registerModel" OnValidSubmit="HandleRegister">
+    <InputText @bind-Value="registerModel.Email" type="email" placeholder="Email" />
+    <InputText @bind-Value="registerModel.Password" type="password" placeholder="Lösenord" />
+    <InputText @bind-Value="registerModel.PhoneNumber" type="tel" placeholder="Telefonnummer" />
+    <button type="submit">Register</button>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color:red">@errorMessage</p>
+}
+
+@code {
+    private RegisterDto registerModel = new();
+    private string errorMessage;
+
+    private async Task HandleRegister()
+    {
+        var response = await Http.PostAsJsonAsync("https://localhost:7162/api/auth/register", registerModel);
+
+        if (response.IsSuccessStatusCode)
+        {
+            // Optionally, auto-login or redirect to login
+            Navigation.NavigateTo("/login");
+        }
+        else
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            errorMessage = $"Registration failed: {error}";
+        }
+    }
+
+    public class RegisterDto
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public string PhoneNumber { get; set; }
+    }
+}

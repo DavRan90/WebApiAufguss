@@ -21,31 +21,53 @@ namespace WebApi.Controllers
             _userManager = userManager;
             _config = config;
         }
+        //[HttpPost("register")]
+        //public async Task<IActionResult> Register([FromBody] RegisterModel model)
+        //{
+        //    var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+        //    var result = await _userManager.CreateAsync(user, model.Password);
+
+        //    if (result.Succeeded)
+        //    {
+        //        return Ok();
+        //    }
+
+        //    return BadRequest(result.Errors);
+        //}
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterModel model)
+        public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
-            var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
+                return BadRequest("User with this email already exists.");
+
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                PhoneNumber = model.PhoneNumber
+            };
+
             var result = await _userManager.CreateAsync(user, model.Password);
 
-            if (result.Succeeded)
-            {
-                return Ok();
-            }
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
 
-            return BadRequest(result.Errors);
+            return Ok("User registered successfully");
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
+            Console.WriteLine(user.Email);
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
+            //if (user != null && model.Password == "!Test1234")
             {
                 var token = GenerateJwtToken(user);
                 return Ok(new { token });
             }
-
             return Unauthorized("Invalid credentials.");
         }
 

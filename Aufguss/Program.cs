@@ -1,7 +1,11 @@
+
 using CurrieTechnologies.Razor.SweetAlert2;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.JSInterop;
 
 namespace Aufguss;
 
@@ -15,8 +19,42 @@ public class Program
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
+        
+       builder.Services.AddSweetAlert2();
+
+
+        // 1. Default HttpClient (unauthenticated)
+        //builder.Services.AddHttpClient("UnauthenticatedClient", client =>
+        //{
+        //    client.BaseAddress = new Uri("https://localhost:7162");
+        //});
+
+        // 2. Authenticated HttpClient (adds JWT)
+        builder.Services.AddScoped<AuthorizationMessageHandler>();
+
+        builder.Services.AddHttpClient("AuthenticatedClient", client =>
+        {
+            client.BaseAddress = new Uri("https://localhost:7162");
+        }).AddHttpMessageHandler<AuthorizationMessageHandler>();
+
+
         builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7162") });
-        builder.Services.AddSweetAlert2();
+
+
+        //builder.Services.AddScoped<AuthorizationMessageHandler>();
+
+        //builder.Services.AddScoped(sp =>
+        //{
+        //    var handler = sp.GetRequiredService<AuthorizationMessageHandler>();
+        //    return new HttpClient(handler)
+        //    {
+        //        BaseAddress = new Uri("https://localhost:7162")
+        //    };
+        //});
+
+        builder.Services.AddAuthorizationCore();  // Required!
+        builder.Services.AddScoped<AuthenticationStateProvider, Services.CustomAuthStateProvider>();
+
 
         builder.Services.AddOidcAuthentication(options =>
         {

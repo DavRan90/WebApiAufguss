@@ -1,0 +1,61 @@
+﻿@page "/login"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthProvider
+
+<h3>Login</h3>
+
+<EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+    <InputText @bind-Value="loginModel.Email" placeholder="Email" />
+    <InputText @bind-Value="loginModel.Password" type="password" placeholder="Password" />
+    <button type="submit">Login</button>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color: red">@errorMessage</p>
+}
+
+@code {
+    private LoginModel loginModel = new();
+    private string errorMessage;
+
+    private async Task HandleLogin()
+    {
+        var response = await Http.PostAsJsonAsync("https://localhost:7162/api/auth/login", loginModel);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<AuthResponse>();
+            var token = result?.Token;
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                // Save token
+                await JS.InvokeVoidAsync("localStorage.setItem", "authToken", token);
+
+                // 2. Notify the app of login
+                ((Services.CustomAuthStateProvider)AuthProvider).NotifyUserAuthentication(result.Token);
+
+                // Optionally redirect
+                Navigation.NavigateTo("/");
+            }
+        }
+        else
+        {
+            errorMessage = "Login failed. Please check your credentials.";
+        }
+    }
+
+    public class LoginModel
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+
+    public class AuthResponse
+    {
+        public string Token { get; set; }
+    }
+}
