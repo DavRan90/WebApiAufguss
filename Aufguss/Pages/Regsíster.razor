@@ -3,14 +3,26 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
-<h3>Registrera dig</h3>
+<div class="d-flex p-5">
+    <div class="card p-4 bg-info-subtle">
+        <div class="card-body p-5">
+            <h3 class="mb-4">Registrera dig</h3>
+            <EditForm Model="registerModel" OnValidSubmit="HandleRegister">
+                <div class="mt-3">
+                    <InputText class="form-control" @bind-Value="registerModel.Email" type="email" placeholder="Email" />
+                </div>
+                <div class="mt-3">
+                    <InputText class="form-control" @bind-Value="registerModel.Password" type="password" placeholder="Lösenord" />
+                </div>
+                <div class="mt-3">
+                    <InputText class="form-control" @bind-Value="registerModel.PhoneNumber" type="tel" placeholder="Telefonnummer" />
+                </div>
+                <button class="btn btn-primary mt-3" type="submit">Spara</button>
+            </EditForm>
+        </div>
+    </div>
+</div>
 
-<EditForm Model="registerModel" OnValidSubmit="HandleRegister">
-    <InputText @bind-Value="registerModel.Email" type="email" placeholder="Email" />
-    <InputText @bind-Value="registerModel.Password" type="password" placeholder="Lösenord" />
-    <InputText @bind-Value="registerModel.PhoneNumber" type="tel" placeholder="Telefonnummer" />
-    <button type="submit">Register</button>
-</EditForm>
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {

@@ -4,13 +4,28 @@
 @inject IJSRuntime JS
 @inject AuthenticationStateProvider AuthProvider
 
-<h3>Login</h3>
+<div class="d-flex p-5">
+    <div class="card p-4 bg-info-subtle">
+        <div class="card-body p-5">
+            <h3 class="mb-4">Logga in</h3>
+            <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+                <div class="mt-3">
+                    <InputText class="form-control" @bind-Value="loginModel.Email" placeholder="Email" />
+                </div>
+                <div class="mt-3">
+                    <InputText class="form-control" @bind-Value="loginModel.Password" type="password" placeholder="Lösenord" />
+                </div>
+                <button class="btn btn-primary mt-3" type="submit">Login</button>
+            </EditForm>
+        </div>
+    </div>
+</div>
 
-<EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+@* <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
     <InputText @bind-Value="loginModel.Email" placeholder="Email" />
     <InputText @bind-Value="loginModel.Password" type="password" placeholder="Password" />
     <button type="submit">Login</button>
-</EditForm>
+</EditForm> *@
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
