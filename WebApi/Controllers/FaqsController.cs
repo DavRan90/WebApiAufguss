@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WebApi.Models;
 using WebApi.Services;
 
@@ -9,24 +10,24 @@ namespace WebApi.Controllers
     [ApiController]
     public class FaqsController : ControllerBase
     {
-        private readonly ApplicationDbContext context;
+        private readonly ApplicationDbContext _context;
 
         public FaqsController(ApplicationDbContext context)
         {
-            this.context = context;
+            this._context = context;
         }
 
         [HttpGet]
         public IActionResult GetFaqs()
         {
-            var faqs = context.Faqs.OrderBy(f => f.Position).ToList();
+            var faqs = _context.Faqs.OrderBy(f => f.Position).ToList();
             return Ok(faqs);
         }
 
         [HttpGet("{id}")]
         public IActionResult GetFaq(int id)
         {
-            var faq = context.Faqs.Find(id);
+            var faq = _context.Faqs.Find(id);
             if (faq == null)
             {
                 return NotFound();
@@ -38,7 +39,7 @@ namespace WebApi.Controllers
         [HttpPost]
         public IActionResult CreateFaq(FaqDto faqDto)
         {
-            var count = context.Faqs.Count();
+            var count = _context.Faqs.Count();
             var faq = new Faq
             {
                 Question = faqDto.Question,
@@ -48,16 +49,32 @@ namespace WebApi.Controllers
                 AddedAt = DateTime.Now
             };
 
-            context.Faqs.Add(faq);
-            context.SaveChanges();
+            _context.Faqs.Add(faq);
+            _context.SaveChanges();
 
             return Ok(faq);
+        }
+
+        [HttpPost("update-order")]
+        public async Task<IActionResult> UpdateFaqOrder([FromBody] List<FaqOrderUpdateDto> faqs)
+        {
+            foreach (var item in faqs)
+            {
+                var faq = await _context.Faqs.FindAsync(item.Id);
+                if (faq != null)
+                {
+                    faq.Position = item.Position;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok();
         }
 
         [HttpPut("{id}")]
         public IActionResult EditFaq(int id, FaqDto faqDto)
         {
-            var faq = context.Faqs.Find(id);
+            var faq = _context.Faqs.Find(id);
             if (faq == null)
             {
                 return NotFound();
@@ -68,7 +85,7 @@ namespace WebApi.Controllers
             faq.Position = faqDto.Position;
             faq.ShowQuestion = faqDto.ShowQuestion;
 
-            context.SaveChanges();
+            _context.SaveChanges();
 
             return Ok(faq);
         }
@@ -76,20 +93,20 @@ namespace WebApi.Controllers
         [HttpDelete("{id}")]
         public IActionResult DeleteFaq(int id)
         {
-            var faqToBeRemoved = context.Faqs.Find(id);
+            var faqToBeRemoved = _context.Faqs.Find(id);
             if (faqToBeRemoved == null)
             {
                 return NotFound();
             }
 
-            var faqs = context.Faqs.Where(f => f.Position > faqToBeRemoved.Position).ToList();
+            var faqs = _context.Faqs.Where(f => f.Position > faqToBeRemoved.Position).ToList();
             foreach(var faq in faqs)
             {
                 faq.Position--;
             }
 
-            context.Faqs.Remove(faqToBeRemoved);
-            context.SaveChanges();
+            _context.Faqs.Remove(faqToBeRemoved);
+            _context.SaveChanges();
 
             return Ok();
         }
