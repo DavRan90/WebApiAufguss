@@ -406,6 +406,7 @@
                         });
 
                     var response = await http.PostAsJsonAsync("api/Bookings", booking);
+
                     if (response.IsSuccessStatusCode)
                     {
                         await JS.InvokeVoidAsync("Swal.fire", "Success", "Ny gäst tillagd!", "success");
