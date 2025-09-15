@@ -1,155 +1,167 @@
 ﻿@page "/Calendar"
+@using BlazorCalendar
+@using BlazorCalendar.Models
 
 <h3>Calendar in progress</h3>
 
-@* <div class="container border border-1 rounded">
 
 
-    <div class="row p-2 mt-2">
-        <div class="col-5">
-        </div>
-        <div class="col">
-            <h3>@DateTime.Now.Date.ToString("MMMM yyyy")</h3>
-        </div>
+<CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate" >
+    <MonthlyView TaskClick="OnTaskClick" Draggable DragStart="OnDragStart" DropTask="OnDragDrop" DayClick="OnDayClick"/>
+</CalendarContainer>
 
 
-        <div class="col">
-            <h3>@CurrentDate.FirstOfTheMonthWeekdayInteger</h3>
-        </div>
-        <div class="col">
-            <h3>week</h3>
-        </div>
 
-    </div>
-
-    // Calender days
-    <div class="row p-2 border border-2 fw-bold">
-        <div class="col">
-            Måndag
-        </div>
-        <div class="col">
-            Tisdag
-        </div>
-        <div class="col">
-            Onsdag
-        </div>
-        <div class="col">
-            Torsdag
-        </div>
-        <div class="col">
-            Fredag
-        </div>
-        <div class="col">
-            Lördag
-        </div>
-        <div class="col">
-            Söndag
-        </div>
-    </div>
-
-    <div class="row ">
-    // Previous months days (in all cases where the 1st isn't on a Monday)
-    @for (int i = 1; i < CurrentDate.FirstOfTheMonthWeekdayInteger; i++)
-    {
-        <div class="col p-2 border border-2 opacity-50">
-            <div class="date m-1 text-secondary">
-                @(CurrentDate.PreviousMonthsDay++)
-            </div>
-            <div class="alert-success p-1 border border-1 rounded">
-                <href>14:00</href>
-            </div>
-
-        </div>
-    }
-
-    // The days of the current month in the first week
-    @for (int k = CurrentDate.FirstOfTheMonthWeekdayInteger; k < 8; k++)
-    {
-        <div class="col p-2 border border-2">
-            // The current day
-            @if (CurrentDate.CurrentDay == DateTime.Now.Date.Day)
-            {
-                <div class="date m-1 fw-bold">
-                    @(CurrentDate.CurrentDay++)
-                </div>
-            }
-            // Other days in the first week of current month
-            else
-            {
-                <div class="date m-1">
-                    @(CurrentDate.CurrentDay++)
-                </div>
-            }
-
-            // Add actvity here
-            <div>
-                <a href class="btn btn-success p-1 rounded text-decoration-none" style="width:100%; text-align:left">14:00</a href>
-            </div>
-
-        </div>
-    }
-</div>
-    
-// Loop for the weeks except the first
-@for(int j = 0; j < 5; j++)
-{
-    if (CurrentDate.CurrentDay <= 31)
-    {
-        <div class="row ">
-            @for (int i = 1; i < 8; i++)
-            {
-                // Write days of the current month
-                if (CurrentDate.CurrentDay <= 31)
-                {
-                    // If current date
-                    @if (new DateTime(DateTime.Now.Year, DateTime.Now.Month, CurrentDate.CurrentDay) == DateTime.Now)
-                    {
-                        <div class="col p-2 " style="background-color:lightblue; border:groove; border-radius:5px; border-color:black">
-                            <div class="date m-1 fw-bold">
-                                @(CurrentDate.CurrentDay++)
-                            </div>
-                            <div class="alert-success p-1 border border-1 rounded">
-                                <href>14:00</href>
-                            </div>
-                        </div>
-                    }
-                    // If not current day
-                    else
-                    {
-                            <div class="col p-2 border border-2">
-                            <div class="date m-1">
-                                @(CurrentDate.CurrentDay++)
-                            </div>
-                            <div class="alert-success p-1 border border-1 rounded">
-                                <href>14:00</href>
-                            </div>
-                        </div>
-                    }
-
-                }
-                // If current month is over but next month fills remaining fields
-                else
-                {
-                    <div class="col p-2 border border-2 opacity-50">
-                        <div class="date m-1 text-secondary">
-                            @(CurrentDate.NextMonth++)
-                        </div>
-                        <div class="alert-success p-1 border border-1 rounded">
-                            <href>14:00</href>
-                        </div>
-
-                    </div>
-                }
-            }
-        </div>
-    }  
-}
-    
-    
-</div> *@
-
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavManager
+@inject SweetAlertService Swal
 
 @code {
-    public int StartDay { get; set; } = 1;
-    public Date? CurrentDate { get; set; }
+    private DateTime FirstDate = DateTime.Today;  // or whatever month you want to start
+
+    private List<Event>? evts;
+
+    private BlazorCalendar.Models.Tasks[]? ModelTasks;
+
+    protected override async Task OnInitializedAsync()
+    {
+        evts = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        ModelTasks = new BlazorCalendar.Models.Tasks[evts.Count];
+
+        for (int i = 0; i < evts.Count; i++)
+        {
+            var evt = evts[i];
+
+            // Map your Event to a Task
+            ModelTasks[i] = new BlazorCalendar.Models.Tasks
+                {
+                    ID = evt.Id,
+                    Caption = evt.Title,         // Assuming you have a Title property
+                    DateStart = evt.Start,   // Assuming your Event has StartDate
+                    DateEnd = evt.Start,
+                    Color = evt.Gender switch
+                    {
+                        Gender.Man => "lightblue",
+                        Gender.Woman => "lightpink",
+                        _ => "gray" // fallback if new enum values are added
+                    },
+                    Comment = evt.Description    // Optional
+                };
+        }
+    }
+
+    private async Task OnTaskClick(ClickTaskParameter clickInfo)
+    {
+        var task = clickInfo.IDList;
+        // Example: Navigate to a details page using the task ID
+        NavManager.NavigateTo($"/Bookings/Book/{task[0]}");
+    }
+
+    private Task OnDragStart(DragDropParameter dragStartInfo)
+    {
+        // Capture the ID of the dragged task (first one if multiple)
+        if (dragStartInfo.taskID != 0)
+        {
+            Console.WriteLine($"Drag started for task ID: {dragStartInfo.taskID}");
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task OnDragDrop(DragDropParameter dropInfo)
+    {
+        if (dropInfo.taskID != 0 && ModelTasks is not null && evts is not null)
+        {
+            // Update the calendar task visually
+            var task = ModelTasks.FirstOrDefault(t => t.ID == dropInfo.taskID);
+            if (task != null)
+            {
+                task.DateStart = dropInfo.Day;
+                task.DateEnd = dropInfo.Day;
+            }
+
+            // Find the corresponding event object (used for the API)
+            var evt = evts.FirstOrDefault(e => e.Id == dropInfo.taskID);
+            if (evt != null)
+            {
+                evt.Start = dropInfo.Day;
+
+                try
+                {
+                    var response = await Http.PutAsJsonAsync($"api/Events/{evt.Id}", evt);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"Failed to update event {evt.Id}: {response.StatusCode}");
+                        // Optional: revert task if you want to undo on failure
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Event {evt.Id} updated successfully.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error updating event: {ex.Message}");
+                }
+            }
+
+            await InvokeAsync(StateHasChanged); // Refresh UI
+        }
+    }
+
+    private async Task OnDayClick(ClickEmptyDayParameter clickedDate)
+    {
+        
+        // Ask for a title (you could use a modal here too)
+        var title = await JSRuntime.InvokeAsync<string>("prompt", $"Enter title for event on {clickedDate.Day:yyyy-MM-dd}");
+
+        if (!string.IsNullOrWhiteSpace(title))
+        {
+            // Create the Event object
+            var newEvent = new Event
+                {
+                    Title = title,
+                    Start = clickedDate.Day,
+                    Gender = Gender.Man, // Or let the user pick this
+                    Description = ""
+                };
+
+            // Post to your backend API
+            var response = await Http.PostAsJsonAsync("api/Events", newEvent);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var createdEvent = await response.Content.ReadFromJsonAsync<Event>();
+
+                // Add to evts
+                evts?.Add(createdEvent!);
+
+                // Add to ModelTasks so it shows up in the calendar
+                var newTask = new Tasks
+                    {
+                        ID = createdEvent!.Id,
+                        Caption = createdEvent.Title,
+                        DateStart = createdEvent.Start,
+                        DateEnd = createdEvent.Start,
+                        Color = createdEvent.Gender switch
+                        {
+                            Gender.Man => "lightblue",
+                            Gender.Woman => "lightpink",
+                            _ => "gray"
+                        },
+                        Comment = createdEvent.Description
+                    };
+
+                // Add to calendar tasks and refresh
+                ModelTasks = ModelTasks?.Append(newTask).ToArray();
+                await InvokeAsync(StateHasChanged);
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Failed to create event.");
+            }
+        }
+    }
 }

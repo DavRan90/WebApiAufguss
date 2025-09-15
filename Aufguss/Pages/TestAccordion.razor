@@ -13,9 +13,9 @@ else
     <div id="faqAccordion" class="accordion">
         @foreach (var faq in faqs)
         {
-            <div class="accordion-item mb-2" data-id="@faq.Id">
+            <div class="accordion-item mb-2 rounded" data-id="@faq.Id">
                 <div class="accordion-header d-flex align-items-center" style="user-select:none;">
-                    <div class="drag-handle me-2"
+                    <div class="drag-handle me-2 bg-info-subtle rounded p-3"
                          style="cursor: grab; padding: 0 8px;"
                     @onclick:stopPropagation
                     @onmousedown:stopPropagation>

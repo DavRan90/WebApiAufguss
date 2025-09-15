@@ -1,4 +1,4 @@
-
+using System.Globalization;
 using CurrieTechnologies.Razor.SweetAlert2;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -13,6 +13,9 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
+        var culture = new CultureInfo("sv-SE"); // Swedish, Monday is first day
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
 
         var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -51,6 +54,8 @@ public class Program
         //        BaseAddress = new Uri("https://localhost:7162")
         //    };
         //});
+
+        
 
         builder.Services.AddAuthorizationCore();  // Required!
         builder.Services.AddScoped<AuthenticationStateProvider, Services.CustomAuthStateProvider>();
