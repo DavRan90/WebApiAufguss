@@ -1,4 +1,6 @@
-﻿namespace Aufguss
+﻿using System.Text.Json.Serialization;
+
+namespace Aufguss
 {
     public class Event
     {

@@ -104,34 +104,52 @@ function showBookingForm(eventId) {
     });
 }
 function showCreateEventAlert(event) {
+    const startDate = new Date(event.start);
+    const dateString = startDate.toISOString().split('T')[0]; // yyyy-mm-dd
+    const timeString = startDate.toTimeString().slice(0, 5);   // HH:mm
+
     return Swal.fire({
         title: 'Lägg till pass',
         html:
             `<input id="swal-title" class="swal2-input" value="${event.title || ''}" placeholder="Titel">` +
+            `<select id="swal-gender" class="swal2-input">
+            <option value="Man" ${event.gender === 'Man' ? 'selected' : ''}>Herrar</option>
+            <option value="Woman" ${event.gender === 'Woman' ? 'selected' : ''}>Damer</option>
+            </select>` +
+            `<input id="swal-date" class="swal2-input" value="${dateString}" readonly style="background-color: #f8f9fa; cursor: not-allowed;">` +
+            `<input id="swal-time" type="time" class="swal2-input" value="${timeString}">` +
             `<textarea style="height: 200px; padding-top: 0.5em" id="swal-description" class="swal2-input" placeholder="Beskrivning">${event.description || ''}</textarea>` +
-            `<input id="swal-maxSlots" type= "number" class="swal2-input" value="${event.maxSlots || ''}">` +
-            `<div style="margin-top: 1rem; text-align: left;">` +
+            `<input id="swal-maxSlots" type="number" class="swal2-input" value="${event.maxSlots || ''}">` +
+            `<div style="margin-top: 1rem; text-align: center;">` +
             `<label><input type="checkbox" id="swal-hidden" ${event.hidden ? 'checked' : ''}> Dold</label>` +
             `</div>`,
         focusConfirm: false,
         showCancelButton: true,
-        confirmButtonText: 'Submit',
+        confirmButtonText: 'Skapa',
         preConfirm: () => {
             const title = document.getElementById('swal-title').value;
             const description = document.getElementById('swal-description').value;
+            const date = document.getElementById('swal-date').value;
+            const time = document.getElementById('swal-time').value;
             const maxSlots = parseInt(document.getElementById('swal-maxSlots').value, 10);
             const hidden = document.getElementById('swal-hidden').checked;
+            const gender = document.getElementById('swal-gender').value;
 
-            if (!title || !description || isNaN(maxSlots)) {
+            if (!title || !description || !date || !time || isNaN(maxSlots)) {
                 Swal.showValidationMessage('Alla fält behöver fyllas i korrekt');
                 return false;
             }
 
+            // Combine date and time into ISO format (e.g. 2025-09-15T14:00:00)
+            const start = `${date}T${time}:00`;
+
             return JSON.stringify({
                 title: title,
                 description: description,
+                start: start,
                 maxSlots: maxSlots,
-                hidden: hidden
+                hidden: hidden,
+                gender: gender
             });
         }
     }).then(result => {
@@ -139,7 +157,6 @@ function showCreateEventAlert(event) {
             return result.value;
         }
         return null;
-
     });
 }
 

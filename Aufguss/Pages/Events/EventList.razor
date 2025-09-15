@@ -2,6 +2,10 @@
 @attribute [Authorize]
 @using System.Globalization
 @using System.Text.Json.Nodes
+@using BlazorCalendar
+@using BlazorCalendar.Models
+@using System.Text.Json
+@using System.Text.Json.Serialization
 
 
 
@@ -13,89 +17,283 @@
 <p></p>
 
 
-@if (events == null)
+@if (evts == null)
 {
     <p><em>Laddar...</em></p>
 }
 else
 {
-    <a class="btn btn-primary mb-3 me-2" href="/Events/Create">Skapa ny bokning</a>
+    if(!Value)
+    {
+        <a class="btn btn-primary mb-3 me-2" href="/Events/Create">Skapa ny bokning</a>
 
-    <table class="table mb-5">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Kön</th>
-                <th>Titel</th>
-                <th>Beskrivning</th>
-
-                <th>Platser</th>
-                <th>Datum</th>
-                <th>Återkommande</th>
-                <th>Dold</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var evt in events)
-            {
+        <table class="table mb-5">
+            <thead>
                 <tr>
-                    <td>@evt.Id</td>
-                    <td>
-                        @if(evt.Gender == 0)
-                        {
-                            <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
-                        }
-                        else
-                        {
-                            <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
-                        }
-                    </td>
-                    <td>@evt.Title</td>
-                    <td>@evt.Description</td>
-                    <td>@evt.MaxSlots</td>
-                    <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
-                    <td>
-                        @if (evt.Recurring)
-                        {
-                            <span class="badge rounded-pill text-bg-success p-2">Ja</span>
-                        }
-                        else
-                        {
-                            <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
-                        }
-                    </td>
-                    <td>
-                        @if (evt.Hidden)
-                        {
-                            @* <a class="badge rounded-pill text-bg-success p-2" @onclick="SaveEvent(evt.Id)>Ja</a> *@
-                            @* <button class="btn btn-primary" @onclick="SaveEvent()">Ja</button> *@
-                            <button class="border border-0 badge rounded-pill text-bg-success p-2" @onclick="async () => await SaveEvent(evt.Id)">Ja</button>
-                        }
-                        else
-                        {
-                            <button class="border border-0 badge rounded-pill text-bg-warning p-2" @onclick="async () => await SaveEvent(evt.Id)">Nej</button>
-                        }
-                    </td>
-                    <td style="white-space:nowrap; width:10px">
-                        <a class="btn btn-primary btn-sm" href="/Events/Edit/@evt.Id">
-                            Ändra
-                        </a>
-                        <button class="btn btn-danger btn-sm" @onclick="async () => await ShowAlert(evt.Id)">
-                            Ta bort
-                        </button>
-                    </td>
+                    <th>ID</th>
+                    <th>Kön</th>
+                    <th>Titel</th>
+                    <th>Beskrivning</th>
+
+                    <th>Platser</th>
+                    <th>Datum</th>
+                    <th>Återkommande</th>
+                    <th>Dold</th>
+                    <th></th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var evt in evts)
+                {
+                    <tr>
+                        <td>@evt.Id</td>
+                        <td>
+                            @if (evt.Gender == 0)
+                            {
+                                <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
+                            }
+                            else
+                            {
+                                <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
+                            }
+                        </td>
+                        <td>@evt.Title</td>
+                        <td>@evt.Description</td>
+                        <td>@evt.MaxSlots</td>
+                        <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                        <td>
+                            @if (evt.Recurring)
+                            {
+                                <span class="badge rounded-pill text-bg-success p-2">Ja</span>
+                            }
+                            else
+                            {
+                                <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
+                            }
+                        </td>
+                        <td>
+                            @if (evt.Hidden)
+                            {
+                                @* <a class="badge rounded-pill text-bg-success p-2" @onclick="SaveEvent(evt.Id)>Ja</a> *@
+                                @* <button class="btn btn-primary" @onclick="SaveEvent()">Ja</button> *@
+                                <button class="border border-0 badge rounded-pill text-bg-success p-2" @onclick="async () => await SaveEvent(evt.Id)">Ja</button>
+                            }
+                            else
+                            {
+                                <button class="border border-0 badge rounded-pill text-bg-warning p-2" @onclick="async () => await SaveEvent(evt.Id)">Nej</button>
+                            }
+                        </td>
+                        <td style="white-space:nowrap; width:10px">
+                            <a class="btn btn-primary btn-sm" href="/Events/Edit/@evt.Id">
+                                Ändra
+                            </a>
+                            <button class="btn btn-danger btn-sm" @onclick="async () => await ShowAlert(evt.Id)">
+                                Ta bort
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate">
+            <MonthlyView TaskClick="OnTaskClick" Draggable DragStart="OnDragStart" DropTask="OnDragDrop" DayClick="OnDayClick" />
+        </CalendarContainer>
+    }
 }
 
 @inject SweetAlertService Swal
-@inject NavigationManager navManager
-@inject HttpClient http
+@inject NavigationManager NavManager
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
 
 @code {
+
+    // Calendar
+    private DateTime FirstDate = DateTime.Today;  // or whatever month you want to start
+
+    private List<Event>? evts;
+
+    private BlazorCalendar.Models.Tasks[]? ModelTasks;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEventsAsync();
+    }
+
+    private async Task LoadEventsAsync()
+    {
+        evts = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+
+        ModelTasks = evts.Select(evt => new BlazorCalendar.Models.Tasks
+            {
+                ID = evt.Id,
+            // Caption = evt.Title,
+                // Caption = evt.Hidden switch
+                // {
+                //     true => "[Dold]" + evt.Title,
+                //     false => evt.Title
+                // },
+                Caption = (evt.Gender, evt.Hidden) switch
+                {
+                    (Gender.Man, false) => "[Herrar] Aufguss \n[" + evt.MaxSlots + "platser kvar]",
+                    (Gender.Woman, false) => "[Damer] Aufguss " + evt.MaxSlots,
+                    (Gender.Man, true) => "[Herrar] Aufguss " + "[Dold]",     // darker blue for hidden Man
+                    (Gender.Woman, true) => "[Damer] Aufguss " + "[Dold]",   // darker pink for hidden Woman
+                    _ => "lightgray"
+                },
+                DateStart = evt.Start,
+                DateEnd = evt.Start,
+                Color = (evt.Gender, evt.Hidden) switch
+                {
+                    (Gender.Man, false) => "#7aa7c7",
+                    (Gender.Woman, false) => "#d58db5",
+                    (Gender.Man, true) => "#e3f2fd",     // darker blue for hidden Man
+                    (Gender.Woman, true) => "#fce4ec",   // darker pink for hidden Woman
+                    _ => "lightgray"
+                },
+                Comment = evt.Description
+            }).ToArray();
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnTaskClick(ClickTaskParameter clickInfo)
+    {
+        var task = clickInfo.IDList;
+        // Example: Navigate to a details page using the task ID
+        NavManager.NavigateTo($"/Events/Edit/{task[0]}");
+    }
+
+    private Task OnDragStart(DragDropParameter dragStartInfo)
+    {
+        // Capture the ID of the dragged task (first one if multiple)
+        if (dragStartInfo.taskID != 0)
+        {
+            Console.WriteLine($"Drag started for task ID: {dragStartInfo.taskID}");
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task OnDragDrop(DragDropParameter dropInfo)
+    {
+        if (dropInfo.taskID != 0 && ModelTasks is not null && evts is not null)
+        {
+            // Update the calendar task visually
+            var task = ModelTasks.FirstOrDefault(t => t.ID == dropInfo.taskID);
+            if (task != null)
+            {
+                task.DateStart = dropInfo.Day.Date + task.DateStart.TimeOfDay;
+                task.DateEnd = dropInfo.Day.Date + task.DateEnd.TimeOfDay;
+            }
+
+            // Find the corresponding event object (used for the API)
+            var evt = evts.FirstOrDefault(e => e.Id == dropInfo.taskID);
+            if (evt != null)
+            {
+                evt.Start = dropInfo.Day.Date + evt.Start.TimeOfDay;
+
+                try
+                {
+                    var response = await Http.PutAsJsonAsync($"api/Events/{evt.Id}", evt);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"Failed to update event {evt.Id}: {response.StatusCode}");
+                        // Optional: revert task if you want to undo on failure
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Event {evt.Id} updated successfully.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error updating event: {ex.Message}");
+                }
+            }
+
+            await InvokeAsync(StateHasChanged); // Refresh UI
+        }
+    }
+
+    private async Task OnDayClick(ClickEmptyDayParameter clickedDate)
+    {
+        var eventDto = new EventDto();
+        eventDto.Start = clickedDate.Day.AddDays(1);
+        string json = await JSRuntime.InvokeAsync<string>("showCreateEventAlert", eventDto);
+        //string json = await JSRuntime.InvokeAsync<string>("showEventForm");
+
+        if (!string.IsNullOrEmpty(json))
+        {
+            try
+            {
+                var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+
+                options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)); // OR use `null` for PascalCase
+
+                var newEvent = JsonSerializer.Deserialize<EventDto>(json, options);
+                var response = await Http.PostAsJsonAsync("api/Events", newEvent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    await JSRuntime.InvokeVoidAsync("Swal.fire", "Success", "Nytt pass tillagt!", "success");
+                    var createdEvent = await response.Content.ReadFromJsonAsync<Event>();
+
+                    // Add to evts
+                    evts?.Add(createdEvent!);
+
+                    // Add to ModelTasks so it shows up in the calendar
+                    var newTask = new Tasks
+                        {
+                            ID = createdEvent.Id,
+                            Caption = (createdEvent.Gender, createdEvent.Hidden) switch
+                            {
+                                (Gender.Man, false) => "[Herrar] " + createdEvent.Title,
+                                (Gender.Woman, false) => "[Damer] " + createdEvent.Title,
+                                (Gender.Man, true) => "[Herrar] " + createdEvent.Title + " [Dold]",
+                                (Gender.Woman, true) => "[Damer] " + createdEvent.Title + " [Dold]",
+                                _ => "lightgray"
+                            },
+                            DateStart = createdEvent.Start,
+                            DateEnd = createdEvent.Start,
+                            Color = (createdEvent.Gender, createdEvent.Hidden) switch
+                            {
+                                (Gender.Man, false) => "#7aa7c7",
+                                (Gender.Woman, false) => "#d58db5",
+                                (Gender.Man, true) => "#e3f2fd",     // lighter blue for hidden Man
+                                (Gender.Woman, true) => "#fce4ec",   // lighter pink for hidden Woman
+                                _ => "lightgray"
+                            },
+
+                            Comment = createdEvent.Description
+                        };
+
+                    // Add to calendar tasks and refresh
+                    ModelTasks = ModelTasks?.Append(newTask).ToArray();
+                    await InvokeAsync(StateHasChanged);
+                }
+                else
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Failed to create event.");
+                }
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"Error deserializing booking: {ex.Message}");
+            }
+        }
+    }
+
+
+
+
     public JsonNode Errors { get; set; } = new JsonObject();
 
     [Parameter]
@@ -109,24 +307,22 @@ else
         set
         {
             if(_value != value)
+            {
                 _value = value;
+            }
             ValueChanged.InvokeAsync(_value);
         }
     }
 
     public int StartDay { get; set; } = 1;
 
-    private List<Event>? events;
 
-    protected override async Task OnInitializedAsync()
-    {
-        events = await http.GetFromJsonAsync<List<Event>>("api/Events");
-    }
 
     private async Task DeleteEvent(int id)
     {
-        await http.DeleteAsync("api/Events/" + id);
-        events = await http.GetFromJsonAsync<List<Event>>("api/Events");
+        await Http.DeleteAsync("api/Events/" + id);
+        evts = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        await LoadEventsAsync();
     }
 
     private async Task ShowAlert(int id)
@@ -147,7 +343,7 @@ else
 
     private async Task SaveEvent(int id)
     {
-        var evt = events.Where(e => e.Id == id).SingleOrDefault();
+        var evt = evts.Where(e => e.Id == id).SingleOrDefault();
         if(evt.Hidden == false)
         {
             evt.Hidden = true;
@@ -157,11 +353,12 @@ else
             evt.Hidden = false;
         }
 
-        var response = await http.PutAsJsonAsync("api/Events/" + id, evt);
+        var response = await Http.PutAsJsonAsync("api/Events/" + id, evt);
+
 
         if (response.IsSuccessStatusCode)
         {
-            navManager.NavigateTo("/Events");
+            await LoadEventsAsync();
         }
 
         else

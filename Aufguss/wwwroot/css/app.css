@@ -5,6 +5,11 @@
     box-sizing: border-box;
     font-weight: bolder !important;
 }
+.monthly-task {
+    min-height: 45px;
+    padding: 2px 6px;
+    white-space: pre-line; /* respects \n line breaks */
+}
 .drag-handle {
     cursor: grab;
     user-select: none;
