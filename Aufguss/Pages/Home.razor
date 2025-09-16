@@ -20,8 +20,10 @@ else
             <img class="card-img-top" src="@String.Concat(@fileLocation + @entry.Image)" />
             <div class="card-body">
                 <p class="card-text linebreak">@entry.Description</p>
-
-                    
+                @if(entry.Url != "")
+                {
+                    <button class="btn btn-primary" @onclick="async () => await BookEvent(entry.Url)">Boka</button>
+                }
                 <button class="btn btn-danger" @onclick="async () => await DeleteEntry(entry.Id)">Ta bort</button>
                 
             </div>
@@ -33,6 +35,7 @@ else
 
 
 @inject HttpClient http
+@inject NavigationManager NavManager
 
 @code {
     private List<Entry>? entries;
@@ -65,5 +68,10 @@ else
     {
         await http.DeleteAsync("api/Entries/" + id);
         entries = await http.GetFromJsonAsync<List<Entry>>("api/Entries");
+    }
+
+    private async Task BookEvent(string id)
+    {
+        NavManager.NavigateTo($"/Bookings/Book/{id}");
     }
 }

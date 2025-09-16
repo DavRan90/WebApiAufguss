@@ -8,7 +8,7 @@
 
 
 <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate" >
-    <MonthlyView TaskClick="OnTaskClick" Draggable DragStart="OnDragStart" DropTask="OnDragDrop" DayClick="OnDayClick"/>
+    <MonthlyView TaskClick="OnTaskClick"/>
 </CalendarContainer>
 
 
@@ -27,7 +27,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        evts = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        var allEvents = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        evts = allEvents.Where(e => e.Hidden == false).ToList();
         ModelTasks = new BlazorCalendar.Models.Tasks[evts.Count];
 
         for (int i = 0; i < evts.Count; i++)

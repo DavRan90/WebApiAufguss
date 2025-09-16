@@ -56,6 +56,22 @@
                     <input class="form-check-input" type="checkbox" id="gridCheck1" @bind="EventDtoData.Recurring">
                     <label class="form-check-label" for="gridCheck1">
                         Återkommande
+                        <span class="ms-1" data-bs-toggle="tooltip" title="Om återkommande pass önskas">
+                            <i class="bi bi-info-circle text-secondary"></i>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-8 offset-md-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="gridCheck2" @bind="EventDtoData.Hidden">
+                    <label class="form-check-label" for="gridCheck2">
+                        Dold
+                        <span class="ms-1" data-bs-toggle="tooltip" title="Detta pass, om dolt, syns inte bland gästernas pass">
+                            <i class="bi bi-info-circle text-secondary"></i>
+                        </span>
                     </label>
                 </div>
             </div>
@@ -64,9 +80,12 @@
         <div class="row mb-3">
             <div class="col-md-8 offset-md-4">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="gridCheck1" @bind="EventDtoData.Hidden">
-                    <label class="form-check-label" for="gridCheck1">
-                        Dold
+                    <input class="form-check-input" type="checkbox" id="gridCheck3" @bind="createNews">
+                    <label class="form-check-label" for="gridCheck3">
+                        Skapa nyhet
+                        <span class="ms-1" data-bs-toggle="tooltip" title="Skapar en nyhet om detta pass på startsidan">
+                            <i class="bi bi-info-circle text-secondary"></i>
+                        </span>
                     </label>
                 </div>
             </div>
@@ -74,7 +93,7 @@
 
         <div class="row">
             <div class="offset-md-4 col-md-4 d-grid">
-                <button class="btn btn-primary" @onclick="SaveEvent">Spara</button>
+                <button class="btn btn-primary" @onclick="SaveEvent">Skapa</button>
             </div>
             <div class="col-md-4 d-grid">
                 <a class="btn btn-outline-primary" href="/Events">Avbryt</a>
@@ -89,6 +108,7 @@
 @code {
     public EventDto EventDtoData { get; set; } = new();
     public JsonNode Errors { get; set; } = new JsonObject();
+    public bool createNews = false;
 
     private string selectedGender = "Male"; // Default selection
 
@@ -96,8 +116,45 @@
     {
         var response = await http.PostAsJsonAsync("api/Events", EventDtoData);
 
-        if(response.IsSuccessStatusCode)
+        if (response.IsSuccessStatusCode)
         {
+            var createdEvent = await response.Content.ReadFromJsonAsync<Event>();
+            if (createdEvent.Hidden == false && createNews == true)
+            {
+                var entry = new EntryDto
+                    {
+                        Title = createdEvent.Title,
+                        Description = createdEvent.Start.ToString("dd-MM-yyyy | HH:mm\n\n") + createdEvent.Description,
+                        Url = createdEvent.Id.ToString(),
+                        Image = "aufguss 2.jpg"
+                    };
+                var response2 = await http.PostAsJsonAsync("api/Entries", entry);
+
+                if (response2.IsSuccessStatusCode)
+                {
+
+                    navManager.NavigateTo("/");
+                }
+
+                else
+                {
+                    var strResponse = await response2.Content.ReadAsStringAsync();
+                    Console.WriteLine("Json Response: \n" + strResponse);
+
+                    try
+                    {
+                        var jsonResponse = JsonNode.Parse(strResponse);
+                        Errors = jsonResponse?["errors"] ?? new JsonObject();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Exception: " + ex.Message);
+                    }
+                }
+            }
+
+
+
             navManager.NavigateTo("/Events");
         }
 
@@ -111,9 +168,9 @@
                 var jsonResponse = JsonNode.Parse(strResponse);
                 Errors = jsonResponse?["errors"] ?? new JsonObject();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                
+                Console.WriteLine("Exception: " + ex.Message);
             }
         }
     }

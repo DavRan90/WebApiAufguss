@@ -29,11 +29,23 @@
         </div>
 
         <div class="row mb-3">
-            <label class="col-md-4 col-form-label">Länk</label>
+            <label class="col-md-4 col-form-label">Länka till pass</label>
+            <div class="col-md-8">
+                <InputSelect class="form-control" @bind-Value="EntryDtoData.Url">
+                    <option value="">-- Välj ett pass --</option>
+                    @foreach (var evt in Events)
+                    {
+                        <option value="@evt.Id">@evt.Title (@evt.Start.ToString("dd/MM-yyyy | HH:mm"))</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+        @* <div class="row mb-3">
+            <label class="col-md-4 col-form-label">Länka till pass</label>
             <div class="col-md-8">
                 <input class="form-control" @bind="EntryDtoData.Url">
             </div>
-        </div>
+        </div> *@
 
         <div class="row">
             <div class="offset-md-4 col-md-4 d-grid">
@@ -53,11 +65,14 @@
     public EntryDto EntryDtoData { get; set; } = new();
     public JsonNode Errors { get; set; } = new JsonObject();
 
+    private List<Event>? Events = new();
     private List<Entry>? entries;
 
     protected override async Task OnInitializedAsync()
     {
         entries = await http.GetFromJsonAsync<List<Entry>>("api/Entries");
+        Events = await http.GetFromJsonAsync<List<Event>>("api/Events");
+        Events = Events.Where(e => e.Start > DateTime.Now && e.Hidden == false).ToList();
     }
 
     private string statusMessage = "";
@@ -127,7 +142,7 @@
             }
             catch (Exception ex)
             {
-
+                Console.WriteLine("Exception: " + ex.Message);
             }
         }
     }

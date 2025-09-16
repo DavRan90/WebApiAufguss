@@ -115,6 +115,7 @@ else
     private DateTime FirstDate = DateTime.Today;  // or whatever month you want to start
 
     private List<Event>? evts;
+    private List<Booking>? bookings;
 
     private BlazorCalendar.Models.Tasks[]? ModelTasks;
 
@@ -126,6 +127,7 @@ else
     private async Task LoadEventsAsync()
     {
         evts = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
 
         ModelTasks = evts.Select(evt => new BlazorCalendar.Models.Tasks
             {
@@ -140,8 +142,8 @@ else
                 {
                     (Gender.Man, false) => "[Herrar] Aufguss \n[" + evt.MaxSlots + "platser kvar]",
                     (Gender.Woman, false) => "[Damer] Aufguss " + evt.MaxSlots,
-                    (Gender.Man, true) => "[Herrar] Aufguss " + "[Dold]",     // darker blue for hidden Man
-                    (Gender.Woman, true) => "[Damer] Aufguss " + "[Dold]",   // darker pink for hidden Woman
+                    (Gender.Man, true) => "[Herrar] Aufguss " + "[Dold]",
+                    (Gender.Woman, true) => "[Damer] Aufguss " + "[Dold]",
                     _ => "lightgray"
                 },
                 DateStart = evt.Start,
@@ -150,8 +152,8 @@ else
                 {
                     (Gender.Man, false) => "#7aa7c7",
                     (Gender.Woman, false) => "#d58db5",
-                    (Gender.Man, true) => "#e3f2fd",     // darker blue for hidden Man
-                    (Gender.Woman, true) => "#fce4ec",   // darker pink for hidden Woman
+                    (Gender.Man, true) => "#e3f2fd",     // lighter blue for hidden Man
+                    (Gender.Woman, true) => "#fce4ec",   // lighter pink for hidden Woman
                     _ => "lightgray"
                 },
                 Comment = evt.Description
@@ -344,7 +346,7 @@ else
     private async Task SaveEvent(int id)
     {
         var evt = evts.Where(e => e.Id == id).SingleOrDefault();
-        if(evt.Hidden == false)
+        if (evt.Hidden == false && bookings.Where(b => b.EventId == evt.Id).ToList().Count < 1)
         {
             evt.Hidden = true;
         }
@@ -373,7 +375,7 @@ else
             }
             catch (Exception ex)
             {
-
+                Console.WriteLine("Exception: " + ex.Message);
             }
         }
     }
