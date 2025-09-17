@@ -12,14 +12,14 @@ else
     <table class="table mb-5">
         <thead>
             <tr>
-                <th>ID</th>
+                @* <th>ID</th> *@
                 <th>Kön</th>
                 <th>Titel</th>
-                <th>Beskrivning</th>
+                @* <th>Beskrivning</th> *@
 
-                <th>Platser</th>
+                <th>Platser kvar</th>
                 <th>Datum</th>
-                <th>Återkommande</th>
+                @* <th>Återkommande</th> *@
                 <th></th>
             </tr>
         </thead>
@@ -29,7 +29,7 @@ else
                 if(evt.Hidden == false)
                 {
                     <tr>
-                        <td>@evt.Id</td>
+                        @* <td>@evt.Id</td> *@
                         <td>
                             @if (evt.Gender == 0)
                             {
@@ -41,10 +41,23 @@ else
                             }
                         </td>
                         <td>@evt.Title</td>
-                        <td>@evt.Description</td>
-                        <td>@evt.MaxSlots</td>
-                        <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                        @* <td>@evt.Description</td> *@
                         <td>
+                            @if (@SpotsRemaining(evt.Id) == 0)
+                            {
+                                <span class="badge rounded-pill text-bg-danger p-2">@SpotsRemaining(evt.Id)</span>
+                            }
+                            else if (@SpotsRemaining(evt.Id) > 0 && @SpotsRemaining(evt.Id) < 3)
+                            {
+                                <span class="badge rounded-pill text-bg-warning p-2">@SpotsRemaining(evt.Id)</span>
+                            }
+                            else
+                            {
+                                <span class="badge rounded-pill text-bg-success p-2">@SpotsRemaining(evt.Id)</span>
+                            }
+                            </td>
+                        <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                        @* <td>
                             @if (evt.Recurring)
                             {
                                 <span class="badge rounded-pill text-bg-success p-2">Ja</span>
@@ -53,7 +66,7 @@ else
                             {
                                 <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
                             }
-                        </td>
+                        </td> *@
                         <td style="white-space:nowrap; width:10px">
                             <a class="btn btn-primary btn-sm" href="/Bookings/Book/@evt.Id">
                                 Boka
@@ -61,7 +74,7 @@ else
                         </td>
                     </tr>
                 }
-                
+
             }
         </tbody>
     </table>
@@ -72,9 +85,30 @@ else
 
 @code {
     private List<Event>? events;
+    private List<Booking>? bookings;
+    // public List<Event>? events { get; set; }
+    public int spotsLeft = 0;
 
     protected override async Task OnInitializedAsync()
     {
         events = await http.GetFromJsonAsync<List<Event>>("api/Events");
+        bookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings");
+    }
+
+    public int SpotsRemaining(int evtId)
+    {
+        if (events == null || bookings == null)
+            return 0;
+
+        var evt = events.SingleOrDefault(e => e.Id == evtId);
+        if (evt == null)
+            return 0;
+
+        var count = bookings.Count(b =>
+            b.EventId == evt.Id &&
+            b.Unbooked == false &&
+            b.Reserve == false);
+
+        return evt.MaxSlots - count;
     }
 }

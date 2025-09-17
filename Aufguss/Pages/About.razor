@@ -20,10 +20,14 @@
 
     Information om datum kommer att anslås på anslagstavlan vid skohyllorna!
 
-    Platserna är begränsade. För anmälan ringer du till Freja Bad & Gym på telefon 0158 - 275 271 eller säger till i kassan när du gör ett besök hos oss. Medtag egen vattenflaska och drick ordentligt både innan, under tiden och efteråt då du svettas ut mycket vätska. Aufguss ingår i priset för bad och kort.
+    Medtag egen vattenflaska och drick ordentligt både innan, under tiden och efteråt då du svettas ut mycket vätska. Aufguss ingår i priset för bad och kort.
 </p>
 
-<h3 class="m-3">FAQ</h3>
+<br />
+<br />
+<br />
+
+<h3 class="m-3">Frågor och svar</h3>
 
 @if(faqs == null)
 {
@@ -32,24 +36,41 @@
 
 else
 {
-    <div class="accordion" id="accordionExample">
-    @foreach(var faq in faqs)
-    {
-            <div class="accordion-item w-50">
-                <h2 class="accordion-header" id="heading+@count">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse+@count" aria-expanded="true" aria-controls="collapse+@count">
-                        @faq.Question
-                    </button>
-                </h2>
-                <div id="collapse+@count" class="accordion-collapse collapse" aria-labelledby="heading+@count" data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                        - @faq.Answer
+    <div id="faqAccordion" class="accordion">
+        @foreach (var faq in faqs)
+        {
+            <div class="d-flex flex-column flex-md-row align-items-stretch mb-3 w-100">
+
+                <!-- Accordion Item -->
+                <div class="accordion-item flex-grow-1 rounded" data-id="@faq.Id">
+                    <div class="accordion-header d-flex align-items-center" style="user-select:none;">
+                        <div class="drag-handle me-2 bg-info-subtle rounded p-3"
+                             style="cursor: grab; padding: 0 8px;"
+                             @onclick:stopPropagation
+                             @onmousedown:stopPropagation>
+                            ☰
+                        </div>
+                        <button class="accordion-button collapsed flex-grow-1"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#collapse-@faq.Id"
+                                aria-expanded="false"
+                                aria-controls="collapse-@faq.Id">
+                            @faq.Question
+                        </button>
+                    </div>
+
+                    <div id="collapse-@faq.Id"
+                         class="accordion-collapse collapse"
+                         aria-labelledby="heading-@faq.Id"
+                         data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            @faq.Answer
+                        </div>
                     </div>
                 </div>
             </div>
-        
-        count++;
-    }
+        }
     </div>
 }
 

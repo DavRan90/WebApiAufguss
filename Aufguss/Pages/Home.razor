@@ -15,22 +15,20 @@ else
 {
     foreach(var entry in entries)
     {
-        <div class="card m-2 w-50 mt-5">
+        <div class="card m-2 card-width mt-5">
             <h2 class="card-header">@entry.Title</h2>
-            <img class="card-img-top" src="@String.Concat(@fileLocation + @entry.Image)" />
+            <img class="card-img-top" src="@String.Concat(fileLocation + entry.Image)" />
             <div class="card-body">
                 <p class="card-text linebreak">@entry.Description</p>
-                @if(entry.Url != "")
+                @if (!string.IsNullOrEmpty(entry.Url))
                 {
                     <button class="btn btn-primary" @onclick="async () => await BookEvent(entry.Url)">Boka</button>
                 }
                 <button class="btn btn-danger" @onclick="async () => await DeleteEntry(entry.Id)">Ta bort</button>
-                
             </div>
             <p class="card-footer">Publicerad: @entry.CreatedAt.ToString("dd/MM/yyyy | HH:mm")</p>
         </div>
     }
-
 }
 
 
@@ -50,8 +48,10 @@ else
     {
         entries = await http.GetFromJsonAsync<List<Entry>>("api/Entries");
 
-        fileLocation = $"https://localhost:7162/api/upload/";
+        // fileLocation = $"https://localhost:7162/api/upload/";
 
+        fileLocation = new Uri(http.BaseAddress, "api/upload/").ToString();
+        // fileLocation = $"https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net/api/upload/";
     
 
         // var fileName = "flower.jpg"; // from DB or wherever

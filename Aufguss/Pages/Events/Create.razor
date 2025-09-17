@@ -123,8 +123,8 @@
             {
                 var entry = new EntryDto
                     {
-                        Title = createdEvent.Title,
-                        Description = createdEvent.Start.ToString("dd-MM-yyyy | HH:mm\n\n") + createdEvent.Description,
+                        Title = createdEvent.Title + " | " + createdEvent.Start.ToString("dd-MM-yyyy | HH:mm"),
+                        Description = createdEvent.Description,
                         Url = createdEvent.Id.ToString(),
                         Image = "aufguss 2.jpg"
                     };

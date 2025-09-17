@@ -9,7 +9,7 @@
 
 }
 .monthly-task {
-    min-height: 6em;
+    min-height: 3em;
     padding: 2px 6px;
     white-space: pre-line; /* respects \n line breaks */
 }

@@ -22,6 +22,7 @@ namespace WebApi
             });
 
 
+
             // 1. Add EF Core
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -108,6 +109,18 @@ namespace WebApi
             }
 
             app.UseCors(policy => policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+
+            //builder.Services.AddCors(options =>
+            //{
+            //    options.AddPolicy("AllowBlazorClient", policy =>
+            //    {
+            //        policy.WithOrigins("https://aufgussdemo.azurewebsites.net")
+            //              .AllowAnyHeader()
+            //              .AllowAnyMethod();
+            //    });
+            //});
+
+            //app.UseCors("AllowBlazorClient");
 
             app.UseHttpsRedirection();
 

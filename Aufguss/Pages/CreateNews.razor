@@ -20,13 +20,13 @@
             </div>
         </div>
 
-        <div class="row mb-3">
+        @* <div class="row mb-3">
             <label class="col-md-4 col-form-label">Välj en bild</label>
             <div class="col-md-8">
-                <InputFile OnChange="UploadFile" accept="image/*" />
-                @* <input class="form-control" @bind="EntryDtoData.Image"> *@
+                <InputFile onchange ="UploadFile" accept="image/*" />
+                <input class="form-control" @bind="EntryDtoData.Image"> 
             </div>
-        </div>
+        </div> *@
 
         <div class="row mb-3">
             <label class="col-md-4 col-form-label">Länka till pass</label>
@@ -123,6 +123,7 @@
 
     private async Task SaveEntry()
     {
+        EntryDtoData.Image = "aufguss 2.jpg";
         var response = await http.PostAsJsonAsync("api/Entries", EntryDtoData);
 
         if (response.IsSuccessStatusCode)

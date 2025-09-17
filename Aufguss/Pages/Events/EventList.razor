@@ -1,5 +1,5 @@
 ﻿@page "/Events"
-@attribute [Authorize]
+@* @attribute [Authorize] *@
 @using System.Globalization
 @using System.Text.Json.Nodes
 @using BlazorCalendar
@@ -33,11 +33,11 @@ else
                     <th>ID</th>
                     <th>Kön</th>
                     <th>Titel</th>
-                    <th>Beskrivning</th>
+                    @* <th>Beskrivning</th> *@
 
                     <th>Platser</th>
                     <th>Datum</th>
-                    <th>Återkommande</th>
+                    @* <th>Återkommande</th> *@
                     <th>Dold</th>
                     <th></th>
                 </tr>
@@ -58,10 +58,10 @@ else
                             }
                         </td>
                         <td>@evt.Title</td>
-                        <td>@evt.Description</td>
+                        @* <td>@evt.Description</td> *@
                         <td>@evt.MaxSlots</td>
                         <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
-                        <td>
+                        @* <td>
                             @if (evt.Recurring)
                             {
                                 <span class="badge rounded-pill text-bg-success p-2">Ja</span>
@@ -70,7 +70,7 @@ else
                             {
                                 <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
                             }
-                        </td>
+                        </td> *@
                         <td>
                             @if (evt.Hidden)
                             {

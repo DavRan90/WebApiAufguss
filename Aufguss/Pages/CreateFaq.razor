@@ -5,7 +5,7 @@
 
 <div class="row mb-5">
     <div class="col-lg-8">
-        <h1 class=mb-5>Lägg till FAQ</h1>
+        <h1 class=mb-5>Lägg till Frågor och Svar</h1>
 
 
         <div class="row mb-3">
@@ -45,15 +45,15 @@ else
     <div id="faqAccordion" class="accordion">
         @foreach (var faq in faqs)
         {
-            <div class="d-flex align-items-start mb-2 w-75">
+            <div class="d-flex flex-column flex-md-row align-items-stretch mb-3 w-100">
 
                 <!-- Accordion Item -->
                 <div class="accordion-item flex-grow-1 rounded" data-id="@faq.Id">
                     <div class="accordion-header d-flex align-items-center" style="user-select:none;">
                         <div class="drag-handle me-2 bg-info-subtle rounded p-3"
                              style="cursor: grab; padding: 0 8px;"
-                        @onclick:stopPropagation
-                        @onmousedown:stopPropagation>
+                             @onclick:stopPropagation
+                             @onmousedown:stopPropagation>
                             ☰
                         </div>
                         <button class="accordion-button collapsed flex-grow-1"
@@ -76,16 +76,17 @@ else
                     </div>
                 </div>
 
-                <!-- Buttons on same line but outside accordion item -->
-                <div class="ms-2 d-flex flex-row justify-content-start">
+                <!-- Buttons -->
+                <div class="mt-2 mt-md-0 ms-md-2 d-flex flex-row justify-content-start">
                     <button class="btn btn-warning btn-sm p-3" @onclick="async () => await EditAlert(faq.Id)">Ändra</button>
                     <button class="btn btn-danger btn-sm ms-1 p-3" @onclick="async () => await ShowRemoveAlert(faq.Id)">Ta bort</button>
                 </div>
-
             </div>
         }
     </div>
 }
+
+
 
 @inject IJSRuntime JS
 @inject SweetAlertService Swal
@@ -136,41 +137,6 @@ else
         await Http.DeleteAsync("api/Faqs/" + id);
         faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
     }
-
-    // private async Task EditFaq(int id, int move)
-    // {
-    //     var faq = faqs.Where(f => f.Id == id).SingleOrDefault();
-    //     int newPos = faq.Position + move;
-    //     var faqOnNewPos = faqs.Where(f => f.Position == newPos).SingleOrDefault();
-
-        
-    //     faqOnNewPos.Position -= move;
-    //     faq.Position = newPos;
-
-    //     var response = await http.PutAsJsonAsync("api/Faqs/" + id, faq);
-    //     var response2 = await http.PutAsJsonAsync("api/Faqs/" + faqOnNewPos.Id, faqOnNewPos);
-
-    //     if (response.IsSuccessStatusCode && response2.IsSuccessStatusCode)
-    //     {
-    //         faqs = await http.GetFromJsonAsync<List<Faq>>("api/Faqs");
-    //     }
-
-    //     else
-    //     {
-    //         var strResponse = await response.Content.ReadAsStringAsync();
-    //         Console.WriteLine("Json Response: \n" + strResponse);
-
-    //         try
-    //         {
-    //             var jsonResponse = JsonNode.Parse(strResponse);
-    //             Errors = jsonResponse?["errors"] ?? new JsonObject();
-    //         }
-    //         catch (Exception ex)
-    //         {
-
-    //         }
-    //     }
-    // }
 
     private async Task SaveFaq()
     {

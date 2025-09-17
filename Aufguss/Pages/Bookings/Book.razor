@@ -20,16 +20,24 @@
             </div>
 
             <div class="row mb-3">
-                <div>
-                    <label class="col-md-4 col-form-label">Kön</label>
-                    @if(EventDtoData.Gender == Gender.Man)
+                <label class="col-md-4 col-form-label">Kön</label>
+                <div class="col-md-8">
+                    @if (EventDtoData.Gender == Gender.Man)
+                    {
+                        <input class="form-control" value="Herrar" readonly>
+                    }
+                    else
+                    {
+                        <input class="form-control" value="Damer" readonly>
+                    }
+                    @* @if(EventDtoData.Gender == Gender.Man)
                     {
                         <label class="badge rounded-pill text-bg-primary p-3 fs-5">Herrar</label>
                     }
                     else
                     {
                         <label class="badge rounded-pill text-bg-danger p-3 fs-5">Damer</label>
-                    }
+                    } *@
 
 
 
@@ -44,9 +52,12 @@
             </div>
 
             <div class="row mb-3">
-                <div>
+                
                     <label class="col-md-4 col-form-label">Platser kvar</label>
-                    @if (SpotsRemaining > 5)
+                    <div class="col-md-8">
+                        <input class="form-control" value="@SpotsRemaining" readonly>
+                    </div>
+                    @* @if (SpotsRemaining > 5)
                     {
                         <label class="badge rounded-pill text-bg-success p-3 fs-5">@SpotsRemaining</label>
                     }
@@ -57,8 +68,8 @@
                     else
                     {
                         <label class="badge rounded-pill text-bg-danger p-3 fs-5">@SpotsRemaining</label>
-                    }
-                </div>
+                    } *@
+                
 
             </div>
 
