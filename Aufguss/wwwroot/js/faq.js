@@ -9,7 +9,9 @@
         animation: 150,
         handle: '.drag-handle',
         onEnd: function () {
-            const order = [...el.children].map(item => item.getAttribute("data-id"));
+            // Find all .accordion-item elements (which contain the correct data-id)
+            const order = Array.from(el.querySelectorAll('.accordion-item'))
+                .map(item => item.getAttribute("data-id"));
             dotNetHelper.invokeMethodAsync("UpdateOrder", order);
         }
     });

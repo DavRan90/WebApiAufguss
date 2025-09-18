@@ -39,7 +39,12 @@
             ModelTasks[i] = new BlazorCalendar.Models.Tasks
                 {
                     ID = evt.Id,
-                    Caption = evt.Title,         // Assuming you have a Title property
+                    Caption = (evt.Gender, evt.Hidden) switch
+                    {
+                        (Gender.Man, false) => "Herrar",
+                        (Gender.Woman, false) => "Damer",
+                        _ => "lightgray"
+                    },
                     DateStart = evt.Start,   // Assuming your Event has StartDate
                     DateEnd = evt.Start,
                     Color = evt.Gender switch
@@ -116,20 +121,6 @@
     private async Task OnDayClick(ClickEmptyDayParameter clickedDate)
     {
 
-        // Ask for a title (you could use a modal here too)
-        // var title = await JSRuntime.InvokeAsync<string>("prompt", $"Enter title for event on {clickedDate.Day:yyyy-MM-dd}");
-
-        
-
-
-        // var json = await JSRuntime.InvokeAsync<string>("showCreateEventAlert", new
-        // {
-        //     title = "",
-        //     description = "",
-        //     maxSlots = "",
-        //     hidden = false
-        // });
-
         string json = await JSRuntime.InvokeAsync<string>("showCreateEventAlert", new EventDto());
         //string json = await JSRuntime.InvokeAsync<string>("showEventForm");
 
@@ -181,50 +172,6 @@
             {
                 Console.WriteLine($"Error deserializing booking: {ex.Message}");
             }
-
-            // Create the Event object
-            // var newEvent = new Event
-            //     {
-            //         Title = ,
-            //         Start = clickedDate.Day,
-            //         Gender = Gender.Man, // Or let the user pick this
-            //         Description = ""
-            //     };
-
-            // Post to your backend API
-            // var response = await Http.PostAsJsonAsync("api/Events", newEvent);
-
-            // if (response.IsSuccessStatusCode)
-            // {
-            //     var createdEvent = await response.Content.ReadFromJsonAsync<Event>();
-
-            //     // Add to evts
-            //     evts?.Add(createdEvent!);
-
-            //     // Add to ModelTasks so it shows up in the calendar
-            //     var newTask = new Tasks
-            //         {
-            //             ID = createdEvent!.Id,
-            //             Caption = createdEvent.Title,
-            //             DateStart = createdEvent.Start,
-            //             DateEnd = createdEvent.Start,
-            //             Color = createdEvent.Gender switch
-            //             {
-            //                 Gender.Man => "lightblue",
-            //                 Gender.Woman => "lightpink",
-            //                 _ => "gray"
-            //             },
-            //             Comment = createdEvent.Description
-            //         };
-
-            //     // Add to calendar tasks and refresh
-            //     ModelTasks = ModelTasks?.Append(newTask).ToArray();
-            //     await InvokeAsync(StateHasChanged);
-            // }
-            // else
-            // {
-            //     await JSRuntime.InvokeVoidAsync("alert", "Failed to create event.");
-            // }
         }
     }
 }

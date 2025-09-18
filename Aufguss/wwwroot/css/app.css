@@ -9,9 +9,28 @@
 
 }
 .monthly-task {
-    min-height: 3em;
+    /*min-height: 3em;
     padding: 2px 6px;
-    white-space: pre-line; /* respects \n line breaks */
+    white-space: pre-line;*/ /* respects \n line breaks */
+    min-height: fit-content;
+    font-size: 0.75rem !important; /* smaller font */
+    padding: 2px 4px !important;  
+    white-space: nowrap;
+    overflow: hidden !important;
+    word-break: break-word;
+    text-overflow: ellipsis;
+    /*min-height: auto !important;*/
+    line-height: 0.6rem;
+}
+@media (max-width: 576px) {
+    .monthly-task {
+        min-height: 3em;
+        overflow:visible !important;
+        font-size: 0.6rem !important;
+        max-width: 100%;
+        word-break: break-word;
+        white-space: normal;
+    }
 }
 .drag-handle {
     cursor: grab;
