@@ -74,7 +74,7 @@ namespace WebApi.Controllers
                 booking.UnbookedAt = DateTime.Now;
                 var reserveList = context.Bookings.Where(b => b.Reserve == true).OrderBy(b => b.ReserveAt).ToList();
 
-                if (reserveList != null)
+                if (reserveList?.Any() == true)
                 {
                     reserveList[0].Reserve = false;
                     reserveList[0].BookedAt = DateTime.Now;

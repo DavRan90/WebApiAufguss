@@ -1,0 +1,152 @@
+﻿@page "/templates"
+@using Aufguss.Models
+<h3>Mallar</h3>
+
+@if (EventTemplates != null)
+{
+    <div class="row mb-3">
+        <label class="col-md-4 col-form-label">Välj typ av mall att visa</label>
+        <div class="col-md-8">
+            <InputSelect class="form-control" @bind-Value="SelectedTemplateId">
+                <option value="">-- Välj en mall --</option>
+                <option value="1">Bokningsmallar</option>
+                <option value="2">Nyhetsmallar</option>
+            </InputSelect>
+        </div>
+    </div>
+}
+@if (SelectedTemplateId == 1)
+{
+    @if (EventTemplates == null)
+    {
+        <p><em>Laddar...</em></p>
+    }
+    else
+    {
+        <table class="table mb-5">
+            <thead>
+                <tr>
+
+                    @* <th>ID</th> *@
+                    <th>Kön</th>
+                    <th>Titel</th>
+                    <th>Platser</th>
+                    <th>Datum</th>
+                    <th>Dold</th>
+                    <th style="width: 80px;"></th> <!-- Icons column -->
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var evt in EventTemplates)
+                {
+                    <tr style="cursor: pointer;"
+                        @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
+
+                        @* <td>@evt.Id</td> *@
+                        <td>
+                            @if (evt.Gender == 0)
+                            {
+                                <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
+                            }
+                            else
+                            {
+                                <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
+                            }
+                        </td>
+                        <td>@evt.Title</td>
+                        <td>@evt.MaxSlots</td>
+                        <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                        <td>
+                            @if (evt.Hidden)
+                            {
+                                @* <button class="border border-0 badge rounded-pill text-bg-success p-2" @onclick="async () => await SaveEvent(evt.Id)">Ja</button> *@
+                                <button class="btn btn-sm btn-success">Ja</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-warning">Nej</button>
+                            }
+                        </td>
+                        <td class="text-nowrap">
+                            <div class="d-flex flex-column flex-md-row">
+                                <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
+                                        title="Ändra"
+                                @onclick:stopPropagation
+                                        @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger"
+                                            title="Ta bort"
+                                    @onclick:stopPropagation
+                                            @onclick="async () => await ShowAlert(evt.Id)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject SweetAlertService Swal
+
+@code {
+    private List<EventTemplate>? EventTemplates;
+    private int? selectedTemplateId;
+    private int? SelectedTemplateId
+    {
+        get => selectedTemplateId;
+        set
+        {
+            if (selectedTemplateId != value)
+            {
+                selectedTemplateId = value;
+                //ApplyTemplate(); // Call your apply method here directly
+            }
+        }
+    }
+
+    private void ApplyTemplate()
+    {
+        if (SelectedTemplateId.HasValue)
+        {
+
+            StateHasChanged();
+
+        }
+    }
+
+    private async Task ShowAlert(int id)
+    {
+        var result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Bekräfta borttagning",
+                Text = $"Vill du ta bort mall med ID {id}?",
+                ShowCancelButton = true,
+                ConfirmButtonText = "Ja, ta bort",
+                CancelButtonText = "Nej, ta inte bort",
+            });
+        if (result.IsConfirmed)
+        {
+            await DeleteEvent(id);
+        }
+    }
+
+    private async Task DeleteEvent(int id)
+    {
+        await Http.DeleteAsync("api/EventTemplates/" + id);
+        EventTemplates = await Http.GetFromJsonAsync<List<EventTemplate>>("api/EventTemplates");
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        EventTemplates = await Http.GetFromJsonAsync<List<EventTemplate>>("api/EventTemplates");
+    }
+
+
+}

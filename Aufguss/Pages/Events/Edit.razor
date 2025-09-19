@@ -170,22 +170,22 @@
                         }
                     </td>
                     <td class="text-nowrap">
-                <div class="d-flex flex-column flex-md-row">
-                        <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
-                                title="Ändra"
-                                @onclick="async () => await EditBooking(booking.Id)">
-                            <i class="bi bi-pencil"></i>
-                        </button>
+                        <div class="d-flex flex-column flex-md-row">
+                            <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
+                            title="Ändra"
+                            @onclick="async () => await EditBooking(booking.Id)">
+                                <i class="bi bi-pencil"></i>
+                            </button>
                             <button class="btn btn-sm btn-outline-warning mb-1 mb-md-0 me-md-1"
-                                title="Avboka"
-                                @onclick="async () => await Unbook(booking.Id)">
-                            <i class="bi bi-x"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger"
-                                title="Ta bort"
-                                @onclick="async () => await ShowAlert(booking.Id)">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                            title="Avboka"
+                            @onclick="async () => await Unbook(booking.Id)">
+                                <i class="bi bi-x"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger"
+                            title="Ta bort"
+                            @onclick="async () => await ShowAlert(booking.Id)">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -339,6 +339,8 @@
     {
         // var bookings = Bookings.Count();
         var getBooking = await http.GetFromJsonAsync<Booking>("api/Bookings/" + id);
+        var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+        var countSpots = allBookings?.Where(b => b.EventId == getBooking?.EventId && b.Unbooked == false).Count();
         string json = await JS.InvokeAsync<string>("showFormAlert", getBooking);
 
         if (!string.IsNullOrEmpty(json))
@@ -349,14 +351,23 @@
                     {
                         PropertyNameCaseInsensitive = true
                     });
+                // if(getBooking.Unbooked == true && booking.Unbooked == false)
+                // {
+                //     booking.Unbooked = false;
+                // }
+                // booking.Unbooked = false;
                 booking.EventId = Id;
                 booking.BookedAt = getBooking.BookedAt;
                 var response = await http.PutAsJsonAsync($"api/Bookings/{id}", booking);
                 if (response.IsSuccessStatusCode)
                 {
-                    await JS.InvokeVoidAsync("Swal.fire", "Success", "Bokning ändrad!", "success");
-                    var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+                    await JS.InvokeVoidAsync("Swal.fire", "Lyckades", "Bokning ändrad!", "success");
+                    // var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
                     Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Det finns inga lediga platser kvar", "error");
                 }
             }
             catch (JsonException ex)
