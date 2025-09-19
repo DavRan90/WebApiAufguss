@@ -68,32 +68,63 @@ namespace WebApi.Controllers
             {
                 return NotFound();
             }
-            if(bookingDto.Unbooked == true)
+
+            if (bookingDto.Unbooked == true)
             {
+                // Unbooking
                 booking.Unbooked = true;
                 booking.UnbookedAt = DateTime.Now;
-                var reserveList = context.Bookings.Where(b => b.Reserve == true).OrderBy(b => b.ReserveAt).ToList();
 
-                if (reserveList?.Any() == true)
+                var reserveList = context.Bookings
+                    .Where(b => b.Reserve == true && b.EventId == booking.EventId)
+                    .OrderBy(b => b.ReserveAt)
+                    .ToList();
+
+                if (reserveList.Any())
                 {
-                    reserveList[0].Reserve = false;
-                    reserveList[0].BookedAt = DateTime.Now;
+                    var promote = reserveList[0];
+                    promote.Reserve = false;
+                    promote.BookedAt = DateTime.Now;
                 }
             }
             else
             {
+                // Re-booking (from Unbooked == true ➝ false), must check capacity
+                if (booking.Unbooked == true && bookingDto.Unbooked == false)
+                {
+                    var @event = context.Events.Find(bookingDto.EventId);
+                    if (@event == null)
+                    {
+                        return BadRequest("Event not found.");
+                    }
+
+                    // Count current bookings (not unbooked, not reserve)
+                    var currentBookings = context.Bookings
+                        .Where(b => b.EventId == bookingDto.EventId && b.Unbooked == false && b.Reserve == false)
+                        .Count();
+
+                    if (currentBookings >= @event.MaxSlots)
+                    {
+                        return Conflict("No spots available.");
+                    }
+
+                    booking.Unbooked = false;
+                    booking.UnbookedAt = null; // Optional: clear if you want
+                }
+
+                // Update other fields
                 booking.Name = bookingDto.Name;
                 booking.Email = bookingDto.Email;
                 booking.Tel = bookingDto.Tel;
                 booking.BookedAt = bookingDto.BookedAt;
                 booking.EventId = bookingDto.EventId;
             }
-                
 
             context.SaveChanges();
 
             return Ok(booking);
         }
+
 
         [HttpDelete("{id}")]
         public IActionResult DeleteBooking(int id)

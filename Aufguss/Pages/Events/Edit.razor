@@ -337,10 +337,16 @@
 
     private async Task EditBooking(int id)
     {
-        // var bookings = Bookings.Count();
-        var getBooking = await http.GetFromJsonAsync<Booking>("api/Bookings/" + id);
+        // Get current booking
+        var getBooking = await http.GetFromJsonAsync<Booking>($"api/Bookings/{id}");
+
+        // Get all bookings for count check
         var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
-        var countSpots = allBookings?.Where(b => b.EventId == getBooking?.EventId && b.Unbooked == false).Count();
+        var countSpots = allBookings?
+            .Where(b => b.EventId == getBooking?.EventId && b.Unbooked == false)
+            .Count();
+
+        // Get user-edited values via JS
         string json = await JS.InvokeAsync<string>("showFormAlert", getBooking);
 
         if (!string.IsNullOrEmpty(json))
@@ -351,23 +357,39 @@
                     {
                         PropertyNameCaseInsensitive = true
                     });
-                // if(getBooking.Unbooked == true && booking.Unbooked == false)
-                // {
-                //     booking.Unbooked = false;
-                // }
-                // booking.Unbooked = false;
+
+                // Check if the user is trying to RE-BOOK a previously unbooked spot
+                if (getBooking.Unbooked == true && booking.Unbooked == false)
+                {
+                    // Check if there are any spots left
+                    var eventData = await http.GetFromJsonAsync<Event>($"api/Events/{Id}");
+                    var maxSlots = eventData?.MaxSlots ?? 0;
+
+                    if (countSpots >= maxSlots)
+                    {
+                        await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Det finns inga lediga platser kvar", "error");
+                        return;
+                    }
+                }
+
+                // Set additional required fields
                 booking.EventId = Id;
                 booking.BookedAt = getBooking.BookedAt;
+
                 var response = await http.PutAsJsonAsync($"api/Bookings/{id}", booking);
                 if (response.IsSuccessStatusCode)
                 {
                     await JS.InvokeVoidAsync("Swal.fire", "Lyckades", "Bokning ändrad!", "success");
-                    // var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
-                    Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
+
+                    // Refresh booking list
+                    var updatedBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+                    Bookings = updatedBookings?.Where(b => b.EventId == Id).ToList();
+
+                    StateHasChanged();
                 }
                 else
                 {
-                    await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Det finns inga lediga platser kvar", "error");
+                    await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Det gick inte att spara bokningen", "error");
                 }
             }
             catch (JsonException ex)
@@ -376,6 +398,7 @@
             }
         }
     }
+
 
     private async Task ShowAlert(int id)
     {
