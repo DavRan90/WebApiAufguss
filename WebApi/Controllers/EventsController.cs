@@ -70,12 +70,18 @@ namespace WebApi.Controllers
             }
 
             if (eventDto.Hidden == true &&
-        context.Bookings.Any(b => b.EventId == id))
+                context.Bookings.Any(b => b.EventId == id))
             {
                 return BadRequest(new { message = "Bokningen går inte att dölja eftersom det finns gäster bokade." });
             }
 
-            if(eventDto.MaxSlots < context.Bookings.Where(b => b.EventId == evt.Id && b.Unbooked == false && b.Reserve == false).Count())
+            if (eventDto.Gender != evt.Gender &&
+                context.Bookings.Any(b => b.EventId == id))
+            {
+                return BadRequest(new { message = "Det går inte att ändra kön för passet efter bokning har skett" });
+            }
+
+            if (eventDto.MaxSlots < context.Bookings.Where(b => b.EventId == evt.Id && b.Unbooked == false && b.Reserve == false).Count())
             {
                 return BadRequest(new { message = "Det finns fler anmälda än platser" });
             }

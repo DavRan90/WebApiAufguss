@@ -84,6 +84,7 @@ namespace WebApi.Controllers
                 {
                     var promote = reserveList[0];
                     promote.Reserve = false;
+                    promote.Unbooked = false;
                     promote.BookedAt = DateTime.Now;
                 }
             }
@@ -92,8 +93,8 @@ namespace WebApi.Controllers
                 // Re-booking (from Unbooked == true ➝ false), must check capacity
                 if (booking.Unbooked == true && bookingDto.Unbooked == false)
                 {
-                    var @event = context.Events.Find(bookingDto.EventId);
-                    if (@event == null)
+                    var evt = context.Events.Find(bookingDto.EventId);
+                    if (evt == null)
                     {
                         return BadRequest("Event not found.");
                     }
@@ -103,7 +104,7 @@ namespace WebApi.Controllers
                         .Where(b => b.EventId == bookingDto.EventId && b.Unbooked == false && b.Reserve == false)
                         .Count();
 
-                    if (currentBookings >= @event.MaxSlots)
+                    if (currentBookings >= evt.MaxSlots)
                     {
                         return Conflict("No spots available.");
                     }

@@ -31,7 +31,8 @@
                     <th>Kön</th>
                     <th>Titel</th>
                     <th>Platser</th>
-                    <th>Datum</th>
+                    <th>Beskrivning</th>
+                    @* <th>Datum</th> *@
                     <th>Dold</th>
                     <th style="width: 80px;"></th> <!-- Icons column -->
                 </tr>
@@ -55,7 +56,8 @@
                         </td>
                         <td>@evt.Title</td>
                         <td>@evt.MaxSlots</td>
-                        <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                        <td>@evt.Description</td>
+                        @* <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td> *@
                         <td>
                             @if (evt.Hidden)
                             {
