@@ -40,7 +40,7 @@
                 @foreach (var evt in EventTemplates)
                 {
                     <tr style="cursor: pointer;"
-                        @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
+                        @onclick="@(() => NavManager.NavigateTo($"/Templates/Edit/{evt.Id}"))">
 
                         @* <td>@evt.Id</td> *@
                         <td>
@@ -72,7 +72,7 @@
                                 <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
                                         title="Ändra"
                                 @onclick:stopPropagation
-                                        @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
+                                        @onclick="@(() => NavManager.NavigateTo($"/Templates/Edit/{evt.Id}"))">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button class="btn btn-sm btn-outline-danger"

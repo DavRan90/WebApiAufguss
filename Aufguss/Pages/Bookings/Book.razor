@@ -153,6 +153,8 @@
 
 @inject HttpClient http
 @inject NavigationManager navManager
+@inject IJSRuntime JS
+@inject SweetAlertService Swal
 
 @code {
 
@@ -201,11 +203,13 @@
 
         if (response.IsSuccessStatusCode)
         {
+            await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", "Du är nu inbokad!", "success");
             navManager.NavigateTo("/Bookings");
         }
 
         else
         {
+            await JS.InvokeVoidAsync("Swal.fire", "Bokning misslyckades", "Bokningen gick inte att lägga till", "error");
             var strResponse = await response.Content.ReadAsStringAsync();
             Console.WriteLine("Json Response: \n" + strResponse);
 
@@ -229,6 +233,7 @@
 
         if (response.IsSuccessStatusCode)
         {
+            await JS.InvokeVoidAsync("Swal.fire", "Reservplats tillagd", "Du är nu inlagd som reserv!", "success");
             navManager.NavigateTo("/Bookings");
         }
 

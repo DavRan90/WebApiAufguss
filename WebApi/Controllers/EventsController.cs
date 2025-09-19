@@ -29,7 +29,7 @@ namespace WebApi.Controllers
         public IActionResult GetEvent(int id)
         {
             var evt = context.Events.Find(id);
-            if(evt == null)
+            if (evt == null)
             {
                 return NotFound();
             }
@@ -69,6 +69,17 @@ namespace WebApi.Controllers
                 return NotFound();
             }
 
+            if (eventDto.Hidden == true &&
+        context.Bookings.Any(b => b.EventId == id))
+            {
+                return BadRequest(new { message = "Bokningen går inte att dölja eftersom det finns gäster bokade." });
+            }
+
+            if(eventDto.MaxSlots < context.Bookings.Where(b => b.EventId == evt.Id && b.Unbooked == false && b.Reserve == false).Count())
+            {
+                return BadRequest(new { message = "Det finns fler anmälda än platser" });
+            }
+
             evt.Title = eventDto.Title;
             evt.Description = eventDto.Description;
             evt.Start = eventDto.Start;
@@ -94,7 +105,7 @@ namespace WebApi.Controllers
             }
             // Also remove all associated bookings
             var bookings = context.Bookings.Where(b => b.EventId == id).ToList();
-            foreach(var booking in bookings)
+            foreach (var booking in bookings)
             {
                 context.Bookings.Remove(booking);
             }

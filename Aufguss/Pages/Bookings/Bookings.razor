@@ -28,7 +28,8 @@ else
             {
                 if(evt.Hidden == false)
                 {
-                    <tr>
+                    <tr style="cursor: pointer;"
+                        @onclick="@(() => NavManager.NavigateTo($"/Bookings/Book/{evt.Id}"))">
                         @* <td>@evt.Id</td> *@
                         <td>
                             @if (evt.Gender == 0)
@@ -99,9 +100,15 @@ else
                             }
                         </td> *@
                         <td style="white-space:nowrap; width:10px">
-                            <a class="btn btn-primary btn-sm" href="/Bookings/Book/@evt.Id">
+                            @* <a class="btn btn-primary btn-sm" href="/Bookings/Book/@evt.Id">
                                 Boka
-                            </a>
+                            </a> *@
+                            <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
+                                    title="Boka"
+                            @onclick:stopPropagation
+                                    @onclick="@(() => NavManager.NavigateTo($"/Bookings/Book/{evt.Id}"))">
+                                Boka
+                            </button>
                         </td>
                     </tr>
                 }
@@ -113,6 +120,8 @@ else
 
 
 @inject HttpClient http
+@inject SweetAlertService Swal
+@inject NavigationManager NavManager
 
 @code {
     private List<Event>? events;

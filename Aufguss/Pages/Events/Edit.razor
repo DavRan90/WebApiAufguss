@@ -279,13 +279,28 @@
 
         else
         {
+            // await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Bokningen går inte att dölja eftersom det finns gäster bokade", "error");
             var strResponse = await response.Content.ReadAsStringAsync();
             Console.WriteLine("Json Response: \n" + strResponse);
 
             try
             {
                 var jsonResponse = JsonNode.Parse(strResponse);
+
+                // Try to read a general message first
+                var message = jsonResponse?["message"]?.ToString();
+
+                // If no general message, try to read validation errors
                 Errors = jsonResponse?["errors"] ?? new JsonObject();
+
+                if (!string.IsNullOrWhiteSpace(message))
+                {
+                    await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", message, "error");
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Ett fel inträffade. Kontrollera formuläret.", "error");
+                }
             }
             catch (Exception ex)
             {
@@ -296,36 +311,48 @@
 
     private async Task Unbook(int id)
     {
-        BookingDtoData.Unbooked = true;
-        var response = await http.PutAsJsonAsync("api/Bookings/" + id, BookingDtoData);
-
-        if (response.IsSuccessStatusCode)
+        var result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Bekräfta avbokning",
+                Text = $"Ta bort bokning med ID {id}?",
+                ShowCancelButton = true,
+                ConfirmButtonText = "Ja, ta bort",
+                CancelButtonText = "Nej, ta inte bort",
+            });
+        if (result.IsConfirmed)
         {
-            var result = await Swal.FireAsync(new SweetAlertOptions
+            BookingDtoData.Unbooked = true;
+            var response = await http.PutAsJsonAsync("api/Bookings/" + id, BookingDtoData);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var res = await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Avbokad",
+                        Text = $"Bokning med id {id} är avbokad",
+                        Icon = SweetAlertIcon.Warning,
+                    });
+                var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+                Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
+            }
+
+            else
+            {
+                var strResponse = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Json Response: \n" + strResponse);
+
+                try
                 {
-                    Title = "Avbokad",
-                    Text = $"Bokning med id {id} är avbokad",
-                    Icon = SweetAlertIcon.Warning,
-                });
-            var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
-            Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
-        }
-
-        else
-        {
-            var strResponse = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Json Response: \n" + strResponse);
-
-            try
-            {
-                var jsonResponse = JsonNode.Parse(strResponse);
-                Errors = jsonResponse?["errors"] ?? new JsonObject();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.Message);
+                    var jsonResponse = JsonNode.Parse(strResponse);
+                    Errors = jsonResponse?["errors"] ?? new JsonObject();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Exception: " + ex.Message);
+                }
             }
         }
+        
     }
 
     private async Task DeleteBooking(int id)
@@ -407,7 +434,7 @@
         var result = await Swal.FireAsync(new SweetAlertOptions
             {
                 Title = "Bekräfta borttagning",
-                Text = $"Ta bort bokning med ID {id}?",
+                Text = $"Ta bort bokning med ID {id}? Detta kan inte ångras.",
                 ShowCancelButton = true,
                 ConfirmButtonText = "Ja, ta bort",
                 CancelButtonText = "Nej, ta inte bort",
