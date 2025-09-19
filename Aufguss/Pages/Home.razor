@@ -24,7 +24,6 @@ else
                 {
                     <button class="btn btn-primary" @onclick="async () => await BookEvent(entry.Url)">Boka</button>
                 }
-                <button class="btn btn-danger" @onclick="async () => await DeleteEntry(entry.Id)">Ta bort</button>
             </div>
             <p class="card-footer">Publicerad: @entry.CreatedAt.ToString("dd/MM/yyyy | HH:mm")</p>
         </div>
@@ -48,10 +47,7 @@ else
     {
         entries = await http.GetFromJsonAsync<List<Entry>>("api/Entries");
 
-        // fileLocation = $"https://localhost:7162/api/upload/";
-
         fileLocation = new Uri(http.BaseAddress, "api/upload/").ToString();
-        // fileLocation = $"https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net/api/upload/";
     
 
         // var fileName = "flower.jpg"; // from DB or wherever

@@ -1,20 +1,38 @@
 ﻿@page "/Events/Create"
 @using System.Text.Json.Nodes
+@using Aufguss.Models
 
 
 <div class="row mb-5">
     <div class="col-lg-8">
         <h1 class=mb-5>Ny aktivitet</h1>
 
+        @if(Templates != null)
+        {
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Använd mall</label>
+                <div class="col-md-8">
+                    <InputSelect class="form-control" @bind-Value="SelectedTemplateId">
+                        <option value="">-- Välj en mall --</option>
+                        @foreach (var template in Templates)
+                        {
+                            <option value="@template.Id">@template.Title (@template.Start.ToString("dd/MM-yyyy | HH:mm"))</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+        }
+
+
         <div class="row mb-3">
             <div>
                 <label class="col-md-4 col-form-label">Kön</label>
                 <input type="radio" checked="@(EventDtoData.Gender == Gender.Man)"
-                       name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Man)" />
+                name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Man)" />
                 <label>Herrar</label>
 
                 <input type="radio" checked="@(EventDtoData.Gender == Gender.Woman)"
-                       name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Woman)" />
+                name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Woman)" />
                 <label>Damer</label>
             </div>
         </div>
@@ -22,12 +40,19 @@
         <div class="row mb-3">
             <label class="col-md-4 col-form-label">Titel</label>
             <div class="col-md-8">
-                <input class="form-control" @bind="EventDtoData.Title">
+                <InputText class="form-control" @bind-Value="EventDtoData.Title" />
                 <span class="text-danger">@Errors["Title"]?[0]</span>
             </div>
         </div>
 
         <div class="row mb-3">
+            @if (templateLoaded)
+            {
+                <div class="alert alert-warning" role="alert">
+                    ⚠️ Tänk på att uppdatera datum och tid!
+                </div>
+            }
+
             <label class="col-md-4 col-form-label">Datum/tid</label>
             <div class="col-md-8">
                 <input type="datetime-local" class="form-control" @bind="EventDtoData.Start">
@@ -90,6 +115,19 @@
                 </div>
             </div>
         </div>
+        <div class="row mb-3">
+            <div class="col-md-8 offset-md-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="gridCheck4" @bind="createTemplate">
+                    <label class="form-check-label" for="gridCheck4">
+                        Skapa mall
+                        <span class="ms-1" data-bs-toggle="tooltip" title="Skapar en mall baserad på denna bokning">
+                            <i class="bi bi-info-circle text-secondary"></i>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
 
         <div class="row">
             <div class="offset-md-4 col-md-4 d-grid">
@@ -102,22 +140,103 @@
     </div>
 </div>
 
-@inject HttpClient http
+@inject HttpClient Http
 @inject NavigationManager navManager
 
 @code {
+    private List<EventTemplate>? Templates;
     public EventDto EventDtoData { get; set; } = new();
     public JsonNode Errors { get; set; } = new JsonObject();
     public bool createNews = false;
+    public bool createTemplate = false;
+
+    private bool templateLoaded = false;
 
     private string selectedGender = "Male"; // Default selection
 
+    // private int? SelectedTemplateId { get; set; }
+
+    private int? selectedTemplateId;
+    private int? SelectedTemplateId
+    {
+        get => selectedTemplateId;
+        set
+        {
+            if (selectedTemplateId != value)
+            {
+                selectedTemplateId = value;
+                ApplyTemplate(); // Call your apply method here directly
+            }
+        }
+    }
+
+
+    private void ApplyTemplate()
+    {
+        if (SelectedTemplateId.HasValue)
+        {
+            templateLoaded = true;
+            var selectedTemplate = Templates.FirstOrDefault(t => t.Id == SelectedTemplateId.Value);
+            if (selectedTemplate is not null)
+            {
+                EventDtoData.Title = selectedTemplate.Title;
+                EventDtoData.Description = selectedTemplate.Description;
+                EventDtoData.Gender = selectedTemplate.Gender;
+                EventDtoData.Start = selectedTemplate.Start;
+                EventDtoData.MaxSlots = selectedTemplate.MaxSlots;
+                EventDtoData.Recurring = selectedTemplate.Recurring;
+                EventDtoData.Hidden = selectedTemplate.Hidden;
+
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task OnTemplateSelected(ChangeEventArgs e)
+    {
+        Console.WriteLine("🚀 OnTemplateSelected triggered");
+
+        if (int.TryParse(e.Value?.ToString(), out var templateId))
+        {
+            SelectedTemplateId = templateId;
+
+            var selectedTemplate = Templates.FirstOrDefault(t => t.Id == templateId);
+
+            if (selectedTemplate is not null)
+            {
+                Console.WriteLine($"Template found: {selectedTemplate.Title}");
+
+                EventDtoData.Title = selectedTemplate.Title;
+                EventDtoData.Description = selectedTemplate.Description;
+                EventDtoData.Gender = selectedTemplate.Gender;
+                EventDtoData.Start = selectedTemplate.Start;
+                EventDtoData.MaxSlots = selectedTemplate.MaxSlots;
+                EventDtoData.Recurring = selectedTemplate.Recurring;
+                EventDtoData.Hidden = selectedTemplate.Hidden;
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        Templates = await Http.GetFromJsonAsync<List<EventTemplate>>("api/EventTemplates");
+    }
+
     private async Task SaveEvent()
     {
-        var response = await http.PostAsJsonAsync("api/Events", EventDtoData);
+        var response = await Http.PostAsJsonAsync("api/Events", EventDtoData);
 
         if (response.IsSuccessStatusCode)
         {
+            if(createTemplate)
+            {
+                var template = await Http.PostAsJsonAsync("api/EventTemplates", EventDtoData);
+            }
+            
+
             var createdEvent = await response.Content.ReadFromJsonAsync<Event>();
             if (createdEvent.Hidden == false && createNews == true)
             {
@@ -128,7 +247,7 @@
                         Url = createdEvent.Id.ToString(),
                         Image = "aufguss 2.jpg"
                     };
-                var response2 = await http.PostAsJsonAsync("api/Entries", entry);
+                var response2 = await Http.PostAsJsonAsync("api/Entries", entry);
 
                 if (response2.IsSuccessStatusCode)
                 {

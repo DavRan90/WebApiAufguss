@@ -35,7 +35,10 @@
 
     private async Task HandleRegister()
     {
-        var response = await Http.PostAsJsonAsync("https://localhost:7162/api/auth/register", registerModel);
+        var path = new Uri(Http.BaseAddress, "api/auth/register").ToString();
+
+        // var response = await Http.PostAsJsonAsync("https://localhost:7162/api/auth/register", registerModel);
+        var response = await Http.PostAsJsonAsync(path, registerModel);
 
         if (response.IsSuccessStatusCode)
         {

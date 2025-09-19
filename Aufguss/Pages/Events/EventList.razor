@@ -42,7 +42,8 @@ else
                     <tbody>
                 @foreach (var evt in evts)
                 {
-                                <tr>
+                    <tr style="cursor: pointer;"
+                        @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
 
                         @* <td>@evt.Id</td> *@
                                     <td>
@@ -91,22 +92,26 @@ else
                                     <td>
                             @if (evt.Hidden)
                             {
-                                                <button class="border border-0 badge rounded-pill text-bg-success p-2" @onclick="async () => await SaveEvent(evt.Id)">Ja</button>
+                                                @* <button class="border border-0 badge rounded-pill text-bg-success p-2" @onclick="async () => await SaveEvent(evt.Id)">Ja</button> *@
+                                <button class="btn btn-sm btn-success" @onclick:stopPropagation @onclick="async () => await SaveEvent(evt.Id)">Ja</button>
                             }
                             else
                             {
-                                                <button class="border border-0 badge rounded-pill text-bg-warning p-2" @onclick="async () => await SaveEvent(evt.Id)">Nej</button>
+                                                @* <button class="border border-0 badge rounded-pill text-bg-warning p-2" @onclick="async () => await SaveEvent(evt.Id)">Nej</button> *@
+                                <button class="btn btn-sm btn-warning" @onclick:stopPropagation @onclick="async () => await SaveEvent(evt.Id)">Nej</button>
                             }
                                     </td>
                                                 <td class="text-nowrap">
                             <div class="d-flex flex-column flex-md-row">
                                 <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
                                         title="Ändra"
+                                @onclick:stopPropagation
                                                     @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button class="btn btn-sm btn-outline-danger"
                                         title="Ta bort"
+                                @onclick:stopPropagation
                                         @onclick="async () => await ShowAlert(evt.Id)">
                                     <i class="bi bi-trash"></i>
                                 </button>
