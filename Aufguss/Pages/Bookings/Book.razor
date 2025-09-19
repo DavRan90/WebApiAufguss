@@ -12,6 +12,19 @@
 
         else
         {
+            if(SpotsRemaining <= 0)
+            {
+                <div class="alert alert-danger" role="alert">
+                    ⚠️ Passet är fullbokat, du kan boka in dig på reservlistan nedan.
+                </div>
+            }
+            else if(SpotsRemaining > 0 && SpotsRemaining < 2)
+            {
+                <div class="alert alert-warning" role="alert">
+                    ⚠️ Endast @SpotsRemaining plats kvar.
+                </div>
+            }
+
             <div class="row mb-3">
                 <label class="col-md-4 col-form-label">Id</label>
                 <div class="col-md-8">

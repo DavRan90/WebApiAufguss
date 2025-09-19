@@ -8,10 +8,12 @@
 
 
 <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate" >
-    <MonthlyView TaskClick="OnTaskClick"/>
+    <MonthlyView TaskClick="OnTaskClick" SaturdayColor="White" SundayColor="White" />
 </CalendarContainer>
 
-
+<p class="btn btn-sm bg-primary-subtle mt-2">Herrar</p>
+<p class="btn btn-sm bg-danger-subtle mt-2">Damer</p>
+<p class="btn btn-sm bg-warning-subtle mt-2">Fullbokat</p>
 
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
@@ -23,18 +25,23 @@
 
     private List<Event>? evts;
 
+    private int guestCount;
+
     private BlazorCalendar.Models.Tasks[]? ModelTasks;
 
     protected override async Task OnInitializedAsync()
     {
         var allEvents = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
         evts = allEvents.Where(e => e.Hidden == false).ToList();
+
         ModelTasks = new BlazorCalendar.Models.Tasks[evts.Count];
 
         for (int i = 0; i < evts.Count; i++)
         {
             var evt = evts[i];
-
+            guestCount = allBookings.Where(b => b.EventId == evt.Id && b.Reserve == false && b.Unbooked == false).Count();
+            bool sessionFull = evt.MaxSlots == guestCount;
             // Map your Event to a Task
             ModelTasks[i] = new BlazorCalendar.Models.Tasks
                 {
@@ -47,12 +54,20 @@
                     },
                     DateStart = evt.Start,   // Assuming your Event has StartDate
                     DateEnd = evt.Start,
-                    Color = evt.Gender switch
+                    Color = (evt.Gender, sessionFull) switch
                     {
-                        Gender.Man => "lightblue",
-                        Gender.Woman => "lightpink",
-                        _ => "gray" // fallback if new enum values are added
+                        (Gender.Man, false) => "lightblue",
+                        (Gender.Woman, false) => "lightpink",
+                        (Gender.Man, true) => "lightyellow",
+                        (Gender.Woman, true) => "lightyellow",
+                        _ => "lightgray"
                     },
+                    // Color = evt.Gender switch
+                    // {
+                    //     Gender.Man => "lightblue",
+                    //     Gender.Woman => "lightpink",
+                    //     _ => "gray" // fallback if new enum values are added
+                    // },
                     Comment = evt.Description    // Optional
                 };
         }

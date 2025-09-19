@@ -17,7 +17,7 @@ else
                 <th>Titel</th>
                 @* <th>Beskrivning</th> *@
 
-                <th>Platser kvar</th>
+                <th>Platser</th>
                 <th>Datum</th>
                 @* <th>Återkommande</th> *@
                 <th></th>
@@ -42,7 +42,38 @@ else
                         </td>
                         <td>@evt.Title</td>
                         @* <td>@evt.Description</td> *@
-                        <td>
+                        <td style="min-width: 5px;">
+                            @{
+                                int remaining = SpotsRemaining(evt.Id);
+                                int total = evt.MaxSlots;
+                                int booked = total - remaining;
+                                int percent = (int)(((double)booked / total) * 100);
+
+                                string progressColor = percent switch
+                                {
+                                    >= 100 => "bg-danger",
+                                    >= 70 => "bg-warning",
+                                    _ => "bg-success"
+                                };
+                            }
+
+                            <div class="progress position-relative" style="height: 20px;">
+                                <!-- Colored fill bar -->
+                                <div class="progress-bar @progressColor"
+                                     role="progressbar"
+                                     style="width: @percent%;"
+                                     aria-valuenow="@percent"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                </div>
+
+                                <!-- Centered text on top of the bar -->
+                                <span class="position-absolute top-50 start-50 translate-middle text-black fw-bold">
+                                    @booked / @total
+                                </span>
+                            </div>
+                        </td>
+                        @* <td>
                             @if (@SpotsRemaining(evt.Id) == 0)
                             {
                                 <span class="badge rounded-pill text-bg-danger p-2">@SpotsRemaining(evt.Id)</span>
@@ -55,7 +86,7 @@ else
                             {
                                 <span class="badge rounded-pill text-bg-success p-2">@SpotsRemaining(evt.Id)</span>
                             }
-                            </td>
+                            </td> *@
                         <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
                         @* <td>
                             @if (evt.Recurring)

@@ -45,7 +45,7 @@ else
     <div id="faqAccordion" class="accordion">
         @foreach (var faq in faqs)
         {
-            <div class="d-flex flex-column flex-md-row align-items-stretch mb-3 w-100">
+            <div class="d-flex flex-md-row align-items-stretch mb-3 w-100">
 
                 <!-- Accordion Item -->
                 <div class="accordion-item flex-grow-1 rounded" data-id="@faq.Id">
@@ -77,9 +77,17 @@ else
                 </div>
 
                 <!-- Buttons -->
-                <div class="mt-2 mt-md-0 ms-md-2 d-flex flex-row justify-content-start">
-                    <button class="btn btn-warning btn-sm p-3" @onclick="async () => await EditAlert(faq.Id)">Ändra</button>
-                    <button class="btn btn-danger btn-sm ms-1 p-3" @onclick="async () => await ShowRemoveAlert(faq.Id)">Ta bort</button>
+                <div class="d-flex flex-column">
+                    <button class="btn btn-sm btn-outline-warning mb-1 mb-md-0 me-md-1 ms-1"
+                            title="Ändra"
+                            @onclick="async () => await EditAlert(faq.Id)">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger mb-1 mb-md-0 me-md-1 ms-1"
+                            title="Ta bort"
+                            @onclick="async () => await ShowRemoveAlert(faq.Id)">
+                        <i class="bi bi-trash"></i>
+                    </button>
                 </div>
             </div>
         }

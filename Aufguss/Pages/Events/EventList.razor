@@ -19,73 +19,103 @@
 
 @if (evts == null)
 {
-    <p><em>Laddar...</em></p>
+        <p><em>Laddar...</em></p>
 }
 else
 {
-    if(!Value)
+    if (!Value)
     {
-        <a class="btn btn-primary mb-3 me-2" href="/Events/Create">Skapa ny bokning</a>
-        <table class="table mb-5">
-            <thead>
-                <tr>
-                    
+                <a class="btn btn-primary mb-3 me-2" href="/Events/Create">Skapa ny bokning</a>
+                <table class="table mb-5">
+                    <thead>
+                        <tr>
+
                     @* <th>ID</th> *@
-                    <th>Kön</th>
-                    <th>Titel</th>
-                    <th>Platser</th>
-                    <th>Datum</th>
-                    <th>Dold</th>
-                    <th style="width: 80px;"></th> <!-- Icons column -->
-                </tr>
-            </thead>
-            <tbody>
+                            <th>Kön</th>
+                            <th>Titel</th>
+                            <th>Platser</th>
+                            <th>Datum</th>
+                            <th>Dold</th>
+                            <th style="width: 80px;"></th> <!-- Icons column -->
+                        </tr>
+                    </thead>
+                    <tbody>
                 @foreach (var evt in evts)
                 {
-                    <tr>
-                        
+                                <tr>
+
                         @* <td>@evt.Id</td> *@
-                        <td>
+                                    <td>
                             @if (evt.Gender == 0)
                             {
-                                <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
+                                                <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
                             }
                             else
                             {
-                                <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
+                                                <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
                             }
-                        </td>
-                        <td>@evt.Title</td>
-                        <td>@evt.MaxSlots</td>
-                        <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
-                        <td>
+                                    </td>
+                                    <td>@evt.Title</td>
+                                                            <td style="min-width: 5px;">
+                            @{
+                                int remaining = SpotsRemaining(evt.Id);
+                                int total = evt.MaxSlots;
+                                int booked = total - remaining;
+                                int percent = (int)(((double)booked / total) * 100);
+
+                                string progressColor = percent switch
+                                {
+                                    >= 100 => "bg-danger",
+                                    >= 70 => "bg-warning",
+                                    _ => "bg-success"
+                                };
+                            }
+
+                                                    <div class="progress position-relative" style="height: 20px;">
+                                                        <!-- Colored fill bar -->
+                                                        <div class="progress-bar @progressColor"
+                                                             role="progressbar"
+                                                             style="width: @percent%;"
+                                                             aria-valuenow="@percent"
+                                                             aria-valuemin="0"
+                                                             aria-valuemax="100">
+                                                        </div>
+
+                                                        <!-- Centered text on top of the bar -->
+                                                        <span class="position-absolute top-50 start-50 translate-middle text-black fw-bold">
+                                    @booked / @total
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                    <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                                    <td>
                             @if (evt.Hidden)
                             {
-                                <button class="border border-0 badge rounded-pill text-bg-success p-2" @onclick="async () => await SaveEvent(evt.Id)">Ja</button>
+                                                <button class="border border-0 badge rounded-pill text-bg-success p-2" @onclick="async () => await SaveEvent(evt.Id)">Ja</button>
                             }
                             else
                             {
-                                <button class="border border-0 badge rounded-pill text-bg-warning p-2" @onclick="async () => await SaveEvent(evt.Id)">Nej</button>
+                                                <button class="border border-0 badge rounded-pill text-bg-warning p-2" @onclick="async () => await SaveEvent(evt.Id)">Nej</button>
                             }
+                                    </td>
+                                                <td class="text-nowrap">
+                            <div class="d-flex flex-column flex-md-row">
+                                <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
+                                        title="Ändra"
+                                                    @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger"
+                                        title="Ta bort"
+                                        @onclick="async () => await ShowAlert(evt.Id)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
                         </td>
-                                    <td class="text-nowrap">
-                <div class="d-flex flex-column flex-md-row">
-                    <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
-                            title="Ändra"
-                                        @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger"
-                            title="Ta bort"
-                            @onclick="async () => await ShowAlert(evt.Id)">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-            </td>
-                    </tr>
+                                </tr>
                 }
-            </tbody>
-        </table>
+                    </tbody>
+                </table>
 
         @* <table class="table mb-5">
             <thead>
@@ -142,10 +172,23 @@ else
     }
     else
     {
-        <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate">
-            <MonthlyView TaskClick="OnTaskClick" Draggable DragStart="OnDragStart" DropTask="OnDragDrop" DayClick="OnDayClick" />
-        </CalendarContainer>
+                <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate">
+            <MonthlyView 
+                TaskClick="OnTaskClick" 
+                Draggable DragStart="OnDragStart" 
+                DropTask="OnDragDrop" 
+                DayClick="OnDayClick" 
+                SaturdayColor="White" 
+                SundayColor="White" />
+                </CalendarContainer>
+
+                <p class="btn btn-sm bg-primary-subtle mt-2">Herrar</p>
+                <p class="btn btn-sm bg-danger-subtle mt-2">Damer</p>
+                <p class="btn btn-sm bg-warning-subtle mt-2">Fullbokat</p>
+                <p class="btn btn-sm bg-dark-subtle mt-2">Dold</p>
     }
+
+
 }
 
 @inject SweetAlertService Swal
@@ -173,35 +216,35 @@ else
         evts = await Http.GetFromJsonAsync<List<Event>>("api/Events");
         bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
 
-        ModelTasks = evts.Select(evt => new BlazorCalendar.Models.Tasks
+
+        ModelTasks = evts.Select(evt =>
+    {
+        bool sessionFull = evt.MaxSlots == bookings.Where(b => b.EventId == evt.Id && b.Reserve == false && b.Unbooked == false).Count(); ;
+
+        return new BlazorCalendar.Models.Tasks
             {
                 ID = evt.Id,
-            // Caption = evt.Title,
-                // Caption = evt.Hidden switch
-                // {
-                //     true => "[Dold]" + evt.Title,
-                //     false => evt.Title
-                // },
                 Caption = (evt.Gender, evt.Hidden) switch
                 {
                     (Gender.Man, false) => "Herrar",
                     (Gender.Woman, false) => "Damer",
-                    (Gender.Man, true) => "[Herrar] Aufguss " + "[Dold]",
-                    (Gender.Woman, true) => "[Damer] Aufguss " + "[Dold]",
+                    (Gender.Man, true) =>  "Herrar", // Om jag behöver ett scenario för dolda
+                    (Gender.Woman, true) => "Damer", // Om jag behöver ett scenario för dolda
                     _ => "lightgray"
                 },
                 DateStart = evt.Start,
                 DateEnd = evt.Start,
-                Color = (evt.Gender, evt.Hidden) switch
+                Color = (evt.Hidden, evt.Gender, sessionFull) switch
                 {
-                    (Gender.Man, false) => "#7aa7c7",
-                    (Gender.Woman, false) => "#d58db5",
-                    (Gender.Man, true) => "#e3f2fd",     // lighter blue for hidden Man
-                    (Gender.Woman, true) => "#fce4ec",   // lighter pink for hidden Woman
+                    (false, Gender.Man, false) => "lightblue",
+                    (false, Gender.Woman, false) => "lightpink",
+                    (false, Gender.Man, true) => "lightyellow",
+                    (false, Gender.Woman, true) => "lightyellow",
                     _ => "lightgray"
                 },
                 Comment = evt.Description
-            }).ToArray();
+            };
+    }).ToArray();
 
         await InvokeAsync(StateHasChanged);
     }
@@ -352,7 +395,7 @@ else
         get { return _value; }
         set
         {
-            if(_value != value)
+            if (_value != value)
             {
                 _value = value;
             }
@@ -422,5 +465,21 @@ else
                 Console.WriteLine("Exception: " + ex.Message);
             }
         }
+    }
+    public int SpotsRemaining(int evtId)
+    {
+        if (evts == null || bookings == null)
+            return 0;
+
+        var evt = evts.SingleOrDefault(e => e.Id == evtId);
+        if (evt == null)
+            return 0;
+
+        var count = bookings.Count(b =>
+            b.EventId == evt.Id &&
+            b.Unbooked == false &&
+            b.Reserve == false);
+
+        return evt.MaxSlots - count;
     }
 }
