@@ -12,52 +12,52 @@
 
 <h1 class="mb-3">Bokningar</h1>
 <p>Visa kalender</p>
-<input type="checkbox" @bind="Value"/>
+<input type="checkbox" @bind="Value" />
 <p></p>
 <p></p>
 
 
 @if (evts == null)
 {
-        <p><em>Laddar...</em></p>
+    <p><em>Laddar...</em></p>
 }
 else
 {
     if (!Value)
     {
-                <a class="btn btn-primary mb-3 me-2" href="/Events/Create">Skapa ny bokning</a>
-                <table class="table mb-5">
-                    <thead>
-                        <tr>
+        <a class="btn btn-primary mb-3 me-2" href="/Events/Create">Skapa ny bokning</a>
+        <table class="table mb-5">
+            <thead>
+                <tr>
 
                     @* <th>ID</th> *@
-                            <th>Kön</th>
-                            <th>Titel</th>
-                            <th>Platser</th>
-                            <th>Datum</th>
-                            <th>Dold</th>
-                            <th style="width: 80px;"></th> <!-- Icons column -->
-                        </tr>
-                    </thead>
-                    <tbody>
+                    <th>Kön</th>
+                    <th>Titel</th>
+                    <th>Platser</th>
+                    <th>Datum</th>
+                    <th>Dold</th>
+                    <th style="width: 80px;"></th> <!-- Icons column -->
+                </tr>
+            </thead>
+            <tbody>
                 @foreach (var evt in evts)
                 {
                     <tr style="cursor: pointer;"
                         @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
 
                         @* <td>@evt.Id</td> *@
-                                    <td>
+                        <td>
                             @if (evt.Gender == 0)
                             {
-                                                <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
+                                <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
                             }
                             else
                             {
-                                                <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
+                                <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
                             }
-                                    </td>
-                                    <td>@evt.Title</td>
-                                                            <td style="min-width: 5px;">
+                        </td>
+                        <td>@evt.Title</td>
+                        <td style="min-width: 5px;">
                             @{
                                 int remaining = SpotsRemaining(evt.Id);
                                 int total = evt.MaxSlots;
@@ -72,41 +72,41 @@ else
                                 };
                             }
 
-                                                    <div class="progress position-relative" style="height: 20px;">
-                                                        <!-- Colored fill bar -->
-                                                        <div class="progress-bar @progressColor"
-                                                             role="progressbar"
-                                                             style="width: @percent%;"
-                                                             aria-valuenow="@percent"
-                                                             aria-valuemin="0"
-                                                             aria-valuemax="100">
-                                                        </div>
+                            <div class="progress position-relative" style="height: 20px;">
+                                <!-- Colored fill bar -->
+                                <div class="progress-bar @progressColor"
+                                     role="progressbar"
+                                     style="width: @percent%;"
+                                     aria-valuenow="@percent"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                </div>
 
-                                                        <!-- Centered text on top of the bar -->
-                                                        <span class="position-absolute top-50 start-50 translate-middle text-black fw-bold">
+                                <!-- Centered text on top of the bar -->
+                                <span class="position-absolute top-50 start-50 translate-middle text-black fw-bold">
                                     @booked / @total
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                    <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
-                                    <td>
+                                </span>
+                            </div>
+                        </td>
+                        <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                        <td>
                             @if (evt.Hidden)
                             {
-                                                @* <button class="border border-0 badge rounded-pill text-bg-success p-2" @onclick="async () => await SaveEvent(evt.Id)">Ja</button> *@
+                                @* <button class="border border-0 badge rounded-pill text-bg-success p-2" @onclick="async () => await SaveEvent(evt.Id)">Ja</button> *@
                                 <button class="btn btn-sm btn-success" @onclick:stopPropagation @onclick="async () => await SaveEvent(evt.Id)">Ja</button>
                             }
                             else
                             {
-                                                @* <button class="border border-0 badge rounded-pill text-bg-warning p-2" @onclick="async () => await SaveEvent(evt.Id)">Nej</button> *@
+                                @* <button class="border border-0 badge rounded-pill text-bg-warning p-2" @onclick="async () => await SaveEvent(evt.Id)">Nej</button> *@
                                 <button class="btn btn-sm btn-warning" @onclick:stopPropagation @onclick="async () => await SaveEvent(evt.Id)">Nej</button>
                             }
-                                    </td>
-                                                <td class="text-nowrap">
+                        </td>
+                        <td class="text-nowrap">
                             <div class="d-flex flex-column flex-md-row">
                                 <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
                                         title="Ändra"
                                 @onclick:stopPropagation
-                                                    @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
+                                        @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button class="btn btn-sm btn-outline-danger"
@@ -117,10 +117,10 @@ else
                                 </button>
                             </div>
                         </td>
-                                </tr>
+                    </tr>
                 }
-                    </tbody>
-                </table>
+            </tbody>
+        </table>
 
         @* <table class="table mb-5">
             <thead>
@@ -177,20 +177,25 @@ else
     }
     else
     {
-                <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate">
-            <MonthlyView 
-                TaskClick="OnTaskClick" 
-                Draggable DragStart="OnDragStart" 
-                DropTask="OnDragDrop" 
-                DayClick="OnDayClick" 
-                SaturdayColor="White" 
-                SundayColor="White" />
-                </CalendarContainer>
 
-                <p class="btn btn-sm bg-primary-subtle mt-2">Herrar</p>
-                <p class="btn btn-sm bg-danger-subtle mt-2">Damer</p>
-                <p class="btn btn-sm bg-warning-subtle mt-2">Fullbokat</p>
-                <p class="btn btn-sm bg-dark-subtle mt-2">Dold</p>
+        <div class="d-flex justify-content-center align-items-center">
+            <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(-1))">←</button>
+            <h3 class="mx-2 text-center" style="width: 15ch;">@FirstDate.ToString("MMMM yyyy")</h3>
+            <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(1))">→</button>
+        </div>
+        <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate">
+            <MonthlyView TaskClick="OnTaskClick"
+                         Draggable DragStart="OnDragStart"
+                         DropTask="OnDragDrop"
+                         DayClick="OnDayClick"
+                         SaturdayColor="White"
+                         SundayColor="White" />
+        </CalendarContainer>
+
+        <p class="btn btn-sm bg-primary-subtle mt-2">Herrar</p>
+        <p class="btn btn-sm bg-danger-subtle mt-2">Damer</p>
+        <p class="btn btn-sm bg-warning-subtle mt-2">Fullbokat</p>
+        <p class="btn btn-sm bg-dark-subtle mt-2">Dold</p>
     }
 
 
@@ -216,6 +221,12 @@ else
         await LoadEventsAsync();
     }
 
+    public void ChangeMonth(int change)
+    {
+        FirstDate = FirstDate.AddMonths(change);
+        StateHasChanged();
+    }
+
     private async Task LoadEventsAsync()
     {
         evts = await Http.GetFromJsonAsync<List<Event>>("api/Events");
@@ -233,7 +244,7 @@ else
                 {
                     (Gender.Man, false) => "Herrar",
                     (Gender.Woman, false) => "Damer",
-                    (Gender.Man, true) =>  "Herrar", // Om jag behöver ett scenario för dolda
+                    (Gender.Man, true) => "Herrar", // Om jag behöver ett scenario för dolda
                     (Gender.Woman, true) => "Damer", // Om jag behöver ett scenario för dolda
                     _ => "lightgray"
                 },

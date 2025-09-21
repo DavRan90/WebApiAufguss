@@ -3,12 +3,20 @@
 @using BlazorCalendar.Models
 @using System.Text.Json
 
-<h3>Calendar in progress</h3>
+<h2>Calendar in progress</h2>
 
+<div class="d-flex justify-content-center align-items-center">
+    <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(-1))">←</button>
+    <h3 class="mx-2 text-center" style="width: 15ch;">@FirstDate.ToString("MMMM yyyy")</h3>
+    <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(1))">→</button>
+</div>
 
+@* <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Weekly" FirstDate="@FirstDate">
+    <WeekView TaskClick="OnTaskClick"></WeekView>
+</CalendarContainer> *@
 
-<CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate" >
-    <MonthlyView TaskClick="OnTaskClick" SaturdayColor="White" SundayColor="White" />
+<CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate">
+    <MonthlyView TaskClick="OnTaskClick" SaturdayColor="White" SundayColor="White"/>
 </CalendarContainer>
 
 <p class="btn btn-sm bg-primary-subtle mt-2">Herrar</p>
@@ -21,13 +29,21 @@
 @inject SweetAlertService Swal
 
 @code {
-    private DateTime FirstDate = DateTime.Today;  // or whatever month you want to start
+
 
     private List<Event>? evts;
 
     private int guestCount;
 
     private BlazorCalendar.Models.Tasks[]? ModelTasks;
+
+    private DateTime FirstDate = DateTime.Today;  // or whatever month you want to start
+
+    public void ChangeMonth(int change)
+    {
+        FirstDate = FirstDate.AddMonths(change);
+        StateHasChanged();
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -53,7 +69,7 @@
                         _ => "lightgray"
                     },
                     DateStart = evt.Start,   // Assuming your Event has StartDate
-                    DateEnd = evt.Start,
+                    DateEnd = evt.Start, // Need end time to show in weekly schedule
                     Color = (evt.Gender, sessionFull) switch
                     {
                         (Gender.Man, false) => "lightblue",

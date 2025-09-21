@@ -37,13 +37,13 @@ public class Program
 
         builder.Services.AddHttpClient("AuthenticatedClient", client =>
         {
-            client.BaseAddress = new Uri("https://localhost:7162");
-            //client.BaseAddress = new Uri("https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net");
+            //client.BaseAddress = new Uri("https://localhost:7162");
+            client.BaseAddress = new Uri("https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net");
         }).AddHttpMessageHandler<AuthorizationMessageHandler>();
 
 
-        builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7162") });
-        //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net") });
+        //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7162") });
+        builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net") });
 
 
         //builder.Services.AddScoped<AuthorizationMessageHandler>();

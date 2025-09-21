@@ -1,8 +1,5 @@
 ﻿.monthly-today {
-    border: 2px solid black !important;
-    border-radius: 6px;
-    padding: 4px;
-    box-sizing: border-box;
+
 }
 .monthly-task {
     white-space: normal !important;

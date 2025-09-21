@@ -17,7 +17,7 @@ namespace WebApi
             // Add services to the container.
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
-                var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+                var connectionString = builder.Configuration.GetConnectionString("MyPC");
                 options.UseSqlServer(connectionString);
             });
 
@@ -25,7 +25,7 @@ namespace WebApi
 
             // 1. Add EF Core
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("MyPC")));
 
             // 2. Add Identity
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()

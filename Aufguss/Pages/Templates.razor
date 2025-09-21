@@ -33,7 +33,7 @@
                     <th>Platser</th>
                     <th>Beskrivning</th>
                     @* <th>Datum</th> *@
-                    <th>Dold</th>
+                    @* <th>Dold</th> *@
                     <th style="width: 80px;"></th> <!-- Icons column -->
                 </tr>
             </thead>
@@ -58,17 +58,16 @@
                         <td>@evt.MaxSlots</td>
                         <td>@evt.Description</td>
                         @* <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td> *@
-                        <td>
+                        @* <td>
                             @if (evt.Hidden)
                             {
-                                @* <button class="border border-0 badge rounded-pill text-bg-success p-2" @onclick="async () => await SaveEvent(evt.Id)">Ja</button> *@
                                 <button class="btn btn-sm btn-success">Ja</button>
                             }
                             else
                             {
                                 <button class="btn btn-sm btn-warning">Nej</button>
                             }
-                        </td>
+                        </td> *@
                         <td class="text-nowrap">
                             <div class="d-flex flex-column flex-md-row">
                                 <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
