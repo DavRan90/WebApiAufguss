@@ -65,12 +65,12 @@
             </div>
 
             <div class="row mb-3">
-                
-                    <label class="col-md-4 col-form-label">Platser kvar</label>
-                    <div class="col-md-8">
-                        <input class="form-control btn btn-warning text-start" value="@SpotsRemaining" readonly>
-                    </div>
-                    @* @if (SpotsRemaining > 5)
+
+                <label class="col-md-4 col-form-label">Platser kvar</label>
+                <div class="col-md-8">
+                    <input class="form-control btn btn-warning text-start" value="@SpotsRemaining" readonly>
+                </div>
+                @* @if (SpotsRemaining > 5)
                     {
                         <label class="badge rounded-pill text-bg-success p-3 fs-5">@SpotsRemaining</label>
                     }
@@ -82,7 +82,7 @@
                     {
                         <label class="badge rounded-pill text-bg-danger p-3 fs-5">@SpotsRemaining</label>
                     } *@
-                
+
 
             </div>
 
@@ -138,7 +138,7 @@
                 else
                 {
                     <div class="offset-md-4 col-md-4 d-grid">
-                        <button class="btn btn-primary" @onclick="async () => await ReserveBooking(true)">Reservlista</button>
+                        <button class="btn btn-warning" @onclick="async () => await ReserveBooking(true)">Reservlista</button>
                     </div>
                 }
                 <div class="col-md-4 d-grid">
@@ -155,6 +155,7 @@
 @inject NavigationManager navManager
 @inject IJSRuntime JS
 @inject SweetAlertService Swal
+@inject AuthenticationStateProvider AuthProvider
 
 @code {
 
@@ -170,6 +171,19 @@
     public Event? eventData { get; set; } = null;
     public EventDto EventDtoData { get; set; } = new();
     public JsonNode Errors { get; set; } = new JsonObject();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity is not null && user.Identity.IsAuthenticated)
+        {
+            BookingDtoData.Name = user.FindFirst("fullName")?.Value ?? "";
+            BookingDtoData.Email = user.FindFirst("email")?.Value ?? "";
+            BookingDtoData.Tel = user.FindFirst("phone_number")?.Value ?? "";
+        }
+    }
 
     protected override async Task OnParametersSetAsync()
     {

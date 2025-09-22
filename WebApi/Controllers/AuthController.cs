@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
 using WebApi.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApi.Controllers
 {
@@ -15,44 +16,120 @@ namespace WebApi.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _config;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration config)
+        public AuthController(UserManager<ApplicationUser> userManager,
+                      RoleManager<IdentityRole> roleManager,
+                      IConfiguration config)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
             _config = config;
         }
-        //[HttpPost("register")]
-        //public async Task<IActionResult> Register([FromBody] RegisterModel model)
-        //{
-        //    var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
-        //    var result = await _userManager.CreateAsync(user, model.Password);
 
-        //    if (result.Succeeded)
-        //    {
-        //        return Ok();
-        //    }
+        [HttpGet("users")]
+        public async Task<IActionResult> GetUsers()
+        {
+            var users = _userManager.Users.ToList();
 
-        //    return BadRequest(result.Errors);
-        //}
+            var usersWithRoles = new List<UserWithRolesDto>();
+
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                usersWithRoles.Add(new UserWithRolesDto
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    UserName = user.UserName,
+                    FirstName = user.FirstName,
+                    SurName = user.SurName,
+                    Roles = roles.ToList()
+                });
+            }
+
+            return Ok(usersWithRoles);
+        }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
+            // 1. Check if user already exists
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
             if (existingUser != null)
                 return BadRequest("User with this email already exists.");
 
+            // 2. Create new user object
             var user = new ApplicationUser
             {
                 UserName = model.Email,
                 Email = model.Email,
                 PhoneNumber = model.PhoneNumber,
+                FirstName = model.FirstName,
+                SurName = model.SurName,
             };
 
+            // 3. Create user with password
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
+
+            // 4. Ensure "User" role exists (optional but recommended)
+            var roleExists = await _roleManager.RoleExistsAsync("User");
+            if (!roleExists)
+            {
+                var roleResult = await _roleManager.CreateAsync(new IdentityRole("User"));
+                if (!roleResult.Succeeded)
+                    return StatusCode(500, "Failed to create default role.");
+            }
+
+            // 5. Assign "User" role
+            var assignRoles = await _userManager.AddToRoleAsync(user, "User");
+            if (!assignRoles.Succeeded)
+                return BadRequest(assignRoles.Errors);
+
+            return Ok("User registered successfully");
+        }
+
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateAdmin([FromBody] RegisterDto model)
+        {
+            // 1. Check if user already exists
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
+                return BadRequest("User with this email already exists.");
+
+            // 2. Create new user object
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                PhoneNumber = model.PhoneNumber,
+                FirstName = model.FirstName,
+                SurName = model.SurName,
+            };
+
+            // 3. Create user with password
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            // 4. Ensure "User" role exists (optional but recommended)
+            var roleExists = await _roleManager.RoleExistsAsync("Admin");
+            if (!roleExists)
+            {
+                var roleResult = await _roleManager.CreateAsync(new IdentityRole("Admin"));
+                if (!roleResult.Succeeded)
+                    return StatusCode(500, "Failed to create default role.");
+            }
+
+            // 5. Assign "User" role
+            var assignRoles = await _userManager.AddToRoleAsync(user, "Admin");
+            //var assignRoles = await _userManager.AddToRolesAsync(user, new[] { "SuperAdmin", "Admin" });
+            if (!assignRoles.Succeeded)
+                return BadRequest(assignRoles.Errors);
 
             return Ok("User registered successfully");
         }
@@ -77,6 +154,9 @@ namespace WebApi.Controllers
             {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.PhoneNumber, user.PhoneNumber),
+            new Claim("fullName", user.FirstName + " " + user.SurName ?? ""),
+            new Claim("firstName", user.FirstName ?? ""),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

@@ -1,9 +1,44 @@
-﻿@page "/CreateFaq"
+﻿@page "/Info"
 @using Aufguss.Models
 @using System.Text.Json.Nodes
 @using System.Text.Json
 
-<div class="row mb-5">
+<h1 class=mb-5>Lägg till Frågor och Svar</h1>
+<EditForm Model="FaqDtoData" OnValidSubmit="SaveFaq">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row mb-3">
+        <label class="col-md-2 col-form-label">Fråga</label>
+        <div class="col-md-4">
+            <InputText class="form-control" @bind-Value="FaqDtoData.Question" />
+            <ValidationMessage For="@(() => FaqDtoData.Question)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label class="col-md-2 col-form-label">Svar</label>
+        <div class="col-md-4">
+            <InputTextArea rows="4" class="form-control" @bind-Value="FaqDtoData.Answer" />
+            <ValidationMessage For="@(() => FaqDtoData.Answer)" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="offset-md-2 col-md-2 d-grid">
+            <button type="submit" class="btn btn-primary">Spara</button>
+        </div>
+        <div class="col-md-2 d-grid">
+            <a class="btn btn-outline-primary" href="/Info">Avbryt</a>
+        </div>
+    </div>
+</EditForm>
+
+<br />
+<br />
+<br />
+
+@* <div class="row mb-5">
     <div class="col-lg-8">
         <h1 class=mb-5>Lägg till Frågor och Svar</h1>
 
@@ -27,11 +62,11 @@
                 <button class="btn btn-primary" @onclick="SaveFaq">Spara</button>
             </div>
             <div class="col-md-4 d-grid">
-                <a class="btn btn-outline-primary" href="/CreateFaq">Avbryt</a>
+                <a class="btn btn-outline-primary" href="/Info">Avbryt</a>
             </div>
         </div>
     </div>
-</div>
+</div> *@
 
 <p></p>
 
@@ -110,6 +145,11 @@ else
 
     private bool sortableInitialized = false;
 
+    protected override async Task OnInitializedAsync()
+    {
+        faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!sortableInitialized && faqs != null)
@@ -135,11 +175,6 @@ else
         await Http.PutAsJsonAsync("api/Faqs/update-order", faqs);
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-        faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
-    }
-
     private async Task DeleteFaq(int id)
     {
         await Http.DeleteAsync("api/Faqs/" + id);
@@ -153,7 +188,8 @@ else
         if (response.IsSuccessStatusCode)
         {
             faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
-            navManager.NavigateTo("/CreateFaq");
+            FaqDtoData = new();
+            navManager.NavigateTo("/Info");
         }
 
         else

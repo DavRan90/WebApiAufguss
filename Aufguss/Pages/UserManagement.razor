@@ -1,0 +1,112 @@
+﻿@page "/Users"
+@using Aufguss.Models
+
+<h1>Användare</h1>
+
+<h3> Vanliga användare </h3>
+@if (Users == null)
+{
+    <p><em>Laddar...</em></p>
+}
+else
+{
+    <table class="table mb-5">
+        <thead>
+            <tr>
+
+                <th>ID</th>
+                <th>Förnamn</th>
+                <th>Efternamn</th>
+                <th>Användarnamn</th>
+                <th>Roll</th>
+                <th style="width: 80px;"></th> <!-- Icons column -->
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Users)
+            {
+                <tr>
+                    <td>@user.Id</td>
+                    <td>@user.FirstName</td>
+                    <td>@user.SurName</td>
+                    <td>@user.UserName</td>
+                    <td>@string.Join(", ", user.Roles)</td>
+                    <td class="text-nowrap">
+                        <div class="d-flex flex-column flex-md-row">
+                            <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
+                            title="Ändra">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger"
+                            title="Ta bort">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (AdminUsers == null)
+{
+    <p><em>Laddar...</em></p>
+}
+else
+{
+<h3> Administratörer </h3>
+
+<table class="table mb-5">
+        <thead>
+            <tr>
+
+                <th>ID</th>
+                <th>Förnamn</th>
+                <th>Efternamn</th>
+                <th>Användarnamn</th>
+                <th>Roll</th>
+                <th style="width: 80px;"></th> <!-- Icons column -->
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var admin in AdminUsers)
+        {
+                    <tr>
+                        <td>@admin.Id</td>
+                        <td>@admin.FirstName</td>
+                        <td>@admin.SurName</td>
+                        <td>@admin.UserName</td>
+                        <td>@string.Join(", ", admin.Roles)</td>
+                        <td class="text-nowrap">
+                            <div class="d-flex flex-column flex-md-row">
+                                <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
+                                title="Ändra">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger"
+                                title="Ta bort">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+        }
+        </tbody>
+    </table>
+    }
+@inject HttpClient Http
+@inject NavigationManager NavManager
+
+@code {
+
+    private List<UserWithRolesDto>? Users;
+
+    private List<UserWithRolesDto>? AdminUsers;
+    protected override async Task OnInitializedAsync()
+    {
+        Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
+        AdminUsers = Users?.Where(u => u.Roles.Contains("Admin")).ToList();
+        Users = Users?.Where(u => u.Roles.Contains("User")).ToList();
+    }
+}

@@ -1,7 +1,42 @@
-﻿@page "/CreateNews"
+﻿@page "/Nyheter"
 @using System.Text.Json.Nodes
 
-<div class="row mb-5">
+<h1 class=mb-5>Lägg till Frågor och Svar</h1>
+<EditForm Model="EntryDtoData" OnValidSubmit="SaveEntry">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row mb-3">
+        <label class="col-md-2 col-form-label">Fråga</label>
+        <div class="col-md-4">
+            <InputText class="form-control" @bind-Value="EntryDtoData.Title" />
+            <ValidationMessage For="@(() => EntryDtoData.Title)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label class="col-md-2 col-form-label">Svar</label>
+        <div class="col-md-4">
+            <InputTextArea rows="4" class="form-control" @bind-Value="EntryDtoData.Description" />
+            <ValidationMessage For="@(() => EntryDtoData.Description)" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="offset-md-2 col-md-2 d-grid">
+            <button type="submit" class="btn btn-primary">Spara</button>
+        </div>
+        <div class="col-md-2 d-grid">
+            <a class="btn btn-outline-primary" href="/Nyheter">Avbryt</a>
+        </div>
+    </div>
+</EditForm>
+
+<br />
+<br />
+<br />
+
+@* <div class="row mb-5">
     <div class="col-lg-8">
         <h1 class=mb-5>Lägg till nyhet</h1>
 
@@ -20,13 +55,13 @@
             </div>
         </div>
 
-        @* <div class="row mb-3">
+        <div class="row mb-3">
             <label class="col-md-4 col-form-label">Välj en bild</label>
             <div class="col-md-8">
                 <InputFile onchange ="UploadFile" accept="image/*" />
                 <input class="form-control" @bind="EntryDtoData.Image"> 
             </div>
-        </div> *@
+        </div> 
 
         <div class="row mb-3">
             <label class="col-md-4 col-form-label">Länka till pass</label>
@@ -40,12 +75,12 @@
                 </InputSelect>
             </div>
         </div>
-        @* <div class="row mb-3">
+        <div class="row mb-3">
             <label class="col-md-4 col-form-label">Länka till pass</label>
             <div class="col-md-8">
                 <input class="form-control" @bind="EntryDtoData.Url">
             </div>
-        </div> *@
+        </div>
 
         <div class="row">
             <div class="offset-md-4 col-md-4 d-grid">
@@ -56,7 +91,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> *@
 
 <h1>Nyheter</h1>
 
