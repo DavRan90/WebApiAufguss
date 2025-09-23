@@ -11,10 +11,17 @@ namespace WebApi.Controllers
     {
         private readonly ApplicationDbContext context;
 
-        public BookingsController(ApplicationDbContext context)
+        private readonly NotificationService _notificationService;
+
+        public BookingsController(ApplicationDbContext context, NotificationService notificationService)
         {
             this.context = context;
+            _notificationService = notificationService;
         }
+        //public BookingsController(ApplicationDbContext context)
+        //{
+        //    this.context = context;
+        //}
 
         [HttpGet]
         public IActionResult GetBookings()
@@ -35,9 +42,35 @@ namespace WebApi.Controllers
             return Ok(booking);
         }
 
+        //[HttpPost]
+        //public IActionResult CreateBooking(BookingDto bookingDto)
+        //{
+
+        //    var booking = new Booking
+        //    {
+        //        Name = bookingDto.Name,
+        //        Email = bookingDto.Email,
+        //        Tel = bookingDto.Tel,
+        //        BookedAt = DateTime.Now,
+        //        EventId = bookingDto.EventId,
+        //    };
+
+        //    if(bookingDto.Reserve == true)
+        //    {
+        //        booking.Reserve = true;
+        //        booking.ReserveAt = DateTime.Now;
+        //    }
+
+        //    context.Bookings.Add(booking);
+        //    context.SaveChanges();
+
+        //    return Ok(booking);
+        //}
+
         [HttpPost]
-        public IActionResult CreateBooking(BookingDto bookingDto)
+        public async Task<IActionResult> CreateBooking(BookingDto bookingDto)
         {
+            Console.WriteLine("CreateBooking called.");
 
             var booking = new Booking
             {
@@ -48,7 +81,7 @@ namespace WebApi.Controllers
                 EventId = bookingDto.EventId,
             };
 
-            if(bookingDto.Reserve == true)
+            if (bookingDto.Reserve)
             {
                 booking.Reserve = true;
                 booking.ReserveAt = DateTime.Now;
@@ -57,8 +90,32 @@ namespace WebApi.Controllers
             context.Bookings.Add(booking);
             context.SaveChanges();
 
+            Console.WriteLine("Booking saved. Attempting to send email...");
+
+            try
+            {
+                var eventTitle = context.Events
+                    .Where(e => e.Id == booking.EventId)
+                    .Select(e => e.Title)
+                    .FirstOrDefault() ?? "Ditt evenemang";
+
+                await _notificationService.SendBookingEmailAsync(
+                    toEmail: booking.Email,
+                    toName: booking.Name,
+                    eventTitle: eventTitle
+                );
+
+                Console.WriteLine($"Email sent to {booking.Email} for event: {eventTitle}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Email sending failed: " + ex.Message);
+                return StatusCode(500, new { error = ex.Message });
+            }
+
             return Ok(booking);
         }
+
 
         [HttpPut("{id}")]
         public IActionResult EditBooking(int id, BookingDto bookingDto)
@@ -137,7 +194,8 @@ namespace WebApi.Controllers
             }
 
             context.Bookings.Remove(booking);
-            var reserveList = context.Bookings.Where(b => b.Reserve == true).OrderBy(b => b.ReserveAt).ToList();
+
+            var reserveList = context.Bookings.Where(b => b.EventId == booking.EventId && b.Reserve == true).OrderBy(b => b.ReserveAt).ToList();
 
             if (reserveList.Any())
             {

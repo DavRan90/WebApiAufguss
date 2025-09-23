@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNet.Identity.EntityFramework;
-
-namespace Aufguss.Models
+﻿namespace Aufguss.Models
 {
-    public class ApplicationUser : IdentityUser
+    public class ApplicationUser
     {
         public string Id { get; set; }
         public string Email { get; set; }

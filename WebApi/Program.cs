@@ -21,7 +21,10 @@ namespace WebApi
             //    options.UseSqlServer(connectionString);
             //});
 
+            builder.Services.Configure<SendGridSettings>(
+    builder.Configuration.GetSection("SendGridSettings"));
 
+            builder.Services.AddScoped<NotificationService>();
 
             // 1. Add EF Core
             builder.Services.AddDbContext<ApplicationDbContext>(options =>

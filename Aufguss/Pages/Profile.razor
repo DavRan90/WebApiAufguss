@@ -1,8 +1,99 @@
 ﻿@page "/Profil"
 
+@using Aufguss.Models
+
 <h2 class="text-bg-danger">Sidan är inte klar</h2>
 <h3>Profilen för den inloggade</h3>
 
-@code {
+@if (CurrentUser == null)
+{
+    <p><em>Laddar...</em></p>
+}
+else
+{
+    <EditForm Model="CurrentUser" OnValidSubmit="SaveUser">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
 
+        <div class="row mb-3">
+            <label class="col-md-2 col-form-label">Förnamn</label>
+            <div class="col-md-4">
+                <InputText class="form-control" @bind-Value="CurrentUser.FirstName" />
+                <ValidationMessage For="@(() => CurrentUser.FirstName)" />
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-md-2 col-form-label">Efternamn</label>
+            <div class="col-md-4">
+                <InputText class="form-control" @bind-Value="CurrentUser.SurName" />
+                <ValidationMessage For="@(() => CurrentUser.SurName)" />
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-md-2 col-form-label">Mail</label>
+            <div class="col-md-4">
+                <InputText class="form-control" @bind-Value="CurrentUser.Email" />
+                <ValidationMessage For="@(() => CurrentUser.Email)" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="offset-md-2 col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary">Spara</button>
+            </div>
+            <div class="col-md-2 d-grid">
+                <a class="btn btn-outline-primary" href="/Info">Avbryt</a>
+            </div>
+        </div>
+    </EditForm>
+}
+
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject SweetAlertService Swal
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@code {
+    private List<UserWithRolesDto>? Users;
+    private UserWithRolesDto? CurrentUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var loggedInUser = authState.User;
+        var userIdString = loggedInUser.FindFirst("sub")?.Value;
+
+        CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
+
+
+    }
+
+    private async Task SaveUser()
+    {
+        // var response = await Http.PostAsJsonAsync("api/Faqs", FaqDtoData);
+
+        // if (response.IsSuccessStatusCode)
+        // {
+        //     faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+        //     FaqDtoData = new();
+        //     navManager.NavigateTo("/Info");
+        // }
+
+        // else
+        // {
+        //     var strResponse = await response.Content.ReadAsStringAsync();
+        //     Console.WriteLine("Json Response: \n" + strResponse);
+
+        //     try
+        //     {
+        //         var jsonResponse = JsonNode.Parse(strResponse);
+        //         Errors = jsonResponse?["errors"] ?? new JsonObject();
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Console.WriteLine("Exception: " + ex.Message);
+        //     }
+        // }
+    }
 }
