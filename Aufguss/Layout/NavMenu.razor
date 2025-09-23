@@ -1,6 +1,8 @@
-﻿<div class="top-row ps-3 navbar navbar-dark bg-success">
+﻿@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="top-row ps-3 navbar navbar-dark bg-success">
     <div class="container-fluid m-4">
-        <img src="images/gnesta-kommun-logotyp.png" class="img-fluid"  />
+        <img src="images/gnesta-kommun-logotyp.png" class="img-fluid" />
         @* <a class="navbar-brand" href="">Freja Bad & Gym</a> *@
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
@@ -31,8 +33,8 @@
                 </svg> Bokningar
             </NavLink>
         </div>
-        
-        
+
+
 
         @* <div class="nav-item px-3">
             <NavLink class="nav-link" href="/TestAccordion">
@@ -54,7 +56,7 @@
         <div>
             <p></p>
         </div>
-        
+
         @* <div class="nav-item px-3">
             <NavLink class="nav-link" href="/register">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bookmark-plus-fill" viewBox="0 0 16 16">
@@ -62,18 +64,74 @@
                 </svg> Register
             </NavLink>
         </div> *@
+        <div class="nav-item px-3">
+            <NavLink class="nav-link d-flex align-items-center" href="/Register">
+                <i class="bi bi-bookmark-plus-fill fs-5 me-2" style="line-height: 1;"></i>
+                <span>Registrera dig</span>
+            </NavLink>
+        </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/login">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-wrench" viewBox="0 0 16 16">
-                    <path d="M.102 2.223A3.004 3.004 0 0 0 3.78 5.897l6.341 6.252A3.003 3.003 0 0 0 13 16a3 3 0 1 0-.851-5.878L5.897 3.781A3.004 3.004 0 0 0 2.223.1l2.141 2.142L4 4l-1.757.364zm13.37 9.019.528.026.287.445.445.287.026.529L15 13l-.242.471-.026.529-.445.287-.287.445-.529.026L13 15l-.471-.242-.529-.026-.287-.445-.445-.287-.026-.529L11 13l.242-.471.026-.529.445-.287.287-.445.529-.026L13 11z" />
-                </svg> Login
+            <NavLink class="nav-link d-flex align-items-center" href="/login">
+                <i class="bi bi-person fs-5 me-2" style="line-height: 1;"></i>
+                <span>Logga in</span>
             </NavLink>
         </div>
 
         @* <AuthorizeView> *@
+        @if (isAdminOrSuperAdmin)
+        {
+            <div class="nav-item px-3 mt-4">
+                <div class="nav-link d-flex align-items-center justify-content-between" @onclick="() => showAdminSection = !showAdminSection" style="cursor:pointer;">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-gear-fill fs-5 me-2" style="line-height: 1;"></i>
+                        <span>Admin</span>
+                    </div>
+                    <i class="bi @(showAdminSection ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                </div>
+            </div>
 
-        <div class="nav-item px-3">
+            @if (showAdminSection)
+            {
+                <div class="ps-4">
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link d-flex align-items-center" href="/Users">
+                            <i class="bi bi-people-fill fs-5 me-2" style="line-height: 1;"></i>
+                            <span>Hantera användare</span>
+                        </NavLink>
+                    </div>
+
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link d-flex align-items-center" href="/Events">
+                            <i class="bi bi-calendar-check-fill fs-5 me-2" style="line-height: 1;"></i>
+                            <span>Hantera bokningar</span>
+                        </NavLink>
+                    </div>
+
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link d-flex align-items-center" href="/Nyheter">
+                            <i class="bi bi-newspaper fs-5 me-2" style="line-height: 1;"></i>
+                            <span>Nyheter</span>
+                        </NavLink>
+                    </div>
+
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link d-flex align-items-center" href="/Info">
+                            <i class="bi bi-patch-question-fill fs-5 me-2" style="line-height: 1;"></i>
+                            <span>Frågor och svar</span>
+                        </NavLink>
+                    </div>
+
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link d-flex align-items-center" href="/templates">
+                            <i class="bi bi-ui-checks fs-5 me-2" style="line-height: 1;"></i>
+                            <span>Mallar</span>
+                        </NavLink>
+                    </div>
+                </div>
+            }
+        }
+        @* <div class="nav-item px-3">
             <NavLink class="nav-link" href="/Admin">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-wrench-adjustable-circle-fill" viewBox="0 0 16 16">
                     <path d="M6.705 8.139a.25.25 0 0 0-.288-.376l-1.5.5.159.474.808-.27-.595.894a.25.25 0 0 0 .287.376l.808-.27-.595.894a.25.25 0 0 0 .287.376l1.5-.5-.159-.474-.808.27.596-.894a.25.25 0 0 0-.288-.376l-.808.27z" />
@@ -126,7 +184,7 @@
                     <path d="M7 2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5zM2 1a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2zm0 8a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2zm.854-3.646a.5.5 0 0 1-.708 0l-1-1a.5.5 0 1 1 .708-.708l.646.647 1.646-1.647a.5.5 0 1 1 .708.708zm0 8a.5.5 0 0 1-.708 0l-1-1a.5.5 0 0 1 .708-.708l.646.647 1.646-1.647a.5.5 0 0 1 .708.708zM7 10.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5zm0-5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0 8a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5" />
                 </svg> Mallar
             </NavLink>
-        </div>
+        </div> *@
 
         @* </AuthorizeView> *@
     </nav>
@@ -135,7 +193,19 @@
 @code {
     private bool collapseNavMenu = true;
 
+    private bool showAdminSection = false;
+
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private bool isAdminOrSuperAdmin = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        isAdminOrSuperAdmin = user.IsInRole("Admin") || user.IsInRole("SuperAdmin");
+    }
 
     private void ToggleNavMenu()
     {

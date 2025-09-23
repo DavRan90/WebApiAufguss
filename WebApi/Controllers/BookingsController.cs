@@ -139,7 +139,7 @@ namespace WebApi.Controllers
             context.Bookings.Remove(booking);
             var reserveList = context.Bookings.Where(b => b.Reserve == true).OrderBy(b => b.ReserveAt).ToList();
 
-            if(reserveList != null)
+            if (reserveList.Any())
             {
                 reserveList[0].Reserve = false;
                 reserveList[0].BookedAt = DateTime.Now;

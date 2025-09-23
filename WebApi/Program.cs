@@ -57,28 +57,6 @@ namespace WebApi
     };
 });
 
-            //builder.Services.AddAuthentication(options =>
-            //{
-            //    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            //    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            //})
-            //.AddJwtBearer(options =>
-            //{
-            //    // nya tillägg
-            //    options.RequireHttpsMetadata = false; // Change to true in production
-            //    options.SaveToken = true;
-
-            //    options.TokenValidationParameters = new TokenValidationParameters
-            //    {
-            //        ValidateIssuer = true,
-            //        ValidateAudience = false, // Can be set to true and validated
-            //        ValidateLifetime = true,
-            //        ValidateIssuerSigningKey = true,
-            //        ValidIssuer = jwtIssuer,
-            //        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-            //    };
-            //});
-
             // When i want more requirements on password
 
             //builder.Services.Configure<IdentityOptions>(options =>
@@ -90,11 +68,22 @@ namespace WebApi
             //    options.Password.RequiredLength = 6;
             //});
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend",
+                    policy =>
+                    {
+                        policy.WithOrigins("https://aufgussdemo.azurewebsites.net", "https://localhost:7003") // Add all frontend origins here
+                              .AllowAnyHeader()
+                              .AllowAnyMethod();
+                    });
+            });
+
             builder.Services.AddEndpointsApiExplorer();
 
             //builder.Services.AddSwaggerGen();
 
-
+            
 
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -102,36 +91,22 @@ namespace WebApi
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.MapOpenApi();
-            }
-
-            app.UseCors(policy => policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
-
-            //builder.Services.AddCors(options =>
+            //if (app.Environment.IsDevelopment())
             //{
-            //    options.AddPolicy("AllowBlazorClient", policy =>
-            //    {
-            //        policy.WithOrigins("https://aufgussdemo.azurewebsites.net")
-            //              .AllowAnyHeader()
-            //              .AllowAnyMethod();
-            //    });
-            //});
+            //    app.UseSwagger();
+            //    app.UseSwaggerUI();
+            //}
 
-            //app.UseCors("AllowBlazorClient");
-
+            // Order is critical!
             app.UseHttpsRedirection();
 
-            app.UseAuthentication(); // Newly added
+            app.UseCors("AllowFrontend"); // CORS must come before auth!
 
+            app.UseAuthentication();      // Then authentication
             app.UseAuthorization();
 
-            app.UseStaticFiles(); // Serves wwwroot/*
-
+            app.UseStaticFiles();
             app.MapControllers();
-
             app.Run();
 
         }
