@@ -1,4 +1,5 @@
 ﻿@page "/Events/Edit/{id:int}"
+@attribute [Authorize(Roles = "Admin,SuperAdmin")]
 @using System.Text.Json.Nodes
 @using System.Text.Json
 

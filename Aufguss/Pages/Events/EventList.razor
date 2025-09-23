@@ -1,5 +1,5 @@
 ﻿@page "/Events"
-@* @attribute [Authorize] *@
+@attribute [Authorize(Roles = "Admin,SuperAdmin")]
 @using System.Globalization
 @using System.Text.Json.Nodes
 @using BlazorCalendar
