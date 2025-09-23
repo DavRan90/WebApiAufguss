@@ -15,11 +15,11 @@ namespace WebApi
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            {
-                var connectionString = builder.Configuration.GetConnectionString("MyPC");
-                options.UseSqlServer(connectionString);
-            });
+            //builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            //{
+            //    var connectionString = builder.Configuration.GetConnectionString("MyPC");
+            //    options.UseSqlServer(connectionString);
+            //});
 
 
 
@@ -53,7 +53,9 @@ namespace WebApi
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+        // New
+        RoleClaimType = "role"
     };
 });
 
@@ -80,9 +82,6 @@ namespace WebApi
             });
 
             builder.Services.AddEndpointsApiExplorer();
-
-            //builder.Services.AddSwaggerGen();
-
             
 
             builder.Services.AddControllers();
@@ -91,11 +90,6 @@ namespace WebApi
 
             var app = builder.Build();
 
-            //if (app.Environment.IsDevelopment())
-            //{
-            //    app.UseSwagger();
-            //    app.UseSwaggerUI();
-            //}
 
             // Order is critical!
             app.UseHttpsRedirection();
