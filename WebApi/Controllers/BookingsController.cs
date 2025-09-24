@@ -13,10 +13,12 @@ namespace WebApi.Controllers
 
         private readonly NotificationService _notificationService;
 
-        public BookingsController(ApplicationDbContext context, NotificationService notificationService)
+        private readonly ResendEmailService _resendEmail;
+
+        public BookingsController(ApplicationDbContext context, ResendEmailService resendEmail)
         {
             this.context = context;
-            _notificationService = notificationService;
+            _resendEmail = resendEmail;
         }
         //public BookingsController(ApplicationDbContext context)
         //{
@@ -72,48 +74,82 @@ namespace WebApi.Controllers
         {
             Console.WriteLine("CreateBooking called.");
 
-            var booking = new Booking
-            {
-                Name = bookingDto.Name,
-                Email = bookingDto.Email,
-                Tel = bookingDto.Tel,
-                BookedAt = DateTime.Now,
-                EventId = bookingDto.EventId,
-            };
+            var alreadyBooked = context.Bookings.Any(b =>
+                                b.EventId == bookingDto.EventId &&
+                                b.Email == bookingDto.Email &&
+                                !b.Unbooked &&
+                                !b.Reserve);
 
-            if (bookingDto.Reserve)
+            if (alreadyBooked)
             {
-                booking.Reserve = true;
-                booking.ReserveAt = DateTime.Now;
+                return BadRequest(new { message = "Du är redan bokad till det här passet" });
             }
 
-            context.Bookings.Add(booking);
-            context.SaveChanges();
 
-            Console.WriteLine("Booking saved. Attempting to send email...");
+            var countActiveBookings = (from b in context.Bookings
+                                       join e in context.Events on b.EventId equals e.Id
+                                       where b.Email == bookingDto.Email &&
+                                             !b.Unbooked &&
+                                             !b.Reserve &&
+                                             e.Start > DateTime.Now
+                                       select b).Count();
 
-            try
+            if(countActiveBookings < 3)
             {
-                var eventTitle = context.Events
-                    .Where(e => e.Id == booking.EventId)
-                    .Select(e => e.Title)
-                    .FirstOrDefault() ?? "Ditt evenemang";
+                var booking = new Booking
+                {
+                    Name = bookingDto.Name,
+                    Email = bookingDto.Email,
+                    Tel = bookingDto.Tel,
+                    BookedAt = DateTime.Now,
+                    EventId = bookingDto.EventId,
+                };
 
-                await _notificationService.SendBookingEmailAsync(
-                    toEmail: booking.Email,
-                    toName: booking.Name,
-                    eventTitle: eventTitle
-                );
+                if (bookingDto.Reserve)
+                {
+                    booking.Reserve = true;
+                    booking.ReserveAt = DateTime.Now;
+                }
 
-                Console.WriteLine($"Email sent to {booking.Email} for event: {eventTitle}");
+                context.Bookings.Add(booking);
+                context.SaveChanges();
+
+                Console.WriteLine("Booking saved. Attempting to send email...");
+
+                try
+                {
+                    var eventTitle = context.Events
+                        .Where(e => e.Id == booking.EventId)
+                        .Select(e => e.Title)
+                        .FirstOrDefault() ?? "Ditt evenemang";
+
+                    await _resendEmail.SendEmailAsync(
+                            to: "david.rantanen@telia.com",
+                            subject: "Bokningsbekräftelse",
+                            htmlContent: "<strong>Tack för din bokning!</strong><br>" +
+                            $"Du är inbokad till {eventTitle} <br>" +
+                            $"Vi ses på Freja Bad & Gym!"
+                        );
+                    return Ok();
+
+                    Console.WriteLine($"Email sent to {booking.Email} for event: {eventTitle}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Email sending failed: " + ex.Message);
+                    return StatusCode(500, new { error = ex.Message });
+                }
+
+                return Ok(booking);
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine("Email sending failed: " + ex.Message);
-                return StatusCode(500, new { error = ex.Message });
+                return BadRequest(new { message = "För många aktiva bokningar, max 3" });
             }
 
-            return Ok(booking);
+
+
+            
         }
 
 

@@ -121,59 +121,6 @@ else
                 }
             </tbody>
         </table>
-
-        @* <table class="table mb-5">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Kön</th>
-                    <th>Titel</th>
-                    <th>Platser</th>
-                    <th>Datum</th>
-                    <th>Dold</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var evt in evts)
-                {
-                    <tr>
-                        <td>@evt.Id</td>
-                        <td>
-                            @if (evt.Gender == 0)
-                            {
-                                <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
-                            }
-                            else
-                            {
-                                <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
-                            }
-                        </td>
-                        <td>@evt.Title</td>
-                        <td>@evt.MaxSlots</td>
-                        <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
-                        <td>
-                            @if (evt.Hidden)
-                            {
-                                <button class="border border-0 badge rounded-pill text-bg-success p-2" @onclick="async () => await SaveEvent(evt.Id)">Ja</button>
-                            }
-                            else
-                            {
-                                <button class="border border-0 badge rounded-pill text-bg-warning p-2" @onclick="async () => await SaveEvent(evt.Id)">Nej</button>
-                            }
-                        </td>
-                        <td style="white-space:nowrap; width:10px">
-                            <a class="btn btn-primary btn-sm" href="/Events/Edit/@evt.Id">
-                                Ändra
-                            </a>
-                            <button class="btn btn-danger btn-sm" @onclick="async () => await ShowAlert(evt.Id)">
-                                Ta bort
-                            </button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table> *@
     }
     else
     {

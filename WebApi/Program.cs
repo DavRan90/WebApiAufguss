@@ -21,8 +21,10 @@ namespace WebApi
             //    options.UseSqlServer(connectionString);
             //});
 
-            builder.Services.Configure<SendGridSettings>(
-    builder.Configuration.GetSection("SendGridSettings"));
+            //        builder.Services.Configure<SendGridSettings>(
+            //builder.Configuration.GetSection("SendGridSettings"));
+            //        Console.WriteLine("SendGrid API key: " + builder.Configuration["SendGridSettings:ApiKey"]);
+            builder.Services.AddHttpClient<ResendEmailService>();
 
             builder.Services.AddScoped<NotificationService>();
 
@@ -105,7 +107,7 @@ namespace WebApi
             app.UseStaticFiles();
             app.MapControllers();
             app.Run();
-
+            
         }
     }
 

@@ -32,17 +32,17 @@
                 <div class="row gap-2 gap-md-1">
                     <div class="col-12 col-md-6 d-flex align-items-center">
                         <input type="radio"
-                               checked="@(EventDtoData.Gender == Gender.Man)"
-                               name="Gender"
-                               @onchange="@(() => EventDtoData.Gender = Gender.Man)" />
+                        checked="@(EventDtoData.Gender == Gender.Man)"
+                        name="Gender"
+                        @onchange="@(() => EventDtoData.Gender = Gender.Man)" />
                         <label class="btn btn-primary ms-2">Herrar</label>
                     </div>
 
                     <div class="col-12 col-md-6 d-flex align-items-center">
                         <input type="radio"
-                               checked="@(EventDtoData.Gender == Gender.Woman)"
-                               name="Gender"
-                               @onchange="@(() => EventDtoData.Gender = Gender.Woman)" />
+                        checked="@(EventDtoData.Gender == Gender.Woman)"
+                        name="Gender"
+                        @onchange="@(() => EventDtoData.Gender = Gender.Woman)" />
                         <label class="btn btn-danger ms-2">Damer</label>
                     </div>
                 </div>
@@ -100,6 +100,21 @@
                 </div>
             </div>
         </div>
+        @if(EventDtoData.Recurring)
+        {
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Frekvens</label>
+                <div class="col-md-8">
+                    <InputSelect class="form-control" @bind-Value="frequency">
+                        <option value="">-- Välj frekvens --</option>
+                        @for(int i = 1; i < 7; i++)
+                        {
+                            <option value="@i">Efter @i veckor</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+        }
         <div class="row mb-3">
             <div class="col-md-8 offset-md-4">
                 <div class="form-check">
@@ -157,6 +172,7 @@
 
 @code {
     private List<EventTemplate>? Templates;
+    private int frequency;
     public EventDto EventDtoData { get; set; } = new();
     public JsonNode Errors { get; set; } = new JsonObject();
     public bool createNews = false;

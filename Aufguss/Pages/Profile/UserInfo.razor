@@ -1,5 +1,4 @@
-﻿@page "/Profil"
-
+﻿@page "/Uppgifter"
 @using Aufguss.Models
 
 <h2 class="text-bg-danger">Sidan är inte klar</h2>
@@ -52,10 +51,15 @@ else
 @inject NavigationManager NavManager
 @inject SweetAlertService Swal
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
 
 @code {
     private List<UserWithRolesDto>? Users;
     private UserWithRolesDto? CurrentUser;
+
+    private List<Event>? events;
+    private List<Booking>? bookings;
+    // private List<Event>? eventsBooked;
 
     protected override async Task OnInitializedAsync()
     {
@@ -66,9 +70,18 @@ else
 
         CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
 
+        var allEvents = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
+        // bookings = bookings.Where(b => b.Email == CurrentUser.Email).ToList();
 
+        events = (from b in bookings
+                  join e in allEvents on b.EventId equals e.Id
+                  where b.Email == CurrentUser.Email &&
+                       !b.Unbooked &&
+                       !b.Reserve &&
+                       e.Start > DateTime.Now
+                  select e).ToList();
     }
-
     private async Task SaveUser()
     {
         // var response = await Http.PostAsJsonAsync("api/Faqs", FaqDtoData);

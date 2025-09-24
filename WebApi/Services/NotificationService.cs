@@ -6,39 +6,36 @@ namespace WebApi.Services
 {
     public class NotificationService
     {
+
         private readonly string _apiKey;
 
-        public NotificationService(IOptions<SendGridSettings> options)
+        public NotificationService(IConfiguration config)
         {
-            _apiKey = options.Value.ApiKey;
+            // Read from appsettings.json or environment variable
+            _apiKey = config["SendGridSettings:ApiKey"] ?? Environment.GetEnvironmentVariable("SendGridSettings");
         }
 
-        public async Task SendBookingEmailAsync(string toEmail, string toName, string eventTitle)
+        public async Task SendEmailAsync(string toEmail, string subject, string plainText, string htmlContent)
         {
-            Console.WriteLine("SendBookingEmailAsync called");
-            //var options = new SendGridClientOptions
-            //{
-            //    ApiKey = _apiKey
-            //};
-            //options.SetDataResidency("eu");
-            //var client = new SendGridClient(options);
-            var client = new SendGridClient(_apiKey);
+            var options = new SendGridClientOptions
+            {
+                ApiKey = _apiKey
+            };
+            options.SetDataResidency("eu");
 
-            var from = new EmailAddress("david.rantanen@telia.com", "Aufguss");
-            var to = new EmailAddress(toEmail, toName);
-            var subject = "Bokningsbekräftelse";
-            var plainTextContent = $"Hej {toName}, din bokning för \"{eventTitle}\" har registrerats.";
-            var htmlContent = $"<strong>Hej {toName}</strong><br>Din bokning för <b>{eventTitle}</b> har registrerats.";
+            var client = new SendGridClient(options);
 
-            var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
+            var from = new EmailAddress("noreply@yourdomain.com", "Freja Bad & Gym"); // replace with your actual from address
+            var to = new EmailAddress(toEmail);
+            var msg = MailHelper.CreateSingleEmail(from, to, subject, plainText, htmlContent);
+
             var response = await client.SendEmailAsync(msg);
 
-            Console.WriteLine($"SendGrid Response Status Code: {response.StatusCode}");
-
-            if ((int)response.StatusCode >= 400)
+            // Optional: check result
+            if (!response.IsSuccessStatusCode)
             {
-                string responseBody = await response.Body.ReadAsStringAsync();
-                Console.WriteLine("SendGrid error response: " + responseBody);
+                var body = await response.Body.ReadAsStringAsync();
+                throw new Exception($"SendGrid failed: {response.StatusCode}, {body}");
             }
         }
     }

@@ -1,0 +1,224 @@
+﻿@page "/Profil"
+
+@using Aufguss.Models
+
+<h2 class="text-bg-danger">Sidan är inte klar</h2>
+<h3>Profilen för den inloggade</h3>
+
+@if (CurrentUser == null)
+{
+    <p><em>Laddar...</em></p>
+}
+else
+{
+    <EditForm Model="CurrentUser" OnValidSubmit="SaveUser">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="row mb-3">
+            <label class="col-md-2 col-form-label">Förnamn</label>
+            <div class="col-md-4">
+                <InputText class="form-control" @bind-Value="CurrentUser.FirstName" />
+                <ValidationMessage For="@(() => CurrentUser.FirstName)" />
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-md-2 col-form-label">Efternamn</label>
+            <div class="col-md-4">
+                <InputText class="form-control" @bind-Value="CurrentUser.SurName" />
+                <ValidationMessage For="@(() => CurrentUser.SurName)" />
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-md-2 col-form-label">Mail</label>
+            <div class="col-md-4">
+                <InputText class="form-control" @bind-Value="CurrentUser.Email" />
+                <ValidationMessage For="@(() => CurrentUser.Email)" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="offset-md-2 col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary">Spara</button>
+            </div>
+            <div class="col-md-2 d-grid">
+                <a class="btn btn-outline-primary" href="/Info">Avbryt</a>
+            </div>
+        </div>
+    </EditForm>
+}
+
+@if (events == null)
+{
+    <p><em>Laddar...</em></p>
+}
+else
+{
+    <h3>Dina bokningar</h3>
+    <table class="table mb-5">
+        <thead>
+            <tr>
+                <th>Kön</th>
+                <th>Titel</th>
+                @* <th>Platser</th> *@
+                <th>Datum</th>
+                <th style="width: 80px;"></th> <!-- Icons column -->
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var evt in events)
+            {
+                if (evt.Hidden == false)
+                {
+                    <tr style="cursor: pointer;"
+                    @onclick="@(() => NavManager.NavigateTo($"/Bookings/Book/{evt.Id}"))">
+                        <td>
+                            @if (evt.Gender == 0)
+                            {
+                                <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
+                            }
+                            else
+                            {
+                                <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
+                            }
+                        </td>
+                        <td>@evt.Title</td>
+                        @* <td style="min-width: 5px;">
+                            @{
+                                int remaining = SpotsRemaining(evt.Id);
+                                int total = evt.MaxSlots;
+                                int booked = total - remaining;
+                                int percent = (int)(((double)booked / total) * 100);
+
+                                string progressColor = percent switch
+                                {
+                                    >= 100 => "bg-danger",
+                                    >= 70 => "bg-warning",
+                                    _ => "bg-success"
+                                };
+                            }
+
+                            <div class="progress position-relative" style="height: 20px;">
+                                <!-- Colored fill bar -->
+                                <div class="progress-bar @progressColor"
+                                     role="progressbar"
+                                     style="width: @percent%;"
+                                     aria-valuenow="@percent"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                </div>
+
+                                <!-- Centered text on top of the bar -->
+                                <span class="position-absolute top-50 start-50 translate-middle text-black fw-bold">
+                                    @booked / @total
+                                </span>
+                            </div>
+                        </td> *@
+                        <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                        <td class="text-nowrap">
+                            <div class="d-flex flex-column flex-md-row">
+                                <button class="btn btn-sm btn-outline-danger"
+                                title="Ta bort"
+                                @onclick:stopPropagation
+                                @onclick="async () => await ShowAlert(evt.Id)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+
+            }
+        </tbody>
+    </table>
+}
+
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject SweetAlertService Swal
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
+
+@code {
+    private List<UserWithRolesDto>? Users;
+    private UserWithRolesDto? CurrentUser;
+
+    private List<Event>? events;
+    private List<Booking>? bookings;
+    // private List<Event>? eventsBooked;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var loggedInUser = authState.User;
+        var userIdString = loggedInUser.FindFirst("sub")?.Value;
+
+        CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
+
+        var allEvents = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
+        // bookings = bookings.Where(b => b.Email == CurrentUser.Email).ToList();
+
+        events =    (from b in bookings
+                  join e in allEvents on b.EventId equals e.Id
+                  where b.Email == CurrentUser.Email &&
+                       !b.Unbooked &&
+                       !b.Reserve &&
+                       e.Start > DateTime.Now
+                  select e).ToList();
+    }
+
+    private async Task ShowAlert(int id)
+    {
+        var result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Bekräfta borttagning",
+                Text = $"Vill du ta bort sittning med ID {id}?",
+                ShowCancelButton = true,
+                ConfirmButtonText = "Ja, ta bort",
+                CancelButtonText = "Nej, ta inte bort",
+            });
+        if (result.IsConfirmed)
+        {
+            await DeleteBooking(id);
+        }
+    }
+
+    private async Task DeleteBooking(int id)
+    {
+        var bookingToRemove = bookings.Where(b => b.EventId == id && b.Email == CurrentUser.Email).SingleOrDefault();
+        await Http.DeleteAsync("api/Bookings/" + bookingToRemove.Id);
+        bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
+        await JSRuntime.InvokeVoidAsync("Swal.fire", "Bokning borttagen", "Du är nu avbokad från passet", "success");
+        await OnInitializedAsync();
+    }
+
+    private async Task SaveUser()
+    {
+        // var response = await Http.PostAsJsonAsync("api/Faqs", FaqDtoData);
+
+        // if (response.IsSuccessStatusCode)
+        // {
+        //     faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+        //     FaqDtoData = new();
+        //     navManager.NavigateTo("/Info");
+        // }
+
+        // else
+        // {
+        //     var strResponse = await response.Content.ReadAsStringAsync();
+        //     Console.WriteLine("Json Response: \n" + strResponse);
+
+        //     try
+        //     {
+        //         var jsonResponse = JsonNode.Parse(strResponse);
+        //         Errors = jsonResponse?["errors"] ?? new JsonObject();
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Console.WriteLine("Exception: " + ex.Message);
+        //     }
+        // }
+    }
+}
