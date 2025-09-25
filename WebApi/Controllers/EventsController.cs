@@ -21,7 +21,7 @@ namespace WebApi.Controllers
         [HttpGet]
         public IActionResult GetEvents()
         {
-            var events = context.Events.OrderBy(e => e.CreatedAt).ToList();
+            var events = context.Events.OrderBy(e => e.Start).ToList();
             return Ok(events);
         }
 

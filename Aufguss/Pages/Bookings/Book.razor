@@ -12,141 +12,120 @@
 
         else
         {
-            if(SpotsRemaining <= 0)
+            if(eventData.Start > DateTime.Now)
             {
-                <div class="alert alert-danger" role="alert">
-                    ⚠️ Passet är fullbokat, du kan boka in dig på reservlistan nedan.
-                </div>
-            }
-            else if(SpotsRemaining > 0 && SpotsRemaining < 2)
-            {
-                <div class="alert alert-warning" role="alert">
-                    ⚠️ Endast @SpotsRemaining plats kvar.
-                </div>
-            }
-
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Id</label>
-                <div class="col-md-8">
-                    <input class="form-control-plaintext" readonly value="@Id">
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Kön</label>
-                <div class="col-md-8">
-                    @if (EventDtoData.Gender == Gender.Man)
-                    {
-                        <input class="form-control btn btn-primary text-start" value="Herrar" readonly>
-                    }
-                    else
-                    {
-                        <input class="form-control btn btn-danger text-start" value="Damer" readonly>
-                    }
-                    @* @if(EventDtoData.Gender == Gender.Man)
-                    {
-                        <label class="badge rounded-pill text-bg-primary p-3 fs-5">Herrar</label>
-                    }
-                    else
-                    {
-                        <label class="badge rounded-pill text-bg-danger p-3 fs-5">Damer</label>
-                    } *@
-
-
-
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Titel</label>
-                <div class="col-md-8">
-                    <input class="form-control" @bind="EventDtoData.Title" readonly>
-                </div>
-            </div>
-
-            <div class="row mb-3">
-
-                <label class="col-md-4 col-form-label">Platser kvar</label>
-                <div class="col-md-8">
-                    <input class="form-control btn btn-warning text-start" value="@SpotsRemaining" readonly>
-                </div>
-                @* @if (SpotsRemaining > 5)
-                    {
-                        <label class="badge rounded-pill text-bg-success p-3 fs-5">@SpotsRemaining</label>
-                    }
-                    else if (SpotsRemaining <= 5 && SpotsRemaining >= 1)
-                    {
-                        <label class="badge rounded-pill text-bg-warning p-3 fs-5">@SpotsRemaining</label>
-                    }
-                    else
-                    {
-                        <label class="badge rounded-pill text-bg-danger p-3 fs-5">@SpotsRemaining</label>
-                    } *@
-
-
-            </div>
-
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Beskrivning</label>
-                <div class="col-md-8">
-                    <textarea class="form-control" @bind="EventDtoData.Description" readonly></textarea>
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Datum/tid</label>
-                <div class="col-md-8">
-                    <input type="datetime-local" class="form-control" @bind="EventDtoData.Start" readonly>
-                    <span class="text-danger">@Errors["Start"]?[0]</span>
-                </div>
-            </div>
-
-            <div>
-                <h2 class="mt-4 mb-4">Kontaktuppgifter</h2>
-            </div>
-
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Namn</label>
-                <div class="col-md-8">
-                    <input class="form-control" type="text" @bind="BookingDtoData.Name">
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">E-post</label>
-                <div class="col-md-8">
-                    <input class="form-control" type="email" @bind="BookingDtoData.Email">
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Telefon</label>
-                <div class="col-md-8">
-                    <input class="form-control" type="tel" @bind="BookingDtoData.Tel">
-                </div>
-            </div>
-
-
-
-            <div class="row">
-                @if (SpotsRemaining > 0)
+                if (SpotsRemaining <= 0)
                 {
-                    <div class="offset-md-4 col-md-4 d-grid">
-                        <button class="btn btn-primary" @onclick="SaveBooking">Boka</button>
+                    <div class="alert alert-danger" role="alert">
+                        ⚠️ Passet är fullbokat, du kan boka in dig på reservlistan nedan.
                     </div>
                 }
-                else
+                else if (SpotsRemaining > 0 && SpotsRemaining < 2)
                 {
-                    <div class="offset-md-4 col-md-4 d-grid">
-                        <button class="btn btn-warning" @onclick="async () => await ReserveBooking(true)">Reservlista</button>
+                    <div class="alert alert-warning" role="alert">
+                        ⚠️ Endast @SpotsRemaining plats kvar.
                     </div>
                 }
-                <div class="col-md-4 d-grid">
-                    <a class="btn btn-outline-primary" href="/Bookings">Avbryt</a>
+
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Id</label>
+                    <div class="col-md-8">
+                        <input class="form-control-plaintext" readonly value="@Id">
+                    </div>
                 </div>
-            </div>
+
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Kön</label>
+                    <div class="col-md-8">
+                        @if (EventDtoData.Gender == Gender.Man)
+                        {
+                            <input class="form-control btn btn-primary text-start" value="Herrar" readonly>
+                        }
+                        else
+                        {
+                            <input class="form-control btn btn-danger text-start" value="Damer" readonly>
+                        }
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Titel</label>
+                    <div class="col-md-8">
+                        <input class="form-control" @bind="EventDtoData.Title" readonly>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+
+                    <label class="col-md-4 col-form-label">Platser kvar</label>
+                    <div class="col-md-8">
+                        <input class="form-control btn btn-warning text-start" value="@SpotsRemaining" readonly>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Beskrivning</label>
+                    <div class="col-md-8">
+                        <textarea class="form-control" @bind="EventDtoData.Description" readonly></textarea>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Datum/tid</label>
+                    <div class="col-md-8">
+                        <input type="datetime-local" class="form-control" @bind="EventDtoData.Start" readonly>
+                        <span class="text-danger">@Errors["Start"]?[0]</span>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="mt-4 mb-4">Kontaktuppgifter</h2>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Namn</label>
+                    <div class="col-md-8">
+                        <input class="form-control" type="text" @bind="BookingDtoData.Name">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">E-post</label>
+                    <div class="col-md-8">
+                        <input class="form-control" type="email" @bind="BookingDtoData.Email">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Telefon</label>
+                    <div class="col-md-8">
+                        <input class="form-control" type="tel" @bind="BookingDtoData.Tel">
+                    </div>
+                </div>
+                <div class="row">
+                    @if (SpotsRemaining > 0)
+                    {
+                        <div class="offset-md-4 col-md-4 d-grid">
+                            <button class="btn btn-primary" @onclick="SaveBooking">Boka</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="offset-md-4 col-md-4 d-grid">
+                            <button class="btn btn-warning" @onclick="async () => await ReserveBooking(true)">Reservlista</button>
+                        </div>
+                    }
+                    <div class="col-md-4 d-grid">
+                        <a class="btn btn-outline-primary" href="/Bookings">Avbryt</a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <h3>Passet har redan startat och/eller avslutats</h3>
+            }
+
         }
-
     </div>
 </div>
 

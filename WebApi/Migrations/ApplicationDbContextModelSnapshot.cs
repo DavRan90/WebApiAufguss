@@ -208,9 +208,6 @@ namespace WebApi.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("int");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -248,6 +245,9 @@ namespace WebApi.Migrations
 
                     b.Property<DateTime>("BookedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("CancellationToken")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
                         .IsRequired()

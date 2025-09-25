@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WebApi.Models;
 using WebApi.Services;
 
@@ -42,6 +43,25 @@ namespace WebApi.Controllers
             }
 
             return Ok(booking);
+        }
+
+        [HttpGet("cancel-booking")]
+        public async Task<IActionResult> CancelBooking([FromQuery] string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+                return BadRequest("Token saknas");
+
+            var booking = await context.Bookings.FirstOrDefaultAsync(b => b.CancellationToken == token);
+
+            if (booking == null || booking.Unbooked)
+                return NotFound("Ogiltig eller redan avbokad bokning");
+
+            booking.Unbooked = true;
+            booking.UnbookedAt = DateTime.UtcNow;
+
+            await context.SaveChangesAsync();
+
+            return Ok("Bokningen har avbokats.");
         }
 
         //[HttpPost]
@@ -103,6 +123,7 @@ namespace WebApi.Controllers
                     Tel = bookingDto.Tel,
                     BookedAt = DateTime.Now,
                     EventId = bookingDto.EventId,
+                    CancellationToken = Guid.NewGuid().ToString("N"),
                 };
 
                 if (bookingDto.Reserve)
@@ -118,21 +139,37 @@ namespace WebApi.Controllers
 
                 try
                 {
-                    var eventTitle = context.Events
+                    var currentEvent = context.Events
                         .Where(e => e.Id == booking.EventId)
-                        .Select(e => e.Title)
-                        .FirstOrDefault() ?? "Ditt evenemang";
+                        .FirstOrDefault();
 
+                    var cancelUrl = $"https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net/api/bookings/cancel-booking?token={booking.CancellationToken}";
+
+                    var htmlMessage = $@"
+                        <div style='font-family: Arial, sans-serif; font-size: 16px; color: #333;'>
+                            <p><strong>Tack för din bokning!</strong></p>
+        
+                            <p>Du är inbokad till <strong>{currentEvent.Title}</strong> den {currentEvent.Start.ToString("yyyy-MM-dd HH:mm")} .</p>
+        
+                            <p>Om du vill avboka din plats, klicka på länken nedan:</p>
+        
+                            <p>
+                                <a href='{cancelUrl}' style='color: #007bff; text-decoration: none;'>Avboka din plats</a>
+                            </p>
+        
+                            <br>
+        
+                            <p>Vi ses på <strong>Freja Bad & Gym</strong>!</p>
+                        </div>";
                     await _resendEmail.SendEmailAsync(
-                            to: "david.rantanen@telia.com",
-                            subject: "Bokningsbekräftelse",
-                            htmlContent: "<strong>Tack för din bokning!</strong><br>" +
-                            $"Du är inbokad till {eventTitle} <br>" +
-                            $"Vi ses på Freja Bad & Gym!"
+                            to: $"{bookingDto.Email}",
+                            subject: "Bokningsbekräftelse Aufguss",
+                            htmlContent: htmlMessage
+                            //htmlContent: "<strong>Tack för din bokning!</strong><br>" +
+                            //$"Du är inbokad till {eventTitle} <br>" +
+                            //$"Vi ses på Freja Bad & Gym!"
                         );
                     return Ok();
-
-                    Console.WriteLine($"Email sent to {booking.Email} for event: {eventTitle}");
                 }
                 catch (Exception ex)
                 {

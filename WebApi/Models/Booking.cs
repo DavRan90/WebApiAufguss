@@ -13,5 +13,6 @@
         public bool Unbooked { get; set; } = false;
         public int? UserId { get; set; }
         public int EventId { get; set; }
+        public string? CancellationToken { get; set; }
     }
 }
