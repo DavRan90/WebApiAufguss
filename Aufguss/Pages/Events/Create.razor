@@ -32,17 +32,17 @@
                 <div class="row gap-2 gap-md-1">
                     <div class="col-12 col-md-6 d-flex align-items-center">
                         <input type="radio"
-                        checked="@(EventDtoData.Gender == Gender.Man)"
+                        checked="@(EventDtoData.Gender == Gender.Male)"
                         name="Gender"
-                        @onchange="@(() => EventDtoData.Gender = Gender.Man)" />
+                               @onchange="@(() => EventDtoData.Gender = Gender.Male)" />
                         <label class="btn btn-primary ms-2">Herrar</label>
                     </div>
 
                     <div class="col-12 col-md-6 d-flex align-items-center">
                         <input type="radio"
-                        checked="@(EventDtoData.Gender == Gender.Woman)"
+                        checked="@(EventDtoData.Gender == Gender.Female)"
                         name="Gender"
-                        @onchange="@(() => EventDtoData.Gender = Gender.Woman)" />
+                               @onchange="@(() => EventDtoData.Gender = Gender.Female)" />
                         <label class="btn btn-danger ms-2">Damer</label>
                     </div>
                 </div>

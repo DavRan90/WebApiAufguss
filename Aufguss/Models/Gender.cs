@@ -5,8 +5,12 @@ namespace Aufguss
     public enum Gender
     {
         [Display(Name = "Man")]
-        Man,
+        Male,
+
         [Display(Name = "Kvinna")]
-        Woman
+        Female,
+
+        [Display(Name = "Annat")]
+        Other
     }
 }

@@ -189,20 +189,20 @@ else
                 ID = evt.Id,
                 Caption = (evt.Gender, evt.Hidden) switch
                 {
-                    (Gender.Man, false) => "Herrar",
-                    (Gender.Woman, false) => "Damer",
-                    (Gender.Man, true) => "Herrar", // Om jag behöver ett scenario för dolda
-                    (Gender.Woman, true) => "Damer", // Om jag behöver ett scenario för dolda
+                    (Gender.Male, false) => "Herrar",
+                    (Gender.Female, false) => "Damer",
+                    (Gender.Male, true) => "Herrar", // Om jag behöver ett scenario för dolda
+                    (Gender.Female, true) => "Damer", // Om jag behöver ett scenario för dolda
                     _ => "lightgray"
                 },
                 DateStart = evt.Start,
                 DateEnd = evt.Start,
                 Color = (evt.Hidden, evt.Gender, sessionFull) switch
                 {
-                    (false, Gender.Man, false) => "lightblue",
-                    (false, Gender.Woman, false) => "lightpink",
-                    (false, Gender.Man, true) => "lightyellow",
-                    (false, Gender.Woman, true) => "lightyellow",
+                    (false, Gender.Male, false) => "lightblue",
+                    (false, Gender.Female, false) => "lightpink",
+                    (false, Gender.Male, true) => "lightyellow",
+                    (false, Gender.Female, true) => "lightyellow",
                     _ => "lightgray"
                 },
                 Comment = evt.Description
@@ -307,20 +307,20 @@ else
                             ID = createdEvent.Id,
                             Caption = (createdEvent.Gender, createdEvent.Hidden) switch
                             {
-                                (Gender.Man, false) => "[Herrar] " + createdEvent.Title,
-                                (Gender.Woman, false) => "[Damer] " + createdEvent.Title,
-                                (Gender.Man, true) => "[Herrar] " + createdEvent.Title + " [Dold]",
-                                (Gender.Woman, true) => "[Damer] " + createdEvent.Title + " [Dold]",
+                                (Gender.Male, false) => "[Herrar] " + createdEvent.Title,
+                                (Gender.Female, false) => "[Damer] " + createdEvent.Title,
+                                (Gender.Male, true) => "[Herrar] " + createdEvent.Title + " [Dold]",
+                                (Gender.Female, true) => "[Damer] " + createdEvent.Title + " [Dold]",
                                 _ => "lightgray"
                             },
                             DateStart = createdEvent.Start,
                             DateEnd = createdEvent.Start,
                             Color = (createdEvent.Gender, createdEvent.Hidden) switch
                             {
-                                (Gender.Man, false) => "#7aa7c7",
-                                (Gender.Woman, false) => "#d58db5",
-                                (Gender.Man, true) => "#e3f2fd",     // lighter blue for hidden Man
-                                (Gender.Woman, true) => "#fce4ec",   // lighter pink for hidden Woman
+                                (Gender.Male, false) => "#7aa7c7",
+                                (Gender.Female, false) => "#d58db5",
+                                (Gender.Male, true) => "#e3f2fd",     // lighter blue for hidden Man
+                                (Gender.Female, true) => "#fce4ec",   // lighter pink for hidden Woman
                                 _ => "lightgray"
                             },
 

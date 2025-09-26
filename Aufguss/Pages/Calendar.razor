@@ -68,18 +68,18 @@
                     ID = evt.Id,
                     Caption = (evt.Gender, evt.Hidden) switch
                     {
-                        (Gender.Man, false) => "Herrar",
-                        (Gender.Woman, false) => "Damer",
+                        (Gender.Male, false) => "Herrar",
+                        (Gender.Female, false) => "Damer",
                         _ => "lightgray"
                     },
                     DateStart = evt.Start,   // Assuming your Event has StartDate
                     DateEnd = evt.Start, // Need end time to show in weekly schedule
                     Color = (evt.Gender, sessionFull) switch
                     {
-                        (Gender.Man, false) => "lightblue",
-                        (Gender.Woman, false) => "lightpink",
-                        (Gender.Man, true) => "lightyellow",
-                        (Gender.Woman, true) => "lightyellow",
+                        (Gender.Male, false) => "lightblue",
+                        (Gender.Female, false) => "lightpink",
+                        (Gender.Male, true) => "lightyellow",
+                        (Gender.Female, true) => "lightyellow",
                         _ => "lightgray"
                     },
                     // Color = evt.Gender switch
@@ -187,8 +187,8 @@
                             DateEnd = createdEvent.Start,
                             Color = createdEvent.Gender switch
                             {
-                                Gender.Man => "lightblue",
-                                Gender.Woman => "lightpink",
+                                Gender.Male => "lightblue",
+                                Gender.Female => "lightpink",
                                 _ => "gray"
                             },
                             Comment = createdEvent.Description

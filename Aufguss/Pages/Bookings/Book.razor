@@ -37,7 +37,7 @@
                 <div class="row mb-3">
                     <label class="col-md-4 col-form-label">Kön</label>
                     <div class="col-md-8">
-                        @if (EventDtoData.Gender == Gender.Man)
+                        @if (EventDtoData.Gender == Gender.Male)
                         {
                             <input class="form-control btn btn-primary text-start" value="Herrar" readonly>
                         }
@@ -176,7 +176,7 @@
             EventDtoData.AllDay = eventData?.AllDay ?? false;
             EventDtoData.MaxSlots = eventData?.MaxSlots ?? 0;
             EventDtoData.Recurring = eventData?.Recurring ?? false;
-            EventDtoData.Gender = eventData?.Gender ?? Gender.Man;
+            EventDtoData.Gender = eventData?.Gender ?? Gender.Male;
 
             var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
             Bookings = allBookings?.Where(b => b.EventId == Id).ToList();

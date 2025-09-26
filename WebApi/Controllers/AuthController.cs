@@ -44,7 +44,8 @@ namespace WebApi.Controllers
                     UserName = user.UserName,
                     FirstName = user.FirstName,
                     SurName = user.SurName,
-                    Roles = roles.ToList()
+                    Roles = roles.ToList(),
+                    Gender = user.Gender
                 });
             }
 
@@ -67,6 +68,7 @@ namespace WebApi.Controllers
                 PhoneNumber = model.PhoneNumber,
                 FirstName = model.FirstName,
                 SurName = model.SurName,
+                Gender = model.Gender,
             };
 
             // 3. Create user with password
@@ -159,6 +161,7 @@ namespace WebApi.Controllers
         new Claim(JwtRegisteredClaimNames.PhoneNumber, user.PhoneNumber ?? ""),
         new Claim("fullName", (user.FirstName + " " + user.SurName) ?? ""),
         new Claim("firstName", user.FirstName ?? ""),
+        new Claim("gender", user.Gender.ToString() ?? ""),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
     };
 

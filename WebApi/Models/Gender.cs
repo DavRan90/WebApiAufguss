@@ -1,8 +1,16 @@
-﻿namespace WebApi.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace WebApi.Models
 {
     public enum Gender
     {
-        Man,
-        Woman
+        [Display(Name = "Man")]
+        Male,
+
+        [Display(Name = "Kvinna")]
+        Female,
+
+        [Display(Name = "Annat")]
+        Other
     }
 }

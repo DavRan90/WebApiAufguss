@@ -24,12 +24,12 @@
             <div class="row mb-3">
                 <div>
                     <label class="col-md-4 col-form-label">Kön</label>
-                    <input type="radio" checked="@(EventDtoData.Gender == Gender.Man)"
-                           name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Man)" />
+                    <input type="radio" checked="@(EventDtoData.Gender == Gender.Male)"
+                           name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Male)" />
                     <label>Herrar</label>
 
-                    <input type="radio" checked="@(EventDtoData.Gender == Gender.Woman)"
-                           name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Woman)" />
+                    <input type="radio" checked="@(EventDtoData.Gender == Gender.Female)"
+                           name="Gender" @onchange="@(() => EventDtoData.Gender = Gender.Female)" />
                     <label>Damer</label>
                 </div>
             </div>
@@ -124,7 +124,7 @@
             EventDtoData.End = eventData?.End;
             EventDtoData.MaxSlots = eventData?.MaxSlots ?? 0;
             EventDtoData.Recurring = eventData?.Recurring ?? false;
-            EventDtoData.Gender = eventData?.Gender ?? Gender.Man;
+            EventDtoData.Gender = eventData?.Gender ?? Gender.Male;
             EventDtoData.Hidden = eventData?.Hidden ?? false;
 
             // var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");

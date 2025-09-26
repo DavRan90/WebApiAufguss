@@ -1,4 +1,5 @@
 ﻿@page "/Bookings"
+@using Aufguss.Models
 
 <h3>Bokningar</h3>
 
@@ -119,11 +120,15 @@ else
 }
 
 
-@inject HttpClient http
+@inject HttpClient Http
 @inject SweetAlertService Swal
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavManager
 
 @code {
+    private List<UserWithRolesDto>? Users;
+    private UserWithRolesDto? CurrentUser;
+
     private List<Event>? events;
     private List<Booking>? bookings;
     // public List<Event>? events { get; set; }
@@ -131,9 +136,25 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        events = await http.GetFromJsonAsync<List<Event>>("api/Events");
-        bookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings");
+        Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var loggedInUser = authState.User;
+        var userIdString = loggedInUser.FindFirst("sub")?.Value;
+        var userGender = loggedInUser.FindFirst("gender")?.Value;
+
+        CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
+
+        events = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
         events = events?.Where(e => e.Start > DateTime.Now).ToList();
+        if(userGender == Gender.Male.ToString())
+        {
+            events = events?.Where(e => e.Gender == Gender.Male).ToList();
+        }
+        else if (userGender == Gender.Female.ToString())
+        {
+            events = events?.Where(e => e.Gender == Gender.Female).ToList();
+        }
     }
 
     public int SpotsRemaining(int evtId)

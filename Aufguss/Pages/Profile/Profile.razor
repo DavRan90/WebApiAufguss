@@ -1,6 +1,8 @@
 ﻿@page "/Profil"
 
 @using Aufguss.Models
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations;
 
 <h2 class="text-bg-danger">Sidan är inte klar</h2>
 <h3>Profilen för den inloggade</h3>
@@ -34,6 +36,12 @@ else
             <div class="col-md-4">
                 <InputText class="form-control" @bind-Value="CurrentUser.Email" />
                 <ValidationMessage For="@(() => CurrentUser.Email)" />
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-md-2 col-form-label">Kön</label>
+            <div class="col-md-4">
+                <p class="form-control">@GetEnumDisplayName(CurrentUser.Gender)</p>
             </div>
         </div>
 
@@ -196,29 +204,15 @@ else
 
     private async Task SaveUser()
     {
-        // var response = await Http.PostAsJsonAsync("api/Faqs", FaqDtoData);
+        
+    }
 
-        // if (response.IsSuccessStatusCode)
-        // {
-        //     faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
-        //     FaqDtoData = new();
-        //     navManager.NavigateTo("/Info");
-        // }
-
-        // else
-        // {
-        //     var strResponse = await response.Content.ReadAsStringAsync();
-        //     Console.WriteLine("Json Response: \n" + strResponse);
-
-        //     try
-        //     {
-        //         var jsonResponse = JsonNode.Parse(strResponse);
-        //         Errors = jsonResponse?["errors"] ?? new JsonObject();
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         Console.WriteLine("Exception: " + ex.Message);
-        //     }
-        // }
+    public string GetEnumDisplayName(Enum value)
+    {
+        return value.GetType()
+                    .GetMember(value.ToString())
+                    .First()
+                    .GetCustomAttribute<DisplayAttribute>()?
+                    .Name ?? value.ToString();
     }
 }

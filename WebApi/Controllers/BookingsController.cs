@@ -147,7 +147,7 @@ namespace WebApi.Controllers
 
                     var htmlMessage = $@"
                         <div style='font-family: Arial, sans-serif; font-size: 16px; color: #333;'>
-                            <p><strong>Tack för din bokning!</strong></p>
+                            <p><strong>Tack för din bokning {booking.Name}!</strong></p>
         
                             <p>Du är inbokad till <strong>{currentEvent.Title}</strong> den {currentEvent.Start.ToString("yyyy-MM-dd HH:mm")} .</p>
         
@@ -162,7 +162,7 @@ namespace WebApi.Controllers
                             <p>Vi ses på <strong>Freja Bad & Gym</strong>!</p>
                         </div>";
                     await _resendEmail.SendEmailAsync(
-                            to: $"{bookingDto.Email}",
+                            to: $"david.rantanen@telia.com",
                             subject: "Bokningsbekräftelse Aufguss",
                             htmlContent: htmlMessage
                             //htmlContent: "<strong>Tack för din bokning!</strong><br>" +
