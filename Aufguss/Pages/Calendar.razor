@@ -1,4 +1,5 @@
 ﻿@page "/Calendar"
+@using Aufguss.Models
 @using BlazorCalendar
 @using BlazorCalendar.Models
 @using System.Text.Json
@@ -14,12 +15,14 @@
 </CalendarContainer> *@
 
 <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate">
-    <MonthlyView TaskClick="OnTaskClick" SaturdayColor="White" SundayColor="White"/>
+    <MonthlyView TaskClick="OnTaskClick" SaturdayColor="White" SundayColor="White" HighlightToday/>
 </CalendarContainer>
 
 <p class="btn btn-sm bg-primary-subtle mt-2">Herrar</p>
 <p class="btn btn-sm bg-danger-subtle mt-2">Damer</p>
 <p class="btn btn-sm bg-warning-subtle mt-2">Fullbokat</p>
+<p class="btn btn-sm bg-body-secondary mt-2">Passerat</p>
+<p class="btn btn-sm border border-2 border-danger mt-2">Idag</p>
 
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
@@ -62,6 +65,7 @@
             var evt = evts[i];
             guestCount = allBookings.Where(b => b.EventId == evt.Id && b.Reserve == false && b.Unbooked == false).Count();
             bool sessionFull = evt.MaxSlots == guestCount;
+            bool sessionOver = evt.Start < DateTime.Now;
             // Map your Event to a Task
             ModelTasks[i] = new BlazorCalendar.Models.Tasks
                 {
@@ -73,21 +77,21 @@
                         _ => "lightgray"
                     },
                     DateStart = evt.Start,   // Assuming your Event has StartDate
-                    DateEnd = evt.Start, // Need end time to show in weekly schedule
-                    Color = (evt.Gender, sessionFull) switch
+                    DateEnd = evt.End ?? evt.Start,
+                    Color = (evt.Gender, sessionFull, sessionOver) switch
                     {
-                        (Gender.Male, false) => "lightblue",
-                        (Gender.Female, false) => "lightpink",
-                        (Gender.Male, true) => "lightyellow",
-                        (Gender.Female, true) => "lightyellow",
+                        (Gender.Male, false, false) => "lightblue",
+                        (Gender.Female, false, false) => "lightpink",
+                        (Gender.Male, true, false) => "lightyellow",
+                        (Gender.Female, true, false) => "lightyellow",
                         _ => "lightgray"
                     },
-                    // Color = evt.Gender switch
-                    // {
-                    //     Gender.Man => "lightblue",
-                    //     Gender.Woman => "lightpink",
-                    //     _ => "gray" // fallback if new enum values are added
-                    // },
+                // Color = evt.Gender switch
+                // {
+                //     Gender.Man => "lightblue",
+                //     Gender.Woman => "lightpink",
+                //     _ => "gray" // fallback if new enum values are added
+                // },
                     Comment = evt.Description    // Optional
                 };
         }
@@ -96,8 +100,16 @@
     private async Task OnTaskClick(ClickTaskParameter clickInfo)
     {
         var task = clickInfo.IDList;
-        // Example: Navigate to a details page using the task ID
-        NavManager.NavigateTo($"/Bookings/Book/{task[0]}");
+        var booking = await Http.GetFromJsonAsync<Event>($"api/Events/{task[0]}");
+        if(booking.Start > DateTime.Now)
+        {
+            NavManager.NavigateTo($"/Bookings/Book/{task[0]}");
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("Swal.fire", "För sent", "Passet har redan start!", "error");
+        }
+
     }
 
     private Task OnDragStart(DragDropParameter dragStartInfo)

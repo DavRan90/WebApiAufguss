@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Aufguss
+namespace Aufguss.Models
 {
     public enum Gender
     {

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Aufguss.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace Aufguss
 {
@@ -7,7 +8,7 @@ namespace Aufguss
         public string Title { get; set; } = "";
         public string Description { get; set; } = "";
         public DateTime Start { get; set; } = DateTime.Now;
-        public DateTime? End { get; set; }
+        public DateTime? End { get; set; } = DateTime.Now;
         public bool AllDay { get; set; }
         public bool Hidden { get; set; }
         public bool Recurring { get; set; }

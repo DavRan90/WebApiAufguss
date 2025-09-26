@@ -1,5 +1,7 @@
 ﻿@page "/Uppgifter"
 @using Aufguss.Models
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations;
 
 <h2 class="text-bg-danger">Sidan är inte klar</h2>
 <h3>Profilen för den inloggade</h3>
@@ -14,16 +16,16 @@ else
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        <div class="row mb-3">
+        <div class="row mb-3 mt-5">
             <label class="col-md-2 col-form-label">Förnamn</label>
-            <div class="col-md-4">
+            <div class="col-md-4 mb-3">
                 <InputText class="form-control" @bind-Value="CurrentUser.FirstName" />
                 <ValidationMessage For="@(() => CurrentUser.FirstName)" />
             </div>
         </div>
         <div class="row mb-3">
             <label class="col-md-2 col-form-label">Efternamn</label>
-            <div class="col-md-4">
+            <div class="col-md-4 mb-3">
                 <InputText class="form-control" @bind-Value="CurrentUser.SurName" />
                 <ValidationMessage For="@(() => CurrentUser.SurName)" />
             </div>
@@ -31,10 +33,18 @@ else
         <div class="row mb-3">
             <label class="col-md-2 col-form-label">Mail</label>
             <div class="col-md-4">
-                <InputText class="form-control" @bind-Value="CurrentUser.Email" />
-                <ValidationMessage For="@(() => CurrentUser.Email)" />
+                <p class="form-control bg-body-tertiary">@CurrentUser.Email</p>
             </div>
         </div>
+        @if (CurrentUser.Gender != null)
+        {
+            <div class="row mb-3">
+                <label class="col-md-2 col-form-label">Kön</label>
+                <div class="col-md-4">
+                    <p class="form-control bg-body-tertiary">@GetEnumDisplayName(CurrentUser.Gender)</p>
+                </div>
+            </div>
+        }
 
         <div class="row">
             <div class="offset-md-2 col-md-2 d-grid">
@@ -108,5 +118,13 @@ else
         //         Console.WriteLine("Exception: " + ex.Message);
         //     }
         // }
+    }
+    public string GetEnumDisplayName(Enum value)
+    {
+        return value.GetType()
+                    .GetMember(value.ToString())
+                    .First()
+                    .GetCustomAttribute<DisplayAttribute>()?
+                    .Name ?? value.ToString();
     }
 }

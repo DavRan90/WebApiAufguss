@@ -1,5 +1,6 @@
 ﻿@page "/Bookings/Book/{id:int}"
 @using System.Text.Json.Nodes
+@using Aufguss.Models
 
 <div class="row mb-5">
     <div class="col-lg-8">
@@ -12,72 +13,107 @@
 
         else
         {
-            if(eventData.Start > DateTime.Now)
+            @* if (eventData.Start < DateTime.Now)
             {
-                if (SpotsRemaining <= 0)
-                {
-                    <div class="alert alert-danger" role="alert">
-                        ⚠️ Passet är fullbokat, du kan boka in dig på reservlistan nedan.
-                    </div>
-                }
-                else if (SpotsRemaining > 0 && SpotsRemaining < 2)
-                {
-                    <div class="alert alert-warning" role="alert">
-                        ⚠️ Endast @SpotsRemaining plats kvar.
-                    </div>
-                }
+                <div class="alert alert-danger" role="alert">
+                    ⚠️ Passet har redan startat och/eller avslutats.
+                </div>
+                <h3>Passet har redan startat och/eller avslutats</h3>
+            } *@
+            @* else
+            { *@
+            if (CurrentUser?.Gender != eventData.Gender && CurrentUser != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    ⚠️ Passet är skapat för ett annat kön än ditt valda kön.
+                </div>
+            }
+            if (SpotsRemaining <= 0)
+            {
+                <div class="alert alert-danger" role="alert">
+                    ⚠️ Passet är fullbokat, du kan boka in dig på reservlistan nedan.
+                </div>
+            }
+            else if (SpotsRemaining > 0 && SpotsRemaining < 2)
+            {
+                <div class="alert alert-warning" role="alert">
+                    ⚠️ Endast @SpotsRemaining plats kvar.
+                </div>
+            }
 
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Id</label>
+                <div class="col-md-8">
+                    <input class="form-control-plaintext" readonly value="@Id">
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Kön</label>
+                <div class="col-md-8">
+                    @if (EventDtoData.Gender == Gender.Male)
+                    {
+                        <p class="form-control bg-primary-subtle">Herrar</p>
+                        @* <input class="form-control btn btn-primary text-start" value="Herrar" readonly> *@
+                    }
+                    else
+                    {
+                        <p class="form-control bg-danger-subtle">Damer</p>
+                        @* <input class="form-control btn btn-danger text-start" value="Damer" readonly> *@
+                    }
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Titel</label>
+                <div class="col-md-8">
+                    <p class="form-control bg-body-tertiary">@EventDtoData.Title</p>
+                    @* <input class="form-control" @bind="EventDtoData.Title" readonly> *@
+                </div>
+            </div>
+
+            <div class="row mb-3">
+
+                <label class="col-md-4 col-form-label">Platser kvar</label>
+                <div class="col-md-8">
+                    <p class="form-control bg-warning text-start">@SpotsRemaining</p>
+                    @* <input class="form-control btn btn-warning text-start" value="@SpotsRemaining" readonly> *@
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Beskrivning</label>
+                <div class="col-md-8">
+                    <p class="form-control" style="white-space: pre-wrap;">@EventDtoData.Description</p>
+                    @* <textarea class="form-control" @bind="EventDtoData.Description" readonly></textarea> *@
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Starttid</label>
+                <div class="col-md-8">
+                    <p class="form-control">@EventDtoData.Start.ToString("dd/MM-yyyy HH:mm")</p>
+                    @* <input type="datetime-local" class="form-control" @bind="EventDtoData.Start" readonly> *@
+                </div>
+            </div>
+            @if(EventDtoData.End != null)
+            {
                 <div class="row mb-3">
-                    <label class="col-md-4 col-form-label">Id</label>
+                    <label class="col-md-4 col-form-label">Sluttid</label>
                     <div class="col-md-8">
-                        <input class="form-control-plaintext" readonly value="@Id">
+                        <p class="form-control">@EventDtoData.End?.ToString("dd/MM-yyyy HH:mm")</p>
                     </div>
                 </div>
-
-                <div class="row mb-3">
-                    <label class="col-md-4 col-form-label">Kön</label>
-                    <div class="col-md-8">
-                        @if (EventDtoData.Gender == Gender.Male)
-                        {
-                            <input class="form-control btn btn-primary text-start" value="Herrar" readonly>
-                        }
-                        else
-                        {
-                            <input class="form-control btn btn-danger text-start" value="Damer" readonly>
-                        }
-                    </div>
+            }
+            
+            if (eventData.Start < DateTime.Now)
+            {
+                <div class="alert alert-danger" role="alert">
+                    ⚠️ Passet har redan startat och/eller avslutats.
                 </div>
-
-                <div class="row mb-3">
-                    <label class="col-md-4 col-form-label">Titel</label>
-                    <div class="col-md-8">
-                        <input class="form-control" @bind="EventDtoData.Title" readonly>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-
-                    <label class="col-md-4 col-form-label">Platser kvar</label>
-                    <div class="col-md-8">
-                        <input class="form-control btn btn-warning text-start" value="@SpotsRemaining" readonly>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <label class="col-md-4 col-form-label">Beskrivning</label>
-                    <div class="col-md-8">
-                        <textarea class="form-control" @bind="EventDtoData.Description" readonly></textarea>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <label class="col-md-4 col-form-label">Datum/tid</label>
-                    <div class="col-md-8">
-                        <input type="datetime-local" class="form-control" @bind="EventDtoData.Start" readonly>
-                        <span class="text-danger">@Errors["Start"]?[0]</span>
-                    </div>
-                </div>
-
+            }
+            if (CurrentUser?.Gender == eventData.Gender && eventData.Start > DateTime.Now || CurrentUser == null && eventData.Start > DateTime.Now)
+            {
                 <div>
                     <h2 class="mt-4 mb-4">Kontaktuppgifter</h2>
                 </div>
@@ -85,23 +121,48 @@
                 <div class="row mb-3">
                     <label class="col-md-4 col-form-label">Namn</label>
                     <div class="col-md-8">
-                        <input class="form-control" type="text" @bind="BookingDtoData.Name">
+                        @if (BookingDtoData.Name == "")
+                        {
+                            <input class="form-control" type="text" @bind="BookingDtoData.Name">
+                        }
+                        else
+                        {
+                            <p class="form-control bg-body-tertiary">@BookingDtoData.Name</p>
+                        }
                     </div>
                 </div>
 
                 <div class="row mb-3">
                     <label class="col-md-4 col-form-label">E-post</label>
                     <div class="col-md-8">
-                        <input class="form-control" type="email" @bind="BookingDtoData.Email">
+                        @if (BookingDtoData.Name == "")
+                        {
+                            <input class="form-control" type="email" @bind="BookingDtoData.Email">
+                        }
+                        else
+                        {
+                            <p class="form-control bg-body-tertiary">@BookingDtoData.Email</p>
+                        }
+
                     </div>
                 </div>
 
                 <div class="row mb-3">
                     <label class="col-md-4 col-form-label">Telefon</label>
                     <div class="col-md-8">
-                        <input class="form-control" type="tel" @bind="BookingDtoData.Tel">
+                        @if (BookingDtoData.Name == "")
+                        {
+                            <input class="form-control" type="tel" @bind="BookingDtoData.Tel">
+                        }
+                        else
+                        {
+                            <p class="form-control bg-body-tertiary">@BookingDtoData.Tel</p>
+                        }
+
                     </div>
                 </div>
+
+
                 <div class="row">
                     @if (SpotsRemaining > 0)
                     {
@@ -120,23 +181,22 @@
                     </div>
                 </div>
             }
-            else
-            {
-                <h3>Passet har redan startat och/eller avslutats</h3>
-            }
+            @* } *@
 
         }
     </div>
 </div>
 
 
-@inject HttpClient http
+@inject HttpClient Http
 @inject NavigationManager navManager
 @inject IJSRuntime JS
 @inject SweetAlertService Swal
 @inject AuthenticationStateProvider AuthProvider
 
 @code {
+    private List<UserWithRolesDto>? Users;
+    private UserWithRolesDto? CurrentUser;
 
     public int SpotsRemaining { get; set; }
     [Parameter]
@@ -153,14 +213,18 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
         var authState = await AuthProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
+        var loggedInUser = authState.User;
+        var userIdString = loggedInUser.FindFirst("sub")?.Value;
 
-        if (user.Identity is not null && user.Identity.IsAuthenticated)
+        CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
+
+        if (loggedInUser.Identity is not null && loggedInUser.Identity.IsAuthenticated)
         {
-            BookingDtoData.Name = user.FindFirst("fullName")?.Value ?? "";
-            BookingDtoData.Email = user.FindFirst("email")?.Value ?? "";
-            BookingDtoData.Tel = user.FindFirst("phone_number")?.Value ?? "";
+            BookingDtoData.Name = loggedInUser.FindFirst("fullName")?.Value ?? "";
+            BookingDtoData.Email = loggedInUser.FindFirst("email")?.Value ?? "";
+            BookingDtoData.Tel = loggedInUser.FindFirst("phone_number")?.Value ?? "";
         }
     }
 
@@ -168,7 +232,7 @@
     {
         try
         {
-            eventData = await http.GetFromJsonAsync<Event>("api/Events/" + Id);
+            eventData = await Http.GetFromJsonAsync<Event>("api/Events/" + Id);
             EventDtoData.Title = eventData?.Title ?? "";
             EventDtoData.Description = eventData?.Description ?? "";
             EventDtoData.Start = eventData?.Start ?? DateTime.Now;
@@ -178,7 +242,7 @@
             EventDtoData.Recurring = eventData?.Recurring ?? false;
             EventDtoData.Gender = eventData?.Gender ?? Gender.Male;
 
-            var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+            var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
             Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
 
             SpotsRemaining = EventDtoData.MaxSlots - Bookings.Where(b => b.Unbooked == false && b.Reserve == false).Count();
@@ -192,7 +256,7 @@
     private async Task SaveBooking()
     {
         BookingDtoData.EventId = Id;
-        var response = await http.PostAsJsonAsync("api/Bookings", BookingDtoData);
+        var response = await Http.PostAsJsonAsync("api/Bookings", BookingDtoData);
 
         if (response.IsSuccessStatusCode)
         {
@@ -252,7 +316,7 @@
     {
         BookingDtoData.EventId = Id;
         BookingDtoData.Reserve = reserve;
-        var response = await http.PostAsJsonAsync("api/Bookings", BookingDtoData);
+        var response = await Http.PostAsJsonAsync("api/Bookings", BookingDtoData);
 
         if (response.IsSuccessStatusCode)
         {

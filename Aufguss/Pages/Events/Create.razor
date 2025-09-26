@@ -8,7 +8,7 @@
     <div class="col-lg-8">
         <h1 class=mb-5>Ny aktivitet</h1>
 
-        @if(Templates != null)
+        @if (Templates != null)
         {
             <div class="row mb-3">
                 <label class="col-md-4 col-form-label">Använd mall</label>
@@ -32,16 +32,16 @@
                 <div class="row gap-2 gap-md-1">
                     <div class="col-12 col-md-6 d-flex align-items-center">
                         <input type="radio"
-                        checked="@(EventDtoData.Gender == Gender.Male)"
-                        name="Gender"
+                               checked="@(EventDtoData.Gender == Gender.Male)"
+                               name="Gender"
                                @onchange="@(() => EventDtoData.Gender = Gender.Male)" />
                         <label class="btn btn-primary ms-2">Herrar</label>
                     </div>
 
                     <div class="col-12 col-md-6 d-flex align-items-center">
                         <input type="radio"
-                        checked="@(EventDtoData.Gender == Gender.Female)"
-                        name="Gender"
+                               checked="@(EventDtoData.Gender == Gender.Female)"
+                               name="Gender"
                                @onchange="@(() => EventDtoData.Gender = Gender.Female)" />
                         <label class="btn btn-danger ms-2">Damer</label>
                     </div>
@@ -65,9 +65,16 @@
                 </div>
             }
 
-            <label class="col-md-4 col-form-label">Datum/tid</label>
+            <label class="col-md-4 col-form-label">Starttid</label>
             <div class="col-md-8">
                 <input type="datetime-local" class="form-control" @bind="EventDtoData.Start">
+                <span class="text-danger">@Errors["Start"]?[0]</span>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-md-4 col-form-label">Sluttid</label>
+            <div class="col-md-8">
+                <input type="datetime-local" class="form-control" @bind="EventDtoData.End">
                 <span class="text-danger">@Errors["Start"]?[0]</span>
             </div>
         </div>
@@ -100,14 +107,14 @@
                 </div>
             </div>
         </div>
-        @if(EventDtoData.Recurring)
+        @if (EventDtoData.Recurring)
         {
             <div class="row mb-3">
                 <label class="col-md-4 col-form-label">Frekvens</label>
                 <div class="col-md-8">
                     <InputSelect class="form-control" @bind-Value="frequency">
                         <option value="">-- Välj frekvens --</option>
-                        @for(int i = 1; i < 7; i++)
+                        @for (int i = 1; i < 7; i++)
                         {
                             <option value="@i">Efter @i veckor</option>
                         }
@@ -211,6 +218,7 @@
                 EventDtoData.Description = selectedTemplate.Description;
                 EventDtoData.Gender = selectedTemplate.Gender;
                 EventDtoData.Start = selectedTemplate.Start;
+                EventDtoData.End = selectedTemplate.End;
                 EventDtoData.MaxSlots = selectedTemplate.MaxSlots;
                 EventDtoData.Recurring = selectedTemplate.Recurring;
                 EventDtoData.Hidden = selectedTemplate.Hidden;
@@ -238,6 +246,7 @@
                 EventDtoData.Description = selectedTemplate.Description;
                 EventDtoData.Gender = selectedTemplate.Gender;
                 EventDtoData.Start = selectedTemplate.Start;
+                EventDtoData.End = selectedTemplate.End;
                 EventDtoData.MaxSlots = selectedTemplate.MaxSlots;
                 EventDtoData.Recurring = selectedTemplate.Recurring;
                 EventDtoData.Hidden = selectedTemplate.Hidden;
@@ -259,11 +268,11 @@
 
         if (response.IsSuccessStatusCode)
         {
-            if(createTemplate)
+            if (createTemplate)
             {
                 var template = await Http.PostAsJsonAsync("api/EventTemplates", EventDtoData);
             }
-            
+
 
             var createdEvent = await response.Content.ReadFromJsonAsync<Event>();
             if (createdEvent.Hidden == false && createNews == true)

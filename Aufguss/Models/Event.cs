@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using Aufguss.Models;
+using System.Text.Json.Serialization;
 
 namespace Aufguss
 {
