@@ -10,7 +10,7 @@
         public DateTime? ReserveAt { get; set; }
         public DateTime? UnbookedAt { get; set; }
         public bool? Unbooked { get; set; } = false;
-        public int? UserId { get; set; }
+        public string? UserId { get; set; }
         public int EventId { get; set; }
         public string? CancellationToken { get; set; }
     }

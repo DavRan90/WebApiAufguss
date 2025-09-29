@@ -21,10 +21,6 @@ namespace WebApi.Controllers
             this.context = context;
             _resendEmail = resendEmail;
         }
-        //public BookingsController(ApplicationDbContext context)
-        //{
-        //    this.context = context;
-        //}
 
         [HttpGet]
         public IActionResult GetBookings()
@@ -64,31 +60,6 @@ namespace WebApi.Controllers
             return Ok("Bokningen har avbokats.");
         }
 
-        //[HttpPost]
-        //public IActionResult CreateBooking(BookingDto bookingDto)
-        //{
-
-        //    var booking = new Booking
-        //    {
-        //        Name = bookingDto.Name,
-        //        Email = bookingDto.Email,
-        //        Tel = bookingDto.Tel,
-        //        BookedAt = DateTime.Now,
-        //        EventId = bookingDto.EventId,
-        //    };
-
-        //    if(bookingDto.Reserve == true)
-        //    {
-        //        booking.Reserve = true;
-        //        booking.ReserveAt = DateTime.Now;
-        //    }
-
-        //    context.Bookings.Add(booking);
-        //    context.SaveChanges();
-
-        //    return Ok(booking);
-        //}
-
         [HttpPost]
         public async Task<IActionResult> CreateBooking(BookingDto bookingDto)
         {
@@ -121,6 +92,7 @@ namespace WebApi.Controllers
                     Name = bookingDto.Name,
                     Email = bookingDto.Email,
                     Tel = bookingDto.Tel,
+                    UserId = bookingDto.UserId,
                     BookedAt = DateTime.Now,
                     EventId = bookingDto.EventId,
                     CancellationToken = Guid.NewGuid().ToString("N"),
@@ -183,10 +155,6 @@ namespace WebApi.Controllers
             {
                 return BadRequest(new { message = "För många aktiva bokningar, max 3" });
             }
-
-
-
-            
         }
 
 

@@ -105,7 +105,7 @@
                     </div>
                 </div>
             }
-            
+
             if (eventData.Start < DateTime.Now)
             {
                 <div class="alert alert-danger" role="alert">
@@ -198,6 +198,8 @@
     private List<UserWithRolesDto>? Users;
     private UserWithRolesDto? CurrentUser;
 
+    private string userIdAsString = "";
+
     public int SpotsRemaining { get; set; }
     [Parameter]
     public int Id { get; set; }
@@ -217,6 +219,7 @@
         var authState = await AuthProvider.GetAuthenticationStateAsync();
         var loggedInUser = authState.User;
         var userIdString = loggedInUser.FindFirst("sub")?.Value;
+        // userIdAsString = userIdString;
 
         CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
 
@@ -225,6 +228,7 @@
             BookingDtoData.Name = loggedInUser.FindFirst("fullName")?.Value ?? "";
             BookingDtoData.Email = loggedInUser.FindFirst("email")?.Value ?? "";
             BookingDtoData.Tel = loggedInUser.FindFirst("phone_number")?.Value ?? "";
+            BookingDtoData.UserId = loggedInUser.FindFirst("sub")?.Value ?? "";
         }
     }
 
@@ -256,6 +260,10 @@
     private async Task SaveBooking()
     {
         BookingDtoData.EventId = Id;
+        // if(userIdAsString != "")
+        // {
+        //     BookingDtoData.UserId = userIdAsString;
+        // }
         var response = await Http.PostAsJsonAsync("api/Bookings", BookingDtoData);
 
         if (response.IsSuccessStatusCode)
@@ -294,22 +302,6 @@
                 Console.WriteLine("Exception: " + ex.Message);
             }
         }
-        // else
-        // {
-        //     await JS.InvokeVoidAsync("Swal.fire", "Bokning misslyckades", "Bokningen gick inte att lägga till", "error");
-        //     var strResponse = await response.Content.ReadAsStringAsync();
-        //     Console.WriteLine("Json Response: \n" + strResponse);
-
-        //     try
-        //     {
-        //         var jsonResponse = JsonNode.Parse(strResponse);
-        //         Errors = jsonResponse?["errors"] ?? new JsonObject();
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         Console.WriteLine("Exception: " + ex.Message);
-        //     }
-        // }
     }
 
     private async Task ReserveBooking(bool reserve)
