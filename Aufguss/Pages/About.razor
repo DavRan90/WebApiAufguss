@@ -2,7 +2,31 @@
 
 @page "/About"
 
-<h1 class="m-2">Om Aufguss</h1>
+<div class="card m-2 card-width mt-5">
+    <h2 class="card-header">Om Aufguss</h2>
+    <div class="card-body bg-info-subtle">
+        <img src="@String.Concat(fileLocation + "aufguss 2.jpg")"
+             class="img-fluid float-start me-3 mb-2 p-4 rounded rounded-5"
+             style="max-width: 50vw;" />
+
+        <p class="card-text p-4">
+            Relax i bastu med härliga dofter och svepande värme. Flera tillfällen under året bjuder vi in till aufguss i vår sköna bastu.
+            <br /><br />
+            <strong>För dig som bastar:</strong><br />
+            - Inga badkläder i bastun<br />
+            - Sitt på egen handduk<br />
+            - Duscha innan du går in i bastun<br />
+            - Tänk på att dricka vatten<br />
+            <br />
+            Aufguss är en tysk bastukultur som letat sig in i Sverige under senare tid. Ordet betyder ungefär "hälla på". En bastuvärd häller på underbart väldoftande eteriska oljor och vatten över heta stenar. Värmen viftas sedan omkring så att den mjukt sprider sig i bastun. <br /><br />
+            En vanlig sittning brukar vara mellan 5 och 15 minuter och har ofta olika teman. Flera tillfällen under året bjuder vi in till aufguss i vår sköna bastu, en härlig avkoppling till olika dofter. Vi använder eteriska oljor som har olika bra egenskaper för kropp och sinne.<br /><br />
+
+            Medtag egen vattenflaska och drick ordentligt både innan, under tiden och efteråt då du svettas ut mycket vätska. Aufguss ingår i priset för bad- och gym-kort.
+        </p>
+    </div>
+</div>
+
+@* <h1 class="m-2">Om Aufguss</h1>
 
 <p>
     Relax i bastu med härliga dofter och svepande värme. Flera tillfällen under året bjuder vi in till aufguss i vår sköna bastu. Vi använder eteriska oljor som har olika bra egenskaper för kropp och själ.
@@ -21,7 +45,7 @@
     Information om datum kommer att anslås på anslagstavlan vid skohyllorna!
 
     Medtag egen vattenflaska och drick ordentligt både innan, under tiden och efteråt då du svettas ut mycket vätska. Aufguss ingår i priset för bad och kort.
-</p>
+</p> *@
 
 <br />
 <br />
@@ -29,7 +53,7 @@
 
 <h3 class="m-3">Frågor och svar</h3>
 
-@if(faqs == null)
+@if (faqs == null)
 {
     <p><em>Laddar...</em></p>
 }
@@ -46,8 +70,8 @@ else
                     <div class="accordion-header d-flex align-items-center" style="user-select:none;">
                         <div class="drag-handle me-2 bg-info-subtle rounded p-3"
                              style="cursor: grab; padding: 0 8px;"
-                             @onclick:stopPropagation
-                             @onmousedown:stopPropagation>
+                        @onclick:stopPropagation
+                        @onmousedown:stopPropagation>
                             ☰
                         </div>
                         <button class="accordion-button collapsed flex-grow-1"
@@ -74,16 +98,18 @@ else
     </div>
 }
 
-@inject HttpClient http
+@inject HttpClient Http
 
 @code {
     int count = 0;
+
+    private string fileLocation = "";
 
     private List<Faq>? faqs;
 
     protected override async Task OnInitializedAsync()
     {
-        faqs = await http.GetFromJsonAsync<List<Faq>>("api/Faqs");
-
+        faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+        fileLocation = new Uri(Http.BaseAddress, "api/upload/").ToString();
     }
 }
