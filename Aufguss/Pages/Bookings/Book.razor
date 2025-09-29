@@ -54,12 +54,10 @@
                     @if (EventDtoData.Gender == Gender.Male)
                     {
                         <p class="form-control bg-primary-subtle">Herrar</p>
-                        @* <input class="form-control btn btn-primary text-start" value="Herrar" readonly> *@
                     }
                     else
                     {
                         <p class="form-control bg-danger-subtle">Damer</p>
-                        @* <input class="form-control btn btn-danger text-start" value="Damer" readonly> *@
                     }
                 </div>
             </div>
@@ -71,13 +69,38 @@
                     @* <input class="form-control" @bind="EventDtoData.Title" readonly> *@
                 </div>
             </div>
-
             <div class="row mb-3">
-
-                <label class="col-md-4 col-form-label">Platser kvar</label>
+                <label class="col-md-4 col-form-label">Platser bokade</label>
                 <div class="col-md-8">
-                    <p class="form-control bg-warning text-start">@SpotsRemaining</p>
-                    @* <input class="form-control btn btn-warning text-start" value="@SpotsRemaining" readonly> *@
+                    @{
+                        int remaining = SpotsRemaining;
+                        int total = eventData.MaxSlots;
+                        int booked = total - remaining;
+                        int percent = (int)(((double)booked / total) * 100);
+
+                        string progressColor = percent switch
+                        {
+                            >= 100 => "bg-danger",
+                            >= 70 => "bg-warning",
+                            _ => "bg-success"
+                        };
+                    }
+
+                    <div class="progress position-relative" style="height: 30px;">
+                        <!-- Colored fill bar -->
+                        <div class="progress-bar @progressColor"
+                        role="progressbar"
+                        style="width: @percent%;"
+                        aria-valuenow="@percent"
+                        aria-valuemin="0"
+                        aria-valuemax="100">
+                        </div>
+
+                        <!-- Centered text on top of the bar -->
+                        <span class="position-absolute top-50 start-50 translate-middle text-black fw-bold">
+                            @booked / @total
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -96,7 +119,7 @@
                     @* <input type="datetime-local" class="form-control" @bind="EventDtoData.Start" readonly> *@
                 </div>
             </div>
-            @if(EventDtoData.End != null)
+            @if (EventDtoData.End != null)
             {
                 <div class="row mb-3">
                     <label class="col-md-4 col-form-label">Sluttid</label>
@@ -112,7 +135,13 @@
                     ⚠️ Passet har redan startat och/eller avslutats.
                 </div>
             }
-            if (CurrentUser?.Gender == eventData.Gender && eventData.Start > DateTime.Now || CurrentUser == null && eventData.Start > DateTime.Now)
+            if (CurrentUserIsBooked)
+            {
+                <div class="alert alert-danger" role="alert">
+                    ⚠️ Du är redan bokad till detta pass.
+                </div>
+            }
+            if (CurrentUser?.Gender == eventData.Gender && eventData.Start > DateTime.Now && !CurrentUserIsBooked || CurrentUser == null && eventData.Start > DateTime.Now)
             {
                 <div>
                     <h2 class="mt-4 mb-4">Kontaktuppgifter</h2>
@@ -121,7 +150,7 @@
                 <div class="row mb-3">
                     <label class="col-md-4 col-form-label">Namn</label>
                     <div class="col-md-8">
-                        @if (BookingDtoData.Name == "")
+                        @if (CurrentUser == null)
                         {
                             <input class="form-control" type="text" @bind="BookingDtoData.Name">
                         }
@@ -135,7 +164,7 @@
                 <div class="row mb-3">
                     <label class="col-md-4 col-form-label">E-post</label>
                     <div class="col-md-8">
-                        @if (BookingDtoData.Name == "")
+                        @if (CurrentUser == null)
                         {
                             <input class="form-control" type="email" @bind="BookingDtoData.Email">
                         }
@@ -150,7 +179,7 @@
                 <div class="row mb-3">
                     <label class="col-md-4 col-form-label">Telefon</label>
                     <div class="col-md-8">
-                        @if (BookingDtoData.Name == "")
+                        @if (CurrentUser == null)
                         {
                             <input class="form-control" type="tel" @bind="BookingDtoData.Tel">
                         }
@@ -198,7 +227,7 @@
     private List<UserWithRolesDto>? Users;
     private UserWithRolesDto? CurrentUser;
 
-    private string userIdAsString = "";
+    private bool CurrentUserIsBooked = false;
 
     public int SpotsRemaining { get; set; }
     [Parameter]
@@ -213,57 +242,136 @@
     public EventDto EventDtoData { get; set; } = new();
     public JsonNode Errors { get; set; } = new JsonObject();
 
-    protected override async Task OnInitializedAsync()
-    {
-        Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
-        var authState = await AuthProvider.GetAuthenticationStateAsync();
-        var loggedInUser = authState.User;
-        var userIdString = loggedInUser.FindFirst("sub")?.Value;
-        // userIdAsString = userIdString;
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     // eventData = await Http.GetFromJsonAsync<Event>("api/Events/" + Id);
+    //     // var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+    //     // Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
 
-        CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
+        
 
-        if (loggedInUser.Identity is not null && loggedInUser.Identity.IsAuthenticated)
-        {
-            BookingDtoData.Name = loggedInUser.FindFirst("fullName")?.Value ?? "";
-            BookingDtoData.Email = loggedInUser.FindFirst("email")?.Value ?? "";
-            BookingDtoData.Tel = loggedInUser.FindFirst("phone_number")?.Value ?? "";
-            BookingDtoData.UserId = loggedInUser.FindFirst("sub")?.Value ?? "";
-        }
-    }
+    //     Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
+
+    //     var authState = await AuthProvider.GetAuthenticationStateAsync();
+    //     var loggedInUser = authState.User;
+    //     var userIdString = loggedInUser.FindFirst("sub")?.Value;
+
+    //     // if (loggedInUser.Identity != null && loggedInUser.Identity.IsAuthenticated)
+    //     // {
+    //     //     CurrentUserIsBooked = Bookings.Where(b => b.UserId == userIdString && b.Unbooked == false).Any();
+    //     // }
+        
+
+    //     CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
+
+    //     if (loggedInUser.Identity is not null && loggedInUser.Identity.IsAuthenticated)
+    //     {
+    //         BookingDtoData.Name = loggedInUser.FindFirst("fullName")?.Value ?? "";
+    //         BookingDtoData.Email = loggedInUser.FindFirst("email")?.Value ?? "";
+    //         BookingDtoData.Tel = loggedInUser.FindFirst("phone_number")?.Value ?? "";
+    //         BookingDtoData.UserId = loggedInUser.FindFirst("sub")?.Value ?? "";
+    //     }
+    // }
+
+    // protected override async Task OnParametersSetAsync()
+    // {
+    //     try
+    //     {
+    //         eventData = await Http.GetFromJsonAsync<Event>("api/Events/" + Id);
+    //         EventDtoData.Title = eventData?.Title ?? "";
+    //         EventDtoData.Description = eventData?.Description ?? "";
+    //         EventDtoData.Start = eventData?.Start ?? DateTime.Now;
+    //         EventDtoData.End = eventData?.End;
+    //         EventDtoData.AllDay = eventData?.AllDay ?? false;
+    //         EventDtoData.MaxSlots = eventData?.MaxSlots ?? 0;
+    //         EventDtoData.Recurring = eventData?.Recurring ?? false;
+    //         EventDtoData.Gender = eventData?.Gender ?? Gender.Male;
+
+    //         var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+    //         Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
+
+    //         var authState = await AuthProvider.GetAuthenticationStateAsync();
+    //         var loggedInUser = authState.User;
+    //         var userIdString = loggedInUser.FindFirst("sub")?.Value;
+
+    //         if (loggedInUser.Identity != null && loggedInUser.Identity.IsAuthenticated)
+    //         {
+    //             CurrentUserIsBooked = Bookings.Where(b => b.UserId == userIdString && b.Unbooked == false).Any();
+    //         }
+
+    //         SpotsRemaining = EventDtoData.MaxSlots - Bookings.Where(b => b.Unbooked == false && b.Reserve == false).Count();
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Console.WriteLine("Exception: " + ex.Message);
+    //     }
+    // }
 
     protected override async Task OnParametersSetAsync()
     {
         try
         {
-            eventData = await Http.GetFromJsonAsync<Event>("api/Events/" + Id);
-            EventDtoData.Title = eventData?.Title ?? "";
-            EventDtoData.Description = eventData?.Description ?? "";
-            EventDtoData.Start = eventData?.Start ?? DateTime.Now;
-            EventDtoData.End = eventData?.End;
-            EventDtoData.AllDay = eventData?.AllDay ?? false;
-            EventDtoData.MaxSlots = eventData?.MaxSlots ?? 0;
-            EventDtoData.Recurring = eventData?.Recurring ?? false;
-            EventDtoData.Gender = eventData?.Gender ?? Gender.Male;
-
-            var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
-            Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
-
-            SpotsRemaining = EventDtoData.MaxSlots - Bookings.Where(b => b.Unbooked == false && b.Reserve == false).Count();
+            await LoadAuthAndCurrentUser();
+            await LoadEventAndBookings();
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Exception: " + ex.Message);
+            Console.WriteLine("Error loading data: " + ex.Message);
+        }
+    }
+
+    private async Task LoadEventAndBookings()
+    {
+        eventData = await Http.GetFromJsonAsync<Event>($"api/Events/{Id}");
+
+        EventDtoData = new EventDto
+            {
+                Title = eventData?.Title ?? "",
+                Description = eventData?.Description ?? "",
+                Start = eventData?.Start ?? DateTime.Now,
+                End = eventData?.End,
+                AllDay = eventData?.AllDay ?? false,
+                MaxSlots = eventData?.MaxSlots ?? 0,
+                Recurring = eventData?.Recurring ?? false,
+                Gender = eventData?.Gender ?? Gender.Male
+            };
+
+        var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+        Bookings = allBookings?.Where(b => b.EventId == Id).ToList() ?? new();
+
+        SpotsRemaining = EventDtoData.MaxSlots - Bookings
+            .Count(b => !b.Unbooked && !b.Reserve);
+
+        var userId = BookingDtoData.UserId;
+        if (!string.IsNullOrEmpty(userId))
+        {
+            CurrentUserIsBooked = Bookings
+                .Any(b => b.UserId == userId && !b.Unbooked);
+        }
+    }
+
+    private async Task LoadAuthAndCurrentUser()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var loggedInUser = authState.User;
+
+        if (loggedInUser.Identity is not null && loggedInUser.Identity.IsAuthenticated)
+        {
+            var userId = loggedInUser.FindFirst("sub")?.Value;
+
+            BookingDtoData.Name = loggedInUser.FindFirst("fullName")?.Value ?? "";
+            BookingDtoData.Email = loggedInUser.FindFirst("email")?.Value ?? "";
+            BookingDtoData.Tel = loggedInUser.FindFirst("phone_number")?.Value ?? "";
+            BookingDtoData.UserId = userId ?? "";
+
+            Users ??= await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
+            CurrentUser = Users?.FirstOrDefault(u => u.Id == userId);
         }
     }
 
     private async Task SaveBooking()
     {
         BookingDtoData.EventId = Id;
-        // if(userIdAsString != "")
-        // {
-        //     BookingDtoData.UserId = userIdAsString;
-        // }
         var response = await Http.PostAsJsonAsync("api/Bookings", BookingDtoData);
 
         if (response.IsSuccessStatusCode)

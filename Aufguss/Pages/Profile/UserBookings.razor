@@ -13,7 +13,6 @@ else
             <tr>
                 <th>Kön</th>
                 <th>Titel</th>
-                @* <th>Platser</th> *@
                 <th>Datum</th>
                 <th style="width: 80px;"></th> <!-- Icons column -->
             </tr>
@@ -73,7 +72,7 @@ else
                                 <button class="btn btn-sm btn-outline-danger"
                                         title="Ta bort"
                                 @onclick:stopPropagation
-                                        @onclick="async () => await ShowAlert(evt.Id)">
+                                        @onclick="async () => await ShowAlert(evt)">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>
@@ -115,26 +114,26 @@ else
 
         events = (from b in bookings
                   join e in allEvents on b.EventId equals e.Id
-                  where b.Email == CurrentUser.Email &&
+                  where b.UserId == userIdString &&
                        !b.Unbooked &&
                        !b.Reserve &&
                        e.Start > DateTime.Now
                   select e).ToList();
     }
 
-    private async Task ShowAlert(int id)
+    private async Task ShowAlert(Event evt)
     {
         var result = await Swal.FireAsync(new SweetAlertOptions
             {
-                Title = "Bekräfta borttagning",
-                Text = $"Vill du ta bort sittning med ID {id}?",
+                Title = "Bekräfta avbokning",
+                Text = $"Vill du avboka dig från passet {evt.Title}?",
                 ShowCancelButton = true,
-                ConfirmButtonText = "Ja, ta bort",
-                CancelButtonText = "Nej, ta inte bort",
+                ConfirmButtonText = "Ja, avboka",
+                CancelButtonText = "Nej, avboka inte",
             });
         if (result.IsConfirmed)
         {
-            await DeleteBooking(id);
+            await DeleteBooking(evt.Id);
         }
     }
 

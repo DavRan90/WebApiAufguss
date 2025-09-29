@@ -279,8 +279,8 @@ namespace WebApi.Migrations
                     b.Property<DateTime?>("UnbookedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
