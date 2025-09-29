@@ -118,6 +118,7 @@ else
                        !b.Unbooked &&
                        !b.Reserve &&
                        e.Start > DateTime.Now
+                  orderby e.Start
                   select e).ToList();
     }
 

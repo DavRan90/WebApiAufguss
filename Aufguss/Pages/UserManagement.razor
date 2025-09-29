@@ -3,35 +3,35 @@
 @using Aufguss.Models
 
 <h1>Användare</h1>
-
-@if (Users == null)
-{
-    <p><em>Laddar...</em></p>
-}
-else
-{
-    <h3>Användare</h3>
-    <table class="table mb-5">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Förnamn</th>
-                <th>Efternamn</th>
-                <th>Användarnamn</th>
-                <th>Roll</th>
-                @* <th style="width: 80px;"></th> <!-- Icons column --> *@
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var user in Users)
-            {
+<div class="container-fluid">
+    @if (Users == null)
+    {
+        <p><em>Laddar...</em></p>
+    }
+    else
+    {
+        <h3>Användare</h3>
+        <table class="table mb-5">
+            <thead>
                 <tr>
-                    <td>@user.Id</td>
-                    <td>@user.FirstName</td>
-                    <td>@user.SurName</td>
-                    <td>@user.UserName</td>
-                    <td>@string.Join(", ", user.Roles)</td>
-                    @* <td class="text-nowrap">
+                    <th class="text-nowrap">ID</th>
+                    <th>Förnamn</th>
+                    <th>Efternamn</th>
+                    <th>Användarnamn</th>
+                    <th>Roll</th>
+                    <th style="width: 80px;"></th> <!-- Icons column -->
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Users)
+                {
+                    <tr>
+                        <td class="text-truncate text-nowrap" style="max-width: 150px;">@user.Id</td>
+                        <td>@user.FirstName</td>
+                        <td>@user.SurName</td>
+                        <td>@user.UserName</td>
+                        <td>@string.Join(", ", user.Roles)</td>
+                        <td class="text-nowrap">
                         <div class="d-flex flex-column flex-md-row">
                             <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
                             title="Ändra">
@@ -42,42 +42,42 @@ else
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>
-                    </td> *@
+                    </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    @if (AdminUsers == null)
+    {
+        <p><em>Laddar...</em></p>
+    }
+    else
+    {
+        <h3> Administratörer </h3>
+
+        <table class="table mb-5">
+            <thead>
+                <tr>
+                    <th class="text-nowrap">ID</th>
+                    <th>Förnamn</th>
+                    <th>Efternamn</th>
+                    <th>Användarnamn</th>
+                    <th>Roll</th>
+                    <th style="width: 80px;"></th> <!-- Icons column -->
                 </tr>
-            }
-        </tbody>
-    </table>
-}
-
-@if (AdminUsers == null)
-{
-    <p><em>Laddar...</em></p>
-}
-else
-{
-<h3> Administratörer </h3>
-
-<table class="table mb-5">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Förnamn</th>
-                <th>Efternamn</th>
-                <th>Användarnamn</th>
-                <th>Roll</th>
-                @* <th style="width: 80px;"></th> <!-- Icons column --> *@
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var admin in AdminUsers)
-        {
+            </thead>
+            <tbody>
+                @foreach (var admin in AdminUsers)
+                {
                     <tr>
-                        <td>@admin.Id</td>
+                        <td class="text-truncate text-nowrap" style="max-width: 150px;">@admin.Id</td>
                         <td>@admin.FirstName</td>
                         <td>@admin.SurName</td>
                         <td>@admin.UserName</td>
                         <td>@string.Join(", ", admin.Roles)</td>
-                        @* <td class="text-nowrap">
+                        <td class="text-nowrap">
                             <div class="d-flex flex-column flex-md-row">
                                 <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
                                 title="Ändra">
@@ -88,14 +88,16 @@ else
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>
-                        </td> *@
+                        </td>
                     </tr>
-        }
-        </tbody>
-    </table>
+                }
+            </tbody>
+        </table>
     }
 
-<a href="/CreateAdmin" class="btn btn-primary">Lägg till administratör</a>
+    <a href="/CreateAdmin" class="btn btn-primary">Lägg till administratör</a>
+</div>
+
 @inject HttpClient Http
 @inject NavigationManager NavManager
 
