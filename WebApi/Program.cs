@@ -28,6 +28,10 @@ namespace WebApi
 
             builder.Services.AddScoped<NotificationService>();
 
+            builder.Services.AddScoped<EmailService>();
+
+            builder.Services.AddScoped<MailgunEmailService>();
+
             // 1. Add EF Core
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("MyPC")));
@@ -95,7 +99,7 @@ namespace WebApi
 
             var app = builder.Build();
 
-
+            app.UseExceptionHandler("/error");  // Optional, adds error endpoint
             // Order is critical!
             app.UseHttpsRedirection();
 

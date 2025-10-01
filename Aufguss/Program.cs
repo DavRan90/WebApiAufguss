@@ -43,6 +43,8 @@ public class Program
 
 
         //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7162") });
+
+        
         builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net") });
 
 

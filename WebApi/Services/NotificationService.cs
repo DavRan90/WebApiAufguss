@@ -25,7 +25,7 @@ namespace WebApi.Services
 
             var client = new SendGridClient(options);
 
-            var from = new EmailAddress("noreply@yourdomain.com", "Freja Bad & Gym"); // replace with your actual from address
+            var from = new EmailAddress("david.rantanen@telia.com", "Aufguss"); // replace with your actual from address
             var to = new EmailAddress(toEmail);
             var msg = MailHelper.CreateSingleEmail(from, to, subject, plainText, htmlContent);
 
