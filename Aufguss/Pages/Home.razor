@@ -18,7 +18,7 @@ else
         <div class="card m-2 card-width mt-5">
             <h2 class="card-header">@entry.Title</h2>
             <img class="card-img-top" src="@String.Concat(fileLocation + entry.Image)" />
-            <div class="card-body">
+                    <div class="card-body bg-info-subtle">
                 <p class="card-text linebreak">@entry.Description</p>
                 @if (!string.IsNullOrEmpty(entry.Url))
                 {

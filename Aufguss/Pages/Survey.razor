@@ -1,0 +1,104 @@
+﻿@page "/Survey"
+@using System.Text.Json.Nodes
+
+<h3  class="m-3">Enkät</h3>
+<EditForm Model="CreateSurveyDtoData" OnValidSubmit="SaveSurvey">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row mb-3">
+        <label class="col-md-2 col-form-label">Titel</label>
+        <div class="col-md-4">
+            <InputText class="form-control" @bind-Value="CreateSurveyDtoData.Title" />
+            <ValidationMessage For="@(() => CreateSurveyDtoData.Title)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label class="col-md-2 col-form-label">Beskrivning</label>
+        <div class="col-md-4">
+            <InputTextArea rows="4" class="form-control" @bind-Value="CreateSurveyDtoData.Description" />
+            <ValidationMessage For="@(() => CreateSurveyDtoData.Description)" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="offset-md-2 col-md-2 d-grid">
+            <button type="submit" class="btn btn-primary">Skapa enkät</button>
+        </div>
+    </div>
+</EditForm>
+@* <div class="card mt-4">
+    <div class="card-header">Hur upplevde du temperaturen? (Mitten är ideelt)</div>
+    <div class="card-body">
+        <div class="slidecontainer">
+            <input type="range" min="1" max="5" value="3" class="slider" id="myRange">
+            <div class="slider-labels">
+                <span>❄️</span>
+                <span>🔥</span>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card mt-4">
+    <div class="card-header">Hur upplevde du doften?</div>
+    <div class="card-body">
+        <div class="slidecontainer">
+            <input type="range" min="1" max="5" value="3" class="slider" id="myRange">
+            <div class="slider-labels">
+                <span>🤢</span>
+                <span>🤗</span>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card mt-4">
+    <div class="card-header">Var sittningen för lång eller för kort?</div>
+    <div class="card-body">
+        <div class="slidecontainer">
+            <input type="range" min="1" max="5" value="3" class="slider" id="myRange">
+            <div class="slider-labels">
+                <span>🥵</span>
+                <span>🥶</span>
+            </div>
+        </div>
+    </div>
+</div> *@
+
+@inject IJSRuntime JS
+@inject SweetAlertService Swal
+@inject HttpClient Http
+@inject NavigationManager navManager
+
+@code {
+    public Models.Survey.CreateSurveyDto CreateSurveyDtoData { get; set; } = new();
+    public JsonNode Errors { get; set; } = new JsonObject();
+
+    private async Task SaveSurvey()
+    {
+        var response = await Http.PostAsJsonAsync("api/Surveys", CreateSurveyDtoData);
+
+        if (response.IsSuccessStatusCode)
+        {
+            // faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+            CreateSurveyDtoData = new();
+            navManager.NavigateTo("/Survey");
+        }
+
+        else
+        {
+            var strResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Json Response: \n" + strResponse);
+
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+                Errors = jsonResponse?["errors"] ?? new JsonObject();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception: " + ex.Message);
+            }
+        }
+    }
+}

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Models;
+using WebApi.Models.Survey;
 
 namespace WebApi.Services
 {
@@ -15,5 +16,10 @@ namespace WebApi.Services
         public required DbSet<Entry> Entries { get; set; }
         public required DbSet<Booking> Bookings { get; set; }
         public required DbSet<Faq> Faqs { get; set; }
+        public required DbSet<Survey> Surveys { get; set; }
+        public required DbSet<SurveyQuestion> SurveyQuestions { get; set; }
+        public required DbSet<SurveyAnswer> SurveyAnswers { get; set; }
+        public required DbSet<SurveyAnswerDetail> SurveyAnswerDetails { get; set; }
+
     }
 }
