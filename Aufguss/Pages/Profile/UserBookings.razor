@@ -1,5 +1,9 @@
 ﻿@page "/Dina_bokningar"
 @using Aufguss.Models
+@using BlazorCalendar
+@using BlazorCalendar.Models
+
+<h3>Dina bokningar</h3>
 
 @if (events == null)
 {
@@ -7,35 +11,43 @@
 }
 else
 {
-    <h3>Dina bokningar</h3>
-    <table class="table mb-5">
-        <thead>
-            <tr>
-                <th>Kön</th>
-                <th>Titel</th>
-                <th>Datum</th>
-                <th style="width: 80px;"></th> <!-- Icons column -->
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var evt in events)
-            {
-                if (evt.Hidden == false)
+
+
+    <p>Visa kalender</p>
+    <input type="checkbox" @bind="Value" />
+    <p></p>
+    <p></p>
+
+    if (!Value)
+    {
+        <table class="table mb-5">
+            <thead>
+                <tr>
+                    <th>Kön</th>
+                    <th>Titel</th>
+                    <th>Datum</th>
+                    <th style="width: 80px;"></th> <!-- Icons column -->
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var evt in events)
                 {
-                    <tr style="cursor: pointer;"
+                    if (evt.Hidden == false)
+                    {
+                        <tr style="cursor: pointer;"
                         @onclick="@(() => NavManager.NavigateTo($"/Bookings/Book/{evt.Id}"))">
-                        <td>
-                            @if (evt.Gender == 0)
-                            {
-                                <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
-                            }
-                            else
-                            {
-                                <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
-                            }
-                        </td>
-                        <td>@evt.Title</td>
-                        @* <td style="min-width: 5px;">
+                            <td>
+                                @if (evt.Gender == 0)
+                                {
+                                    <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
+                                }
+                            </td>
+                            <td>@evt.Title</td>
+                            @* <td style="min-width: 5px;">
                             @{
                                 int remaining = SpotsRemaining(evt.Id);
                                 int total = evt.MaxSlots;
@@ -66,23 +78,47 @@ else
                                 </span>
                             </div>
                         </td> *@
-                        <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
-                        <td class="text-nowrap">
-                            <div class="d-flex flex-column flex-md-row">
-                                <button class="btn btn-sm btn-outline-danger"
-                                        title="Ta bort"
-                                @onclick:stopPropagation
-                                        @onclick="async () => await ShowAlert(evt)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                }
+                            <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                            <td class="text-nowrap">
+                                <div class="d-flex flex-column flex-md-row">
+                                    <button class="btn btn-sm btn-outline-danger"
+                                    title="Ta bort"
+                                    @onclick:stopPropagation
+                                    @onclick="async () => await ShowAlert(evt)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
 
-            }
-        </tbody>
-    </table>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+    @*     <p>Visa Veckovy</p>
+    <input type="checkbox" @bind="ShowWeek" />
+    <p></p>
+    <p></p> *@
+        <div class="d-flex justify-content-center align-items-center">
+            <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(-1))">←</button>
+            <h3 class="mx-2 text-center" style="width: 15ch;">@FirstDate.ToString("MMMM yyyy")</h3>
+            <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(1))">→</button>
+        </div>
+                <CalendarContainer TasksList="@ModelTasks" DisplayedView="ShowWeek ? DisplayedView.Weekly : DisplayedView.Monthly" FirstDate="@FirstDate">
+            <MonthlyView 
+            SaturdayColor="White"
+            SundayColor="White" />
+
+            <WeekView
+                
+                
+                SaturdayColor="White"
+                SundayColor="White" />
+        </CalendarContainer>
+    }
 }
 
 @inject HttpClient Http
@@ -92,6 +128,47 @@ else
 @inject IJSRuntime JSRuntime
 
 @code {
+    private BlazorCalendar.Models.Tasks[]? ModelTasks;
+    private DateTime FirstDate = DateTime.Today;
+    [Parameter]
+    public EventCallback<bool> ValueChanged { get; set; }
+
+    public void ChangeMonth(int change)
+    {
+        FirstDate = FirstDate.AddMonths(change);
+        StateHasChanged();
+    }
+
+    private bool _showWeek;
+    [Parameter]
+    public bool ShowWeek
+    {
+        get { return _showWeek; }
+        set
+        {
+            if (_showWeek != value)
+            {
+                _showWeek = value;
+            }
+            ValueChanged.InvokeAsync(_showWeek);
+        }
+    }
+
+    private bool _value;
+    [Parameter]
+    public bool Value
+    {
+        get { return _value; }
+        set
+        {
+            if (_value != value)
+            {
+                _value = value;
+            }
+            ValueChanged.InvokeAsync(_value);
+        }
+    }
+
     private List<UserWithRolesDto>? Users;
     private UserWithRolesDto? CurrentUser;
 
@@ -120,7 +197,58 @@ else
                        e.Start > DateTime.Now
                   orderby e.Start
                   select e).ToList();
+
+        var userBookingsWithEvents = (from b in bookings
+                                      join e in allEvents on b.EventId equals e.Id
+                                      where b.UserId == userIdString &&
+                                            !b.Unbooked &&
+                                            e.Start > DateTime.Now
+                                      orderby e.Start
+                                      select new { Booking = b, Event = e }).ToList();
+
+        ModelTasks = userBookingsWithEvents
+            .Select(be => new BlazorCalendar.Models.Tasks
+                {
+                    ID = be.Event.Id,
+                    Caption = be.Booking.Reserve ? "? Reserv" : "✓ Inbokad",
+                    DateStart = be.Event.Start,
+                    DateEnd = be.Event.End ?? be.Event.Start,
+                    Color = be.Booking.Reserve
+                        ? "lightyellow" // Highlight reserved bookings with yellow (for example)
+                        : be.Event.Gender switch
+                        {
+                            Gender.Male => "lightblue",
+                            Gender.Female => "lightpink",
+                            _ => "lightgray"
+                        },
+                    Comment = be.Event.Description
+                })
+            .ToArray();
+
+    //     ModelTasks = events
+    // .Select(evt => new BlazorCalendar.Models.Tasks
+    // {
+    //     ID = evt.Id,
+    //     Caption = evt.Gender switch
+    //     {
+    //         Gender.Male => "Inbokad",
+    //             Gender.Female => "Inbokad",
+    //         _ => "lightgray"
+    //     },
+    //     DateStart = evt.Start,
+    //     DateEnd = evt.Start,
+    //     Color = evt.Gender switch
+    //     {
+    //         Gender.Male => "lightblue",
+    //         Gender.Female => "lightpink",
+    //         _ => "lightgray"
+    //     },
+    //     Comment = evt.Description
+    // })
+    // .ToArray();
     }
+
+
 
     private async Task ShowAlert(Event evt)
     {

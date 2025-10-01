@@ -180,6 +180,7 @@ namespace WebApi.Controllers
 
                 if (reserveList.Any())
                 {
+                    // Need to add notification but also check that the user isn't already actively booked to three events
                     var promote = reserveList[0];
                     promote.Reserve = false;
                     promote.Unbooked = false;
