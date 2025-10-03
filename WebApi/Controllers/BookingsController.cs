@@ -85,7 +85,7 @@ namespace WebApi.Controllers
                                              e.Start > DateTime.Now
                                        select b).Count();
 
-            if(countActiveBookings < 3)
+            if (countActiveBookings < 3)
             {
                 var booking = new Booking
                 {
@@ -137,9 +137,9 @@ namespace WebApi.Controllers
                             to: $"david.rantanen@telia.com",
                             subject: "Bokningsbekräftelse Aufguss",
                             htmlContent: htmlMessage
-                            //htmlContent: "<strong>Tack för din bokning!</strong><br>" +
-                            //$"Du är inbokad till {eventTitle} <br>" +
-                            //$"Vi ses på Freja Bad & Gym!"
+                        //htmlContent: "<strong>Tack för din bokning!</strong><br>" +
+                        //$"Du är inbokad till {eventTitle} <br>" +
+                        //$"Vi ses på Freja Bad & Gym!"
                         );
                     return Ok();
                 }
@@ -155,6 +155,47 @@ namespace WebApi.Controllers
             {
                 return BadRequest(new { message = "För många aktiva bokningar, max 3" });
             }
+        }
+
+        [HttpPut("Unbook/{id}")]
+        public IActionResult Unbook(int id)
+        {
+            var booking = context.Bookings.Find(id);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            // Unbooking
+            booking.Unbooked = true;
+            booking.UnbookedAt = DateTime.Now;
+
+            context.SaveChanges();
+
+            CheckReserveList(booking);
+
+            //var bookingsCount = context.Bookings.Where(b => b.EventId == booking.EventId && !b.Reserve && !b.Unbooked).Count();
+            //var evt = context.Events.Where(e => e.Id == booking.EventId).FirstOrDefault();
+
+            //if(evt.MaxSlots >= bookingsCount)
+            //{
+            //    var reserveList = context.Bookings
+            //        .Where(b => b.EventId == booking.EventId && b.Reserve)
+            //        .OrderBy(b => b.ReserveAt)
+            //        .ToList();
+
+            //    if (reserveList.Any())
+            //    {
+            //        // Need to add notification but also check that the user isn't already actively booked to three events
+            //        var promote = reserveList[0];
+            //        promote.Reserve = false;
+            //        promote.Unbooked = false;
+            //        promote.BookedAt = DateTime.Now;
+            //    }
+            //}
+            
+
+            return Ok(booking);
         }
 
 
@@ -236,18 +277,30 @@ namespace WebApi.Controllers
             }
 
             context.Bookings.Remove(booking);
-
-            var reserveList = context.Bookings.Where(b => b.EventId == booking.EventId && b.Reserve == true).OrderBy(b => b.ReserveAt).ToList();
-
-            if (reserveList.Any())
-            {
-                reserveList[0].Reserve = false;
-                reserveList[0].BookedAt = DateTime.Now;
-            }
-
             context.SaveChanges();
 
+            CheckReserveList(booking);
+
             return Ok();
+        }
+
+        public async Task CheckReserveList(Booking booking)
+        {
+            var bookingsCount = context.Bookings.Where(b => b.EventId == booking.EventId && !b.Reserve && !b.Unbooked).Count();
+            var evt = context.Events.Where(e => e.Id == booking.EventId).FirstOrDefault();
+
+            if (evt.MaxSlots > bookingsCount)
+            {
+
+                var reserveList = context.Bookings.Where(b => b.EventId == booking.EventId && b.Reserve == true).OrderBy(b => b.ReserveAt).ToList();
+
+                if (reserveList.Any())
+                {
+                    reserveList[0].Reserve = false;
+                    reserveList[0].BookedAt = DateTime.Now;
+                }
+            }
+            context.SaveChanges();
         }
 
     }

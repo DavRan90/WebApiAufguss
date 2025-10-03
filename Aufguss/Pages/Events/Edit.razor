@@ -183,11 +183,13 @@
                             </button> *@
                             <button class="btn btn-sm btn-outline-warning mb-1 mb-md-0 me-md-1"
                             title="Avboka"
+                            @onclick:stopPropagation
                             @onclick="async () => await Unbook(booking.Id)">
                                 <i class="bi bi-x"></i>
                             </button>
                             <button class="btn btn-sm btn-outline-danger"
                             title="Ta bort"
+                            @onclick:stopPropagation
                             @onclick="async () => await ShowAlert(booking.Id)">
                                 <i class="bi bi-trash"></i>
                             </button>
@@ -203,7 +205,7 @@
 
 @inject IJSRuntime JS
 @inject SweetAlertService Swal
-@inject HttpClient http
+@inject HttpClient Http
 @inject NavigationManager NavManager
 
 @code {
@@ -253,7 +255,7 @@
     {
         try
         {
-            eventData = await http.GetFromJsonAsync<Event>("api/Events/" + Id);
+            eventData = await Http.GetFromJsonAsync<Event>("api/Events/" + Id);
             EventDtoData.Title = eventData?.Title ?? "";
             EventDtoData.Description = eventData?.Description ?? "";
             EventDtoData.Start = eventData?.Start ?? DateTime.Now;
@@ -264,7 +266,7 @@
             EventDtoData.Gender = eventData?.Gender ?? Gender.Male;
             EventDtoData.Hidden = eventData?.Hidden ?? false;
 
-            var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+            var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
             Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
         }
         catch (Exception ex)
@@ -275,7 +277,7 @@
 
     private async Task SaveEvent()
     {
-        var response = await http.PutAsJsonAsync("api/Events/" + Id, EventDtoData);
+        var response = await Http.PutAsJsonAsync("api/Events/" + Id, EventDtoData);
 
         if (response.IsSuccessStatusCode)
         {
@@ -326,8 +328,7 @@
             });
         if (result.IsConfirmed)
         {
-            BookingDtoData.Unbooked = true;
-            var response = await http.PutAsJsonAsync("api/Bookings/" + id, BookingDtoData);
+            var response = await Http.PutAsync("api/Bookings/Unbook/" + id, null);
 
             if (response.IsSuccessStatusCode)
             {
@@ -337,7 +338,7 @@
                         Text = $"Bokning med id {id} är avbokad",
                         Icon = SweetAlertIcon.Warning,
                     });
-                var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+                var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
                 Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
             }
 
@@ -362,8 +363,8 @@
 
     private async Task DeleteBooking(int id)
     {
-        await http.DeleteAsync("api/Bookings/" + id);
-        var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+        await Http.DeleteAsync("api/Bookings/" + id);
+        var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
         Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
     }
 
@@ -465,11 +466,11 @@
                     });
                 booking.Reserve = true;
                 booking.EventId = id;
-                var response = await http.PostAsJsonAsync("api/Bookings", booking);
+                var response = await Http.PostAsJsonAsync("api/Bookings", booking);
                 if (response.IsSuccessStatusCode)
                 {
                     await JS.InvokeVoidAsync("Swal.fire", "Success", "Ny gäst tillagd i reservlistan!", "success");
-                    var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+                    var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
                     Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
                 }
             }
@@ -498,12 +499,12 @@
                             PropertyNameCaseInsensitive = true
                         });
 
-                    var response = await http.PostAsJsonAsync("api/Bookings", booking);
+                    var response = await Http.PostAsJsonAsync("api/Bookings", booking);
 
                     if (response.IsSuccessStatusCode)
                     {
                         await JS.InvokeVoidAsync("Swal.fire", "Success", "Ny gäst tillagd!", "success");
-                        var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+                        var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
                         Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
                     }
                 }

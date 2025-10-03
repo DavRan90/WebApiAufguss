@@ -1,4 +1,5 @@
 ﻿@page "/Booking/{id:int}"
+@using System.Text.Json.Nodes
 
 <div class="row mb-5">
     <div class="col-lg-8">
@@ -94,11 +95,23 @@
                     </div>
                 </div>
             }
-            
+
 
             <div class="row">
-                <div class="offset-md-4 col-md-4 d-grid">
-                    <a class="btn btn-primary" href="/Events/Edit/@evnt.Id">Avbryt</a>
+                @if(booking.Unbooked)
+                {
+                    <div class="offset-md-4 col-md-4 d-grid">
+                        <button class="btn btn-primary">Omboka</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="offset-md-4 col-md-4 d-grid">
+                        <button class="btn btn-danger" @onclick="async () => await Unbook(booking.Id)">Avboka</button>
+                    </div>
+                }
+                <div class="col-md-4 d-grid">
+                    <a class="btn btn-outline-primary" href="/Events/Edit/@evnt.Id">Avbryt</a>
                 </div>
             </div>
         }
@@ -118,7 +131,11 @@
 
     public Booking? booking { get; set; }
 
+    public BookingDto BookingDtoData { get; set; } = new();
+
     public Event? evnt { get; set; }
+
+    public JsonNode Errors { get; set; } = new JsonObject();
 
     protected override async Task OnParametersSetAsync()
     {
@@ -139,5 +156,50 @@
         var allEvents = await Http.GetFromJsonAsync<List<Event>>("api/Events/");
         booking = allBookings?.Where(b => b.Id == Id).SingleOrDefault();
         evnt = allEvents?.Where(e => e.Id == booking?.EventId).SingleOrDefault();
+    }
+
+    private async Task Unbook(int id)
+    {
+        var result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Bekräfta avbokning",
+                Text = $"Ta bort bokning med ID {id}?",
+                ShowCancelButton = true,
+                ConfirmButtonText = "Ja, ta bort",
+                CancelButtonText = "Nej, ta inte bort",
+            });
+        if (result.IsConfirmed)
+        {
+            var response = await Http.PutAsync("api/Bookings/Unbook/" + id, null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var res = await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Avbokad",
+                        Text = $"Bokning med id {id} är avbokad",
+                        Icon = SweetAlertIcon.Warning,
+                    });
+                // Navigate to page
+                NavManager.NavigateTo($"/Events/Edit/{evnt.Id}");
+            }
+
+            else
+            {
+                var strResponse = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Json Response: \n" + strResponse);
+
+                try
+                {
+                    var jsonResponse = JsonNode.Parse(strResponse);
+                    Errors = jsonResponse?["errors"] ?? new JsonObject();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Exception: " + ex.Message);
+                }
+            }
+        }
+
     }
 }

@@ -22,6 +22,7 @@ else
             <thead>
                 <tr>
                     <th>Status</th>
+                    <th>Plats</th>
                     <th>Kön</th>
                     <th>Titel</th>
                     <th>Datum</th>
@@ -41,6 +42,16 @@ else
                             else
                             {
                                 <span class="badge rounded-pill text-bg-warning p-2">Reserv</span>
+                            }
+                        </td>
+                        <td>
+                            @if (book.Status == "Inbokad")
+                            {
+                                <span class="badge rounded-pill text-bg-success p-2">✓</span>
+                            }
+                            else
+                            {
+                                <span class="badge rounded-pill text-bg-warning p-2">@book.ReservePosition</span>
                             }
                         </td>
                         <td>
@@ -202,17 +213,38 @@ else
                   select e).ToList();
         var userBookingsWithEvents = (from b in bookings
                                       join e in allEvents on b.EventId equals e.Id
-                                      where b.UserId == userIdString &&
+                                      where /* b.UserId == userIdString && */
                                             !b.Unbooked &&
                                             e.Start > DateTime.Now
                                       orderby e.Start
                                       select new { Booking = b, Event = e }).ToList();
+
+        
+
+        userBookingsWithEvents = userBookingsWithEvents.Where(u => u.Booking.UserId == userIdString).ToList();
+
+
         foreach (var booking in userBookingsWithEvents)
         {
+            int? reservePosition = null;
+
+            var reservesForThisEvent = bookings
+                                            .Where(b => b.EventId == booking.Event.Id && b.Reserve && !b.Unbooked)
+                                            .OrderBy(b => b.ReserveAt)
+                                            .ToList();
+
+            if (booking.Booking.Reserve)
+            {
+                // Find the user's position in the reserve list
+                reservePosition = reservesForThisEvent
+                    .FindIndex(r => r.Id == booking.Booking.Id) + 1;
+            }
+
             var newBooking = new DisplayBooking
                 {
                     Title = booking.Event.Title,
                     Gender = booking.Event.Gender,
+                    ReservePosition = reservePosition,
                     Status = booking.Booking.Reserve ? "Reserv" : "Inbokad",
                     Start = booking.Event.Start,
                     BookingId = booking.Booking.Id,
@@ -274,6 +306,7 @@ else
     {
         public Gender Gender { get; set; }
         public string? Status { get; set; }
+        public int? ReservePosition { get; set; }
         public string? Title { get; set; }
         public DateTime Start { get; set; }
         public int EventId { get; set; }
