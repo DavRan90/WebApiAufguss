@@ -1,6 +1,7 @@
 ﻿@page "/Nyheter"
-@attribute [Authorize(Roles = "Admin,SuperAdmin")]
+@attribute [Authorize(Roles = "Admin, SuperAdmin")]
 @using System.Text.Json.Nodes
+@using System.IO;
 
 <h1 class=mb-5>Lägg till nyhet</h1>
 <EditForm Model="EntryDtoData" OnValidSubmit="SaveEntry">
@@ -22,6 +23,30 @@
             <ValidationMessage For="@(() => EntryDtoData.Description)" />
         </div>
     </div>
+    <div class="row mb-3">
+        <label class="col-md-2 col-form-label">Välj en bild</label>
+        <div class="col-md-4">
+    <select class="form-select" @onchange="OnImageSelect">
+        <option disabled selected>Välj en bild</option>
+        @foreach (var image in ImageOptions)
+                {
+                    <option value="@image">@Path.GetFileName(image)</option>
+                }
+            </select>
+
+            @if (!string.IsNullOrEmpty(SelectedImageUrl))
+            {
+                <img src="@SelectedImageUrl" class="img-thumbnail mt-2" style="max-height: 200px;" />
+            }
+        </div>
+    </div>
+    @* <div class="row mb-3">
+        <label class="col-md-2 col-form-label">Beskrivning</label>
+        <div class="col-md-4">
+            <InputFile rows="4" accept="image/*" class="form-control" @bind-Value="EntryDtoData.Image" />
+            <ValidationMessage For="@(() => EntryDtoData.Image)" />
+        </div>
+    </div> *@
 
     <div class="row">
         <div class="offset-md-2 col-md-2 d-grid">
@@ -107,7 +132,7 @@ else
     {
         <div class="card m-2 card-width mt-5">
             <h2 class="card-header">@entry.Title</h2>
-            <img class="card-img-top" src="@String.Concat(fileLocation + entry.Image)" />
+            <img class="card-img-top" src="@entry.Image" />
             <div class="card-body">
                 <p class="card-text linebreak">@entry.Description</p>
                 @if (!string.IsNullOrEmpty(entry.Url))
@@ -126,6 +151,18 @@ else
 
 
 @code {
+    private List<string> ImageOptions = new();
+    private string SelectedImageUrl;
+
+
+
+    private void OnImageSelect(ChangeEventArgs e)
+    {
+        SelectedImageUrl = e.Value?.ToString();
+        EntryDtoData.Image = SelectedImageUrl; // Bind selected image URL to your model
+    }
+
+
     private string fileLocation = "";
     public EntryDto EntryDtoData { get; set; } = new();
     public JsonNode Errors { get; set; } = new JsonObject();
@@ -139,6 +176,7 @@ else
         entries = await Http.GetFromJsonAsync<List<Entry>>("api/Entries");
         Events = await Http.GetFromJsonAsync<List<Event>>("api/Events");
         Events = Events.Where(e => e.Start > DateTime.Now && e.Hidden == false).ToList();
+        ImageOptions = await Http.GetFromJsonAsync<List<string>>("api/upload/news");
     }
 
     private string statusMessage = "";
@@ -189,7 +227,11 @@ else
 
     private async Task SaveEntry()
     {
-        EntryDtoData.Image = "aufguss 2.jpg";
+        if(EntryDtoData.Image == "")
+        {
+            EntryDtoData.Image = "aufguss 2.jpg";
+        }
+        
         var response = await Http.PostAsJsonAsync("api/Entries", EntryDtoData);
 
         if (response.IsSuccessStatusCode)

@@ -32,17 +32,17 @@
                 <div class="row gap-2 gap-md-1">
                     <div class="col-12 col-md-6 d-flex align-items-center">
                         <input type="radio"
-                               checked="@(EventDtoData.Gender == Gender.Male)"
-                               name="Gender"
-                               @onchange="@(() => EventDtoData.Gender = Gender.Male)" />
+                        checked="@(EventDtoData.Gender == Gender.Male)"
+                        name="Gender"
+                        @onchange="@(() => EventDtoData.Gender = Gender.Male)" />
                         <label class="btn btn-primary ms-2">Herrar</label>
                     </div>
 
                     <div class="col-12 col-md-6 d-flex align-items-center">
                         <input type="radio"
-                               checked="@(EventDtoData.Gender == Gender.Female)"
-                               name="Gender"
-                               @onchange="@(() => EventDtoData.Gender = Gender.Female)" />
+                        checked="@(EventDtoData.Gender == Gender.Female)"
+                        name="Gender"
+                        @onchange="@(() => EventDtoData.Gender = Gender.Female)" />
                         <label class="btn btn-danger ms-2">Damer</label>
                     </div>
                 </div>
@@ -75,7 +75,7 @@
             <label class="col-md-4 col-form-label">Sluttid</label>
             <div class="col-md-8">
                 <input type="datetime-local" class="form-control" @bind="EventDtoData.End">
-                <span class="text-danger">@Errors["Start"]?[0]</span>
+                <span class="text-danger">@Errors["End"]?[0]</span>
             </div>
         </div>
 
@@ -97,7 +97,7 @@
         <div class="row mb-3">
             <div class="col-md-8 offset-md-4">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="gridCheck1" @bind="EventDtoData.Recurring" disabled>
+                    <input class="form-check-input" type="checkbox" id="gridCheck1" @bind="EventDtoData.Recurring">
                     <label class="form-check-label" for="gridCheck1">
                         Återkommande
                         <span class="ms-1" data-bs-toggle="tooltip" title="Om återkommande pass önskas">
@@ -107,6 +107,7 @@
                 </div>
             </div>
         </div>
+
         @if (EventDtoData.Recurring)
         {
             <div class="row mb-3">
@@ -120,8 +121,29 @@
                         }
                     </InputSelect>
                 </div>
+
+            </div>
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Slutdatum</label>
+                <div class="col-md-8">
+                    <input type="datetime-local" class="form-control" @bind="EndDate">
+                    <span class="text-danger">@Errors["Recurring"]?[0]</span>
+                </div>
             </div>
         }
+        <div class="row mb-3">
+            <div class="col-md-8 offset-md-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="gridCheck1" @bind="Survey" disabled>
+                    <label class="form-check-label" for="gridCheck1">
+                        Enkät
+                        <span class="ms-1" data-bs-toggle="tooltip" title="Om enkät ska göras i samband med passet">
+                            <i class="bi bi-info-circle text-secondary"></i>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
         <div class="row mb-3">
             <div class="col-md-8 offset-md-4">
                 <div class="form-check">
@@ -178,6 +200,8 @@
 @inject NavigationManager navManager
 
 @code {
+    private bool Survey = false;
+    private DateTime EndDate = DateTime.Now;
     private List<EventTemplate>? Templates;
     private int frequency;
     public EventDto EventDtoData { get; set; } = new();
@@ -262,72 +286,157 @@
         Templates = await Http.GetFromJsonAsync<List<EventTemplate>>("api/EventTemplates");
     }
 
+    private async Task CheckFormData()
+    {
+        if (EventDtoData.End <= EventDtoData.Start)
+        {
+            Errors["End"] = new JsonArray("Sluttid måste vara efter starttid.");
+            // return;
+        }
+
+        if (EventDtoData.Start <= DateTime.Now)
+        {
+            Errors["Start"] = new JsonArray("Starttiden har redan passerat");
+            // return;
+        }
+
+        if (EventDtoData.Recurring)
+        {
+            if ((EndDate - EventDtoData.Start).TotalDays < 7)
+            {
+                Errors = new JsonObject
+                    {
+                        ["Recurring"] = new JsonArray("Slutdatumet tillåter inga återkommande pass.")
+                    };
+
+                // return;
+            }
+        }
+    }
+
     private async Task SaveEvent()
     {
-        var response = await Http.PostAsJsonAsync("api/Events", EventDtoData);
-
-        if (response.IsSuccessStatusCode)
+        if (EventDtoData.End <= EventDtoData.Start)
         {
-            if (createTemplate)
-            {
-                var template = await Http.PostAsJsonAsync("api/EventTemplates", EventDtoData);
-            }
-
-
-            var createdEvent = await response.Content.ReadFromJsonAsync<Event>();
-            if (createdEvent.Hidden == false && createNews == true)
-            {
-                var entry = new EntryDto
-                    {
-                        Title = createdEvent.Title + " | " + createdEvent.Start.ToString("dd-MM-yyyy | HH:mm"),
-                        Description = createdEvent.Description,
-                        Url = createdEvent.Id.ToString(),
-                        Image = "aufguss 2.jpg"
-                    };
-                var response2 = await Http.PostAsJsonAsync("api/Entries", entry);
-
-                if (response2.IsSuccessStatusCode)
-                {
-
-                    navManager.NavigateTo("/");
-                }
-
-                else
-                {
-                    var strResponse = await response2.Content.ReadAsStringAsync();
-                    Console.WriteLine("Json Response: \n" + strResponse);
-
-                    try
-                    {
-                        var jsonResponse = JsonNode.Parse(strResponse);
-                        Errors = jsonResponse?["errors"] ?? new JsonObject();
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Exception: " + ex.Message);
-                    }
-                }
-            }
-
-
-
-            navManager.NavigateTo("/Events");
+            Errors["End"] = new JsonArray("Sluttid måste vara efter starttid.");
+            return;
         }
 
+        if (EventDtoData.Start <= DateTime.Now)
+        {
+            Errors["Start"] = new JsonArray("Starttiden har redan passerat");
+            return;
+        }
+
+        if(EventDtoData.Recurring)
+        {
+            if ((EndDate - EventDtoData.Start).TotalDays < 7)
+            {
+                Errors = new JsonObject
+                    {
+                        ["Recurring"] = new JsonArray("Slutdatumet tillåter inga återkommande pass.")
+                    };
+
+                return;
+            }
+            else
+            {
+                while (EndDate > EventDtoData.Start)
+                {
+                    var res = await Http.PostAsJsonAsync("api/Events", EventDtoData);
+                    if (res.IsSuccessStatusCode)
+                    {
+                        EventDtoData.Start = EventDtoData.Start.AddDays(7 * frequency);
+                    }
+                    else
+                    {
+                        var strResponse = await res.Content.ReadAsStringAsync();
+                        Console.WriteLine("Json Response: \n" + strResponse);
+
+                        try
+                        {
+                            var jsonResponse = JsonNode.Parse(strResponse);
+                            Errors = jsonResponse?["errors"] ?? new JsonObject();
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Exception: " + ex.Message);
+                        }
+                        break;
+                    }
+                }
+                navManager.NavigateTo("/Events");
+            }
+            
+        }
         else
         {
-            var strResponse = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Json Response: \n" + strResponse);
+            var response = await Http.PostAsJsonAsync("api/Events", EventDtoData);
 
-            try
+            if (response.IsSuccessStatusCode)
             {
-                var jsonResponse = JsonNode.Parse(strResponse);
-                Errors = jsonResponse?["errors"] ?? new JsonObject();
+                if (createTemplate)
+                {
+                    var template = await Http.PostAsJsonAsync("api/EventTemplates", EventDtoData);
+                }
+
+
+                var createdEvent = await response.Content.ReadFromJsonAsync<Event>();
+                if (createdEvent.Hidden == false && createNews == true)
+                {
+                    var entry = new EntryDto
+                        {
+                            Title = createdEvent.Title + " | " + createdEvent.Start.ToString("dd-MM-yyyy | HH:mm"),
+                            Description = createdEvent.Description,
+                            Url = createdEvent.Id.ToString(),
+                            Image = "https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net/upload/aufguss 2.jpg"
+                        };
+                    var response2 = await Http.PostAsJsonAsync("api/Entries", entry);
+
+                    if (response2.IsSuccessStatusCode)
+                    {
+
+                        navManager.NavigateTo("/");
+                    }
+
+                    else
+                    {
+                        var strResponse = await response2.Content.ReadAsStringAsync();
+                        Console.WriteLine("Json Response: \n" + strResponse);
+
+                        try
+                        {
+                            var jsonResponse = JsonNode.Parse(strResponse);
+                            Errors = jsonResponse?["errors"] ?? new JsonObject();
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Exception: " + ex.Message);
+                        }
+                    }
+                }
+
+
+
+                navManager.NavigateTo("/Events");
             }
-            catch (Exception ex)
+
+            else
             {
-                Console.WriteLine("Exception: " + ex.Message);
+                var strResponse = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Json Response: \n" + strResponse);
+
+                try
+                {
+                    var jsonResponse = JsonNode.Parse(strResponse);
+                    Errors = jsonResponse?["errors"] ?? new JsonObject();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Exception: " + ex.Message);
+                }
             }
         }
+        
     }
 }

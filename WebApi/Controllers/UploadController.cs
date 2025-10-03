@@ -28,6 +28,22 @@ namespace WebApi.Controllers
             return File(fileStream, contentType);
         }
 
+        [HttpGet("news")]
+        public IActionResult GetNewsImages()
+        {
+            var folderPath = Path.Combine(_env.WebRootPath, "upload");
+
+            if (!Directory.Exists(folderPath))
+                return NotFound("Image folder not found.");
+
+            var files = Directory.GetFiles(folderPath)
+                .Select(Path.GetFileName)
+                .Select(f => $"{Request.Scheme}://{Request.Host}/upload/{f}")
+                .ToList();
+
+            return Ok(files);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Upload(IFormFile file)
         {

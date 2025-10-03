@@ -17,7 +17,7 @@ else
     {
         <div class="card m-2 card-width mt-5">
             <h2 class="card-header">@entry.Title</h2>
-            <img class="card-img-top" src="@String.Concat(fileLocation + entry.Image)" />
+            <img class="card-img-top" src="@entry.Image" />
                     <div class="card-body bg-info-subtle">
                 <p class="card-text linebreak">@entry.Description</p>
                 @if (!string.IsNullOrEmpty(entry.Url))
@@ -31,13 +31,13 @@ else
 }
 
 
-@inject HttpClient http
+@inject HttpClient Http
 @inject NavigationManager NavManager
 
 @code {
     private List<Entry>? entries;
 
-    private string base64Image;
+    // private string base64Image;
 
     private string imagePathFromDb = "";
     private string fileLocation = "";
@@ -45,9 +45,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        entries = await http.GetFromJsonAsync<List<Entry>>("api/Entries");
+        entries = await Http.GetFromJsonAsync<List<Entry>>("api/Entries");
 
-        fileLocation = new Uri(http.BaseAddress, "api/upload/").ToString();
+        fileLocation = new Uri(Http.BaseAddress, "api/upload/").ToString();
     
 
         // var fileName = "flower.jpg"; // from DB or wherever
@@ -58,12 +58,6 @@ else
         //     var imageBytes = await response.Content.ReadAsByteArrayAsync();
         //     base64Image = $"data:image/jpeg;base64,{Convert.ToBase64String(imageBytes)}";
         // }
-    }
-
-    private async Task DeleteEntry(int id)
-    {
-        await http.DeleteAsync("api/Entries/" + id);
-        entries = await http.GetFromJsonAsync<List<Entry>>("api/Entries");
     }
 
     private async Task BookEvent(string id)
