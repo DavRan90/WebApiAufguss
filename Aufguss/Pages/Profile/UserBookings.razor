@@ -11,18 +11,17 @@
 }
 else
 {
-
-
     <p>Visa kalender</p>
-    <input type="checkbox" @bind="Value" />
+    <input type="checkbox" @bind="ShowCalendar" />
     <p></p>
     <p></p>
 
-    if (!Value)
+    if (!ShowCalendar)
     {
         <table class="table mb-5">
             <thead>
                 <tr>
+                    <th>Status</th>
                     <th>Kön</th>
                     <th>Titel</th>
                     <th>Datum</th>
@@ -30,7 +29,46 @@ else
                 </tr>
             </thead>
             <tbody>
-                @foreach (var evt in events)
+                @foreach (var book in extendedBookings)
+                {
+                    <tr style="cursor: pointer;"
+                    @onclick="@(() => NavManager.NavigateTo($"/Bookings/Book/{book.EventId}"))">
+                        <td>
+                            @if (book.Status == "Inbokad")
+                            {
+                                <span class="badge rounded-pill text-bg-success p-2">Inbokad</span>
+                            }
+                            else
+                            {
+                                <span class="badge rounded-pill text-bg-warning p-2">Reserv</span>
+                            }
+                        </td>
+                        <td>
+                            @if (book.Gender == 0)
+                            {
+                                <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
+                            }
+                            else
+                            {
+                                <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
+                            }
+                        </td>
+                        <td>@book.Title</td>
+                        <td>@book.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                        <td class="text-nowrap">
+                            <div class="d-flex flex-column flex-md-row">
+                                <button class="btn btn-sm btn-outline-danger"
+                                title="Ta bort"
+                                @onclick:stopPropagation
+                                @onclick="async () => await ShowAlert(book)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                }
+                @* @foreach (var evt in events)
                 {
                     if (evt.Hidden == false)
                     {
@@ -46,38 +84,8 @@ else
                                     <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
                                 }
                             </td>
+                            <td>Status</td>
                             <td>@evt.Title</td>
-                            @* <td style="min-width: 5px;">
-                            @{
-                                int remaining = SpotsRemaining(evt.Id);
-                                int total = evt.MaxSlots;
-                                int booked = total - remaining;
-                                int percent = (int)(((double)booked / total) * 100);
-
-                                string progressColor = percent switch
-                                {
-                                    >= 100 => "bg-danger",
-                                    >= 70 => "bg-warning",
-                                    _ => "bg-success"
-                                };
-                            }
-
-                            <div class="progress position-relative" style="height: 20px;">
-                                <!-- Colored fill bar -->
-                                <div class="progress-bar @progressColor"
-                                     role="progressbar"
-                                     style="width: @percent%;"
-                                     aria-valuenow="@percent"
-                                     aria-valuemin="0"
-                                     aria-valuemax="100">
-                                </div>
-
-                                <!-- Centered text on top of the bar -->
-                                <span class="position-absolute top-50 start-50 translate-middle text-black fw-bold">
-                                    @booked / @total
-                                </span>
-                            </div>
-                        </td> *@
                             <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
                             <td class="text-nowrap">
                                 <div class="d-flex flex-column flex-md-row">
@@ -91,14 +99,13 @@ else
                             </td>
                         </tr>
                     }
-
-                }
+                } *@
             </tbody>
         </table>
     }
     else
     {
-    @*     <p>Visa Veckovy</p>
+        @*     <p>Visa Veckovy</p>
     <input type="checkbox" @bind="ShowWeek" />
     <p></p>
     <p></p> *@
@@ -107,16 +114,12 @@ else
             <h3 class="mx-2 text-center" style="width: 15ch;">@FirstDate.ToString("MMMM yyyy")</h3>
             <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(1))">→</button>
         </div>
-                <CalendarContainer TasksList="@ModelTasks" DisplayedView="ShowWeek ? DisplayedView.Weekly : DisplayedView.Monthly" FirstDate="@FirstDate">
-            <MonthlyView 
-            SaturdayColor="White"
+        <CalendarContainer TasksList="@ModelTasks" DisplayedView="ShowWeek ? DisplayedView.Weekly : DisplayedView.Monthly" FirstDate="@FirstDate">
+            <MonthlyView SaturdayColor="White"
             SundayColor="White" />
 
-            <WeekView
-                
-                
-                SaturdayColor="White"
-                SundayColor="White" />
+            <WeekView SaturdayColor="White"
+            SundayColor="White" />
         </CalendarContainer>
     }
 }
@@ -154,18 +157,18 @@ else
         }
     }
 
-    private bool _value;
+    private bool _showCalendar;
     [Parameter]
-    public bool Value
+    public bool ShowCalendar
     {
-        get { return _value; }
+        get { return _showCalendar; }
         set
         {
-            if (_value != value)
+            if (_showCalendar != value)
             {
-                _value = value;
+                _showCalendar = value;
             }
-            ValueChanged.InvokeAsync(_value);
+            ValueChanged.InvokeAsync(_showCalendar);
         }
     }
 
@@ -174,10 +177,12 @@ else
 
     private List<Event>? events;
     private List<Booking>? bookings;
+    private List<DisplayBooking>? extendedBookings;
     // private List<Event>? eventsBooked;
 
     protected override async Task OnInitializedAsync()
     {
+        extendedBookings = new();
         Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var loggedInUser = authState.User;
@@ -187,8 +192,6 @@ else
 
         var allEvents = await Http.GetFromJsonAsync<List<Event>>("api/Events");
         bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
-        // bookings = bookings.Where(b => b.Email == CurrentUser.Email).ToList();
-
         events = (from b in bookings
                   join e in allEvents on b.EventId equals e.Id
                   where b.UserId == userIdString &&
@@ -197,7 +200,6 @@ else
                        e.Start > DateTime.Now
                   orderby e.Start
                   select e).ToList();
-
         var userBookingsWithEvents = (from b in bookings
                                       join e in allEvents on b.EventId equals e.Id
                                       where b.UserId == userIdString &&
@@ -205,6 +207,21 @@ else
                                             e.Start > DateTime.Now
                                       orderby e.Start
                                       select new { Booking = b, Event = e }).ToList();
+        foreach (var booking in userBookingsWithEvents)
+        {
+            var newBooking = new DisplayBooking
+                {
+                    Title = booking.Event.Title,
+                    Gender = booking.Event.Gender,
+                    Status = booking.Booking.Reserve ? "Reserv" : "Inbokad",
+                    Start = booking.Event.Start,
+                    BookingId = booking.Booking.Id,
+                    EventId = booking.Event.Id
+                };
+            extendedBookings.Add(newBooking);
+        }
+
+
 
         ModelTasks = userBookingsWithEvents
             .Select(be => new BlazorCalendar.Models.Tasks
@@ -214,43 +231,21 @@ else
                     DateStart = be.Event.Start,
                     DateEnd = be.Event.End ?? be.Event.Start,
                     Color = be.Booking.Reserve
-                        ? "lightyellow" // Highlight reserved bookings with yellow (for example)
-                        : be.Event.Gender switch
-                        {
-                            Gender.Male => "lightblue",
-                            Gender.Female => "lightpink",
-                            _ => "lightgray"
-                        },
+                                        ? "lightyellow" // Highlight reserved bookings with yellow (for example)
+                                        : be.Event.Gender switch
+                                        {
+                                            Gender.Male => "lightblue",
+                                            Gender.Female => "lightpink",
+                                            _ => "lightgray"
+                                        },
                     Comment = be.Event.Description
                 })
             .ToArray();
-
-    //     ModelTasks = events
-    // .Select(evt => new BlazorCalendar.Models.Tasks
-    // {
-    //     ID = evt.Id,
-    //     Caption = evt.Gender switch
-    //     {
-    //         Gender.Male => "Inbokad",
-    //             Gender.Female => "Inbokad",
-    //         _ => "lightgray"
-    //     },
-    //     DateStart = evt.Start,
-    //     DateEnd = evt.Start,
-    //     Color = evt.Gender switch
-    //     {
-    //         Gender.Male => "lightblue",
-    //         Gender.Female => "lightpink",
-    //         _ => "lightgray"
-    //     },
-    //     Comment = evt.Description
-    // })
-    // .ToArray();
     }
 
 
 
-    private async Task ShowAlert(Event evt)
+    private async Task ShowAlert(DisplayBooking evt)
     {
         var result = await Swal.FireAsync(new SweetAlertOptions
             {
@@ -262,7 +257,7 @@ else
             });
         if (result.IsConfirmed)
         {
-            await DeleteBooking(evt.Id);
+            await DeleteBooking(evt.EventId);
         }
     }
 
@@ -273,5 +268,15 @@ else
         bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
         await JSRuntime.InvokeVoidAsync("Swal.fire", "Bokning borttagen", "Du är nu avbokad från passet", "success");
         await OnInitializedAsync();
+    }
+
+    public class DisplayBooking()
+    {
+        public Gender Gender { get; set; }
+        public string? Status { get; set; }
+        public string? Title { get; set; }
+        public DateTime Start { get; set; }
+        public int EventId { get; set; }
+        public int BookingId { get; set; }
     }
 }

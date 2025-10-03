@@ -80,17 +80,6 @@
             <div class="row mb-3">
                 <div class="col-md-8 offset-md-4">
                     <div>
-                        <input type="checkbox" id="gridCheck1" @bind="EventDtoData.Recurring">
-                        <label style="vertical-align: top;" class="form-check-label m-1" for="gridCheck1">
-                            Återkommande
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <div class="col-md-8 offset-md-4">
-                    <div>
                         <input type="checkbox" id="gridCheck2" @bind="EventDtoData.Hidden">
                         <label style="vertical-align: top;" class="form-check-label m-1" for="gridCheck2">
                             Dold
@@ -124,6 +113,7 @@
     <table class="table mb-5">
         <thead>
             <tr>
+            
                 @* <th>ID</th> *@
                 <th>Namn</th>
                 <th>Mail</th>
@@ -137,7 +127,9 @@
         <tbody>
             @foreach (var booking in Bookings.Where(b => !b.Unbooked && !b.Reserve || (Value && b.Unbooked) || (ShowReserve && b.Reserve)))
             {
-                <tr>
+                @* <tr> *@
+                <tr style="cursor: pointer;"
+                    @onclick="@(() => NavManager.NavigateTo($"/Booking/{booking.Id}"))">
                     @* <td>@booking.Id</td> *@
                     <td>@booking.Name</td>
                     <!-- Email -->
@@ -184,11 +176,11 @@
                     </td>
                     <td class="text-nowrap">
                         <div class="d-flex flex-column flex-md-row">
-                            <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
+                            @* <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
                             title="Ändra"
                             @onclick="async () => await EditBooking(booking.Id)">
                                 <i class="bi bi-pencil"></i>
-                            </button>
+                            </button> *@
                             <button class="btn btn-sm btn-outline-warning mb-1 mb-md-0 me-md-1"
                             title="Avboka"
                             @onclick="async () => await Unbook(booking.Id)">
@@ -212,7 +204,7 @@
 @inject IJSRuntime JS
 @inject SweetAlertService Swal
 @inject HttpClient http
-@inject NavigationManager navManager
+@inject NavigationManager NavManager
 
 @code {
     [Parameter]
@@ -287,7 +279,7 @@
 
         if (response.IsSuccessStatusCode)
         {
-            navManager.NavigateTo("/Events");
+            NavManager.NavigateTo("/Events");
         }
 
         else
@@ -375,69 +367,69 @@
         Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
     }
 
-    private async Task EditBooking(int id)
-    {
-        // Get current booking
-        var getBooking = await http.GetFromJsonAsync<Booking>($"api/Bookings/{id}");
+    // private async Task EditBooking(int id)
+    // {
+    //     // Get current booking
+    //     var getBooking = await http.GetFromJsonAsync<Booking>($"api/Bookings/{id}");
 
-        // Get all bookings for count check
-        var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
-        var countSpots = allBookings?
-            .Where(b => b.EventId == getBooking?.EventId && b.Unbooked == false)
-            .Count();
+    //     // Get all bookings for count check
+    //     var allBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+    //     var countSpots = allBookings?
+    //         .Where(b => b.EventId == getBooking?.EventId && b.Unbooked == false)
+    //         .Count();
 
-        // Get user-edited values via JS
-        string json = await JS.InvokeAsync<string>("showFormAlert", getBooking);
+    //     // Get user-edited values via JS
+    //     string json = await JS.InvokeAsync<string>("showFormAlert", getBooking);
 
-        if (!string.IsNullOrEmpty(json))
-        {
-            try
-            {
-                var booking = JsonSerializer.Deserialize<BookingDto>(json, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
+    //     if (!string.IsNullOrEmpty(json))
+    //     {
+    //         try
+    //         {
+    //             var booking = JsonSerializer.Deserialize<BookingDto>(json, new JsonSerializerOptions
+    //                 {
+    //                     PropertyNameCaseInsensitive = true
+    //                 });
 
-                // Check if the user is trying to RE-BOOK a previously unbooked spot
-                if (getBooking.Unbooked == true && booking.Unbooked == false)
-                {
-                    // Check if there are any spots left
-                    var eventData = await http.GetFromJsonAsync<Event>($"api/Events/{Id}");
-                    var maxSlots = eventData?.MaxSlots ?? 0;
+    //             // Check if the user is trying to RE-BOOK a previously unbooked spot
+    //             if (getBooking.Unbooked == true && booking.Unbooked == false)
+    //             {
+    //                 // Check if there are any spots left
+    //                 var eventData = await http.GetFromJsonAsync<Event>($"api/Events/{Id}");
+    //                 var maxSlots = eventData?.MaxSlots ?? 0;
 
-                    if (countSpots >= maxSlots)
-                    {
-                        await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Det finns inga lediga platser kvar", "error");
-                        return;
-                    }
-                }
+    //                 if (countSpots >= maxSlots)
+    //                 {
+    //                     await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Det finns inga lediga platser kvar", "error");
+    //                     return;
+    //                 }
+    //             }
 
-                // Set additional required fields
-                booking.EventId = Id;
-                booking.BookedAt = getBooking.BookedAt;
+    //             // Set additional required fields
+    //             booking.EventId = Id;
+    //             booking.BookedAt = getBooking.BookedAt;
 
-                var response = await http.PutAsJsonAsync($"api/Bookings/{id}", booking);
-                if (response.IsSuccessStatusCode)
-                {
-                    await JS.InvokeVoidAsync("Swal.fire", "Lyckades", "Bokning ändrad!", "success");
+    //             var response = await http.PutAsJsonAsync($"api/Bookings/{id}", booking);
+    //             if (response.IsSuccessStatusCode)
+    //             {
+    //                 await JS.InvokeVoidAsync("Swal.fire", "Lyckades", "Bokning ändrad!", "success");
 
-                    // Refresh booking list
-                    var updatedBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
-                    Bookings = updatedBookings?.Where(b => b.EventId == Id).ToList();
+    //                 // Refresh booking list
+    //                 var updatedBookings = await http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+    //                 Bookings = updatedBookings?.Where(b => b.EventId == Id).ToList();
 
-                    StateHasChanged();
-                }
-                else
-                {
-                    await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Det gick inte att spara bokningen", "error");
-                }
-            }
-            catch (JsonException ex)
-            {
-                Console.WriteLine($"Error deserializing booking: {ex.Message}");
-            }
-        }
-    }
+    //                 StateHasChanged();
+    //             }
+    //             else
+    //             {
+    //                 await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Det gick inte att spara bokningen", "error");
+    //             }
+    //         }
+    //         catch (JsonException ex)
+    //         {
+    //             Console.WriteLine($"Error deserializing booking: {ex.Message}");
+    //         }
+    //     }
+    // }
 
 
     private async Task ShowAlert(int id)

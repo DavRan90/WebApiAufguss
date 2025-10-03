@@ -13,7 +13,7 @@
 
 <h1 class="mb-3">Bokningar</h1>
 <p>Visa kalender</p>
-<input type="checkbox" @bind="Value" />
+<input type="checkbox" @bind="ShowCalendar" />
 <p></p>
 <p></p>
 
@@ -24,14 +24,12 @@
 }
 else
 {
-    if (!Value)
+    if (!ShowCalendar)
     {
         <a class="btn btn-primary mb-3 me-2" href="/Events/Create">Skapa ny bokning</a>
         <table class="table mb-5">
             <thead>
                 <tr>
-
-                    @* <th>ID</th> *@
                     <th>Kön</th>
                     <th>Titel</th>
                     <th>Platser</th>
@@ -93,12 +91,10 @@ else
                         <td>
                             @if (evt.Hidden)
                             {
-                                @* <button class="border border-0 badge rounded-pill text-bg-success p-2" @onclick="async () => await SaveEvent(evt.Id)">Ja</button> *@
                                 <button class="btn btn-sm btn-success" @onclick:stopPropagation @onclick="async () => await SaveEvent(evt.Id)">Ja</button>
                             }
                             else
                             {
-                                @* <button class="border border-0 badge rounded-pill text-bg-warning p-2" @onclick="async () => await SaveEvent(evt.Id)">Nej</button> *@
                                 <button class="btn btn-sm btn-warning" @onclick:stopPropagation @onclick="async () => await SaveEvent(evt.Id)">Nej</button>
                             }
                         </td>
@@ -183,7 +179,7 @@ else
 
         ModelTasks = evts.Select(evt =>
     {
-        bool sessionFull = evt.MaxSlots == bookings.Where(b => b.EventId == evt.Id && b.Reserve == false && b.Unbooked == false).Count(); ;
+        bool sessionFull = evt.MaxSlots == bookings.Where(b => b.EventId == evt.Id && !b.Reserve && !b.Unbooked).Count(); ;
 
         return new BlazorCalendar.Models.Tasks
             {
@@ -216,7 +212,6 @@ else
     private async Task OnTaskClick(ClickTaskParameter clickInfo)
     {
         var task = clickInfo.IDList;
-        // Example: Navigate to a details page using the task ID
         NavManager.NavigateTo($"/Events/Edit/{task[0]}");
     }
 
@@ -278,7 +273,6 @@ else
         var eventDto = new EventDto();
         eventDto.Start = clickedDate.Day.AddDays(1);
         string json = await JSRuntime.InvokeAsync<string>("showCreateEventAlert", eventDto);
-        //string json = await JSRuntime.InvokeAsync<string>("showEventForm");
 
         if (!string.IsNullOrEmpty(json))
         {
@@ -352,22 +346,22 @@ else
     [Parameter]
     public EventCallback<bool> ValueChanged { get; set; }
 
-    private bool _value;
+    private bool _showCalendar;
     [Parameter]
-    public bool Value
+    public bool ShowCalendar
     {
-        get { return _value; }
+        get { return _showCalendar; }
         set
         {
-            if (_value != value)
+            if (_showCalendar != value)
             {
-                _value = value;
+                _showCalendar = value;
             }
-            ValueChanged.InvokeAsync(_value);
+            ValueChanged.InvokeAsync(_showCalendar);
         }
     }
 
-    public int StartDay { get; set; } = 1;
+    // public int StartDay { get; set; } = 1;
 
 
 

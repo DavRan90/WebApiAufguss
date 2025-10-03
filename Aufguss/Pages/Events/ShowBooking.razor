@@ -1,0 +1,143 @@
+﻿@page "/Booking/{id:int}"
+
+<div class="row mb-5">
+    <div class="col-lg-8">
+        <h1 class=mb-5>Bokning @Id</h1>
+
+        @if (booking == null)
+        {
+            <p><em>Laddar...</em></p>
+        }
+
+        else
+        {
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Id</label>
+                <div class="col-md-8">
+                    <input class="form-control-plaintext" readonly value="@Id">
+                </div>
+            </div>
+
+            @* <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Kön</label>
+
+                <div class="col-md-8">
+                    <div class="row gap-2 gap-md-1">
+                        <div class="col-12 col-md-6 d-flex align-items-center">
+                            <input type="radio"
+                                   checked="@(evnt.Gender == Gender.Male)"
+                                   name="Gender"
+                                   @onchange="@(() => EventDtoData.Gender = Gender.Male)" />
+                            <label class="btn btn-primary ms-2">Herrar</label>
+                        </div>
+
+                        <div class="col-12 col-md-6 d-flex align-items-center">
+                            <input type="radio"
+                                   checked="@(EventDtoData.Gender == Gender.Female)"
+                                   name="Gender"
+                                   @onchange="@(() => EventDtoData.Gender = Gender.Female)" />
+                            <label class="btn btn-danger ms-2">Damer</label>
+                        </div>
+                    </div>
+                </div>
+            </div> *@
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Passnamn</label>
+                <div class="col-md-8">
+                    <p class="form-control">@evnt.Title</p>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Datum/tid</label>
+                <div class="col-md-8">
+                    <p class="form-control">@evnt.Start.ToString("dd/MM-yyyy HH:mm")</p>
+                </div>
+            </div>
+
+            <h3 class="mb-5">Gästuppgifter</h3>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Namn</label>
+                <div class="col-md-8">
+                    <p class="form-control">@booking.Name</p>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Email</label>
+                <div class="col-md-8">
+                    <p class="form-control">@booking.Email</p>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Telefon</label>
+                <div class="col-md-8">
+                    <p class="form-control">@booking.Tel</p>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Bokad</label>
+                <div class="col-md-8">
+                    <p class="form-control">@booking.BookedAt.ToString("dd/MM-yyyy HH:mm")</p>
+                </div>
+            </div>
+            @if(booking.Unbooked)
+            {
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Avbokad</label>
+                    <div class="col-md-8">
+                        <p class="form-control">@booking.UnbookedAt?.ToString("dd/MM-yyyy HH:mm")</p>
+                    </div>
+                </div>
+            }
+            
+
+            <div class="row">
+                <div class="offset-md-4 col-md-4 d-grid">
+                    <a class="btn btn-primary" href="/Events/Edit/@evnt.Id">Avbryt</a>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject IJSRuntime JS
+@inject SweetAlertService Swal
+@inject AuthenticationStateProvider AuthProvider
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    public Booking? booking { get; set; }
+
+    public Event? evnt { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            // await LoadAuthAndCurrentUser();
+            await LoadEventAndBookings();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error loading data: " + ex.Message);
+        }
+    }
+
+    private async Task LoadEventAndBookings()
+    {
+        var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+        var allEvents = await Http.GetFromJsonAsync<List<Event>>("api/Events/");
+        booking = allBookings?.Where(b => b.Id == Id).SingleOrDefault();
+        evnt = allEvents?.Where(e => e.Id == booking?.EventId).SingleOrDefault();
+    }
+}

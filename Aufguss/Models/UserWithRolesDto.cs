@@ -7,6 +7,7 @@
         public string UserName { get; set; }
         public string FirstName { get; set; }
         public string SurName { get; set; }
+        public string Telephone { get; set; }
         public List<string> Roles { get; set; } = new();
         public Gender? Gender { get; set; }
     }
