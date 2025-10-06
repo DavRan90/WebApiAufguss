@@ -1,0 +1,261 @@
+﻿@page "/BokaAufguss"
+
+@using Aufguss.Models
+@using BlazorCalendar
+@using BlazorCalendar.Models
+
+<h3>Tillgängliga pass</h3>
+
+@if (events == null)
+{
+    <p><em>Laddar...</em></p>
+}
+else
+{
+    <p>Visa kalender</p>
+    <input type="checkbox" @bind="ShowCalendar" />
+    <p></p>
+    <p></p>
+    if (!ShowCalendar)
+    {
+        <table class="table mb-5">
+            <thead>
+                <tr>
+                    <th>Kön</th>
+                    <th>Titel</th>
+                    <th>Platser</th>
+                    <th>Datum</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var evt in events)
+                {
+                    if (evt.Hidden == false)
+                    {
+                        <tr style="cursor: pointer;"
+                            @onclick="@(() => NavManager.NavigateTo($"/BokaAufguss/Book/{evt.Id}"))">
+                            <td>
+                                @if (evt.Gender == 0)
+                                {
+                                    <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
+                                }
+                            </td>
+                            <td>@evt.Title</td>
+                            <td style="min-width: 5px;">
+                                @{
+                                    int remaining = SpotsRemaining(evt.Id);
+                                    int total = evt.MaxSlots;
+                                    int booked = total - remaining;
+                                    int percent = (int)(((double)booked / total) * 100);
+
+                                    string progressColor = percent switch
+                                    {
+                                        >= 100 => "bg-danger",
+                                        >= 70 => "bg-warning",
+                                        _ => "bg-success"
+                                    };
+                                }
+
+                                <div class="progress position-relative" style="height: 20px;">
+                                    <!-- Colored fill bar -->
+                                    <div class="progress-bar @progressColor"
+                                    role="progressbar"
+                                    style="width: @percent%;"
+                                    aria-valuenow="@percent"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100">
+                                    </div>
+
+                                    <!-- Centered text on top of the bar -->
+                                    <span class="position-absolute top-50 start-50 translate-middle text-black fw-bold">
+                                        @booked / @total
+                                    </span>
+                                </div>
+                            </td>
+                            <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                            <td style="white-space:nowrap; width:10px">
+                                <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
+                                title="Boka"
+                                @onclick:stopPropagation
+                                @onclick="@(() => NavManager.NavigateTo($"/BokaAufguss/Book/{evt.Id}"))">
+                                    Boka
+                                </button>
+                            </td>
+                        </tr>
+                    }
+
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="d-flex justify-content-center align-items-center">
+            <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(-1))">←</button>
+            <h3 class="mx-2 text-center" style="width: 15ch;">@FirstDate.ToString("MMMM yyyy")</h3>
+            <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(1))">→</button>
+        </div>
+        <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate">
+            <MonthlyView TaskClick="OnTaskClick" SaturdayColor="White" SundayColor="White" HighlightToday />
+        </CalendarContainer>
+
+        <p class="btn btn-sm bg-primary-subtle mt-2">Herrar</p>
+        <p class="btn btn-sm bg-danger-subtle mt-2">Damer</p>
+        <p class="btn btn-sm bg-warning-subtle mt-2">Fullbokat</p>
+        <p class="btn btn-sm bg-body-secondary mt-2">Passerat</p>
+        <p class="btn btn-sm border border-2 border-danger mt-2">Idag</p>
+    }
+}
+
+
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@inject SweetAlertService Swal
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavManager
+
+@code {
+    private BlazorCalendar.Models.Tasks[]? ModelTasks;
+    private DateTime FirstDate = DateTime.Today;
+    [Parameter]
+    public EventCallback<bool> ValueChanged { get; set; }
+
+    public void ChangeMonth(int change)
+    {
+        FirstDate = FirstDate.AddMonths(change);
+        StateHasChanged();
+    }
+
+    private bool _showWeek;
+    [Parameter]
+    public bool ShowWeek
+    {
+        get { return _showWeek; }
+        set
+        {
+            if (_showWeek != value)
+            {
+                _showWeek = value;
+            }
+            ValueChanged.InvokeAsync(_showWeek);
+        }
+    }
+
+    private bool _showCalendar;
+    [Parameter]
+    public bool ShowCalendar
+    {
+        get { return _showCalendar; }
+        set
+        {
+            if (_showCalendar != value)
+            {
+                _showCalendar = value;
+            }
+            ValueChanged.InvokeAsync(_showCalendar);
+        }
+    }
+
+    private int guestCount;
+
+    private List<UserWithRolesDto>? Users;
+    private UserWithRolesDto? CurrentUser;
+
+    private List<Event>? events;
+    private List<Booking>? bookings;
+    // public List<Event>? events { get; set; }
+    public int spotsLeft = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var loggedInUser = authState.User;
+        var userIdString = loggedInUser.FindFirst("sub")?.Value;
+        var userGender = loggedInUser.FindFirst("gender")?.Value;
+
+        CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
+
+        events = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
+        events = events?.Where(e => e.Start > DateTime.Now).ToList();
+        if (userGender == Gender.Male.ToString())
+        {
+            events = events?.Where(e => e.Gender == Gender.Male).ToList();
+        }
+        else if (userGender == Gender.Female.ToString())
+        {
+            events = events?.Where(e => e.Gender == Gender.Female).ToList();
+        }
+
+        ModelTasks = new BlazorCalendar.Models.Tasks[events.Count];
+
+        for (int i = 0; i < events.Count; i++)
+        {
+            var evt = events[i];
+            guestCount = bookings.Where(b => b.EventId == evt.Id && b.Reserve == false && b.Unbooked == false).Count();
+            bool sessionFull = evt.MaxSlots == guestCount;
+            bool sessionOver = evt.Start < DateTime.Now;
+            // Map your Event to a Task
+            ModelTasks[i] = new BlazorCalendar.Models.Tasks
+                {
+                    ID = evt.Id,
+                    Caption = (evt.Gender, evt.Hidden) switch
+                    {
+                        (Gender.Male, false) => "Herrar",
+                        (Gender.Female, false) => "Damer",
+                        _ => "lightgray"
+                    },
+                    DateStart = evt.Start,   // Assuming your Event has StartDate
+                    DateEnd = evt.End ?? evt.Start,
+                    Color = (evt.Gender, sessionFull, sessionOver) switch
+                    {
+                        (Gender.Male, false, false) => "lightblue",
+                        (Gender.Female, false, false) => "lightpink",
+                        (Gender.Male, true, false) => "lightyellow",
+                        (Gender.Female, true, false) => "lightyellow",
+                        _ => "lightgray"
+                    },
+                    Comment = evt.Description    // Optional
+                };
+        }
+        
+    }
+
+    public int SpotsRemaining(int evtId)
+    {
+        if (events == null || bookings == null)
+            return 0;
+
+        var evt = events.SingleOrDefault(e => e.Id == evtId);
+        if (evt == null)
+            return 0;
+
+        var count = bookings.Count(b =>
+            b.EventId == evt.Id &&
+            b.Unbooked == false &&
+            b.Reserve == false);
+
+        return evt.MaxSlots - count;
+    }
+
+    private async Task OnTaskClick(ClickTaskParameter clickInfo)
+    {
+        var task = clickInfo.IDList;
+        var booking = await Http.GetFromJsonAsync<Event>($"api/Events/{task[0]}");
+        if (booking.Start > DateTime.Now)
+        {
+            NavManager.NavigateTo($"/BokaAufguss/Book/{task[0]}");
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("Swal.fire", "För sent", "Passet har redan start!", "error");
+        }
+
+    }
+}

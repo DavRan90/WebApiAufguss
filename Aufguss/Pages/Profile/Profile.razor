@@ -48,7 +48,15 @@ else
                 </div>
             </div>
         }
-        
+
+        <div class="row mb-3">
+            <label class="col-md-2 col-form-label">Aufgusskompis</label>
+            <div class="col-md-4">
+                <p class="form-control bg-body-tertiary">Mailaddress/namn</p>
+                @* <InputText class="form-control" @bind-Value="CurrentUser.Email" /> *@
+                @* <ValidationMessage For="@(() => CurrentUser.Email)" /> *@
+            </div>
+        </div>
 
         <div class="row">
             <div class="offset-md-2 col-md-2 d-grid">

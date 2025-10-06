@@ -54,6 +54,27 @@ else
             </div>
         }
 
+        @* <div class="row mb-3">
+            <label class="col-md-2 col-form-label">Aufgusskompis</label>
+            <div class="col-md-4 mb-3">
+                <InputText class="form-control" @bind-Value="CurrentUser.SurName" />
+                <ValidationMessage For="@(() => CurrentUser.SurName)" />
+            </div>
+        </div> *@
+
+        <div class="row mb-3">
+            <label class="col-md-2 col-form-label">Aufgusskompis</label>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center gap-2">
+                    <p class="form-control bg-body-tertiary mb-0">Mailaddress/namn</p>
+                    <button class="btn btn-success text-nowrap">Bli vän med</button>
+                </div>
+                
+                @* <InputText class="form-control" @bind-Value="CurrentUser.Email" /> *@
+                @* <ValidationMessage For="@(() => CurrentUser.Email)" /> *@
+            </div>
+        </div>
+
         <div class="row">
             <div class="offset-md-2 col-md-2 d-grid">
                 <button type="submit" class="btn btn-primary">Spara</button>
