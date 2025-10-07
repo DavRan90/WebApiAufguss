@@ -7,6 +7,8 @@ using System.Security.Claims;
 using System.Text;
 using WebApi.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace WebApi.Controllers
 {
@@ -28,6 +30,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("users")]
+        //[Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<IActionResult> GetUsers()
         {
             var users = _userManager.Users.ToList();
@@ -44,6 +47,8 @@ namespace WebApi.Controllers
                     UserName = user.UserName,
                     FirstName = user.FirstName,
                     SurName = user.SurName,
+                    PhoneNumber = user.PhoneNumber,
+                    AufgussFriendId = user.AufgussFriendId,
                     Roles = roles.ToList(),
                     Gender = user.Gender
                 });
@@ -52,20 +57,51 @@ namespace WebApi.Controllers
             return Ok(usersWithRoles);
         }
 
+        [HttpGet("user")]
+        //[Authorize(Roles = "Admin,SuperAdmin")]
+        public async Task<IActionResult> GetUser([FromQuery] string phoneNumber)
+        {
+            var user = await _userManager.Users.Where(u => u.PhoneNumber == NormalizeSwedishPhone(phoneNumber)).FirstOrDefaultAsync();
+
+            if(user == null)
+            {
+                return NotFound("No user found");
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            var userWithRoles = new UserWithRolesDto()
+            {
+                Id = user.Id,
+                Email = user.Email,
+                UserName = user.UserName,
+                FirstName = user.FirstName,
+                SurName = user.SurName,
+                PhoneNumber = user.PhoneNumber,
+                AufgussFriendId = user.AufgussFriendId,
+                Roles = roles.ToList(),
+                Gender = user.Gender,
+            };
+            return Ok(userWithRoles);            
+        }
+
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
             // 1. Check if user already exists
-            var existingUser = await _userManager.FindByEmailAsync(model.Email);
-            if (existingUser != null)
+            var existingEmail = await _userManager.FindByEmailAsync(model.Email);
+            if (existingEmail != null)
                 return BadRequest("User with this email already exists.");
+
+            var existingPhoneNumber = await _userManager.Users
+                .FirstOrDefaultAsync(u => u.PhoneNumber == NormalizeSwedishPhone(model.PhoneNumber));
+            if (existingPhoneNumber != null)
+                return BadRequest("User with this phone number already exists.");
 
             // 2. Create new user object
             var user = new ApplicationUser
             {
                 UserName = model.Email,
                 Email = model.Email,
-                PhoneNumber = model.PhoneNumber,
+                PhoneNumber = NormalizeSwedishPhone(model.PhoneNumber),
                 FirstName = model.FirstName,
                 SurName = model.SurName,
                 Gender = model.Gender,
@@ -116,7 +152,7 @@ namespace WebApi.Controllers
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded)
-                return BadRequest(result.Errors);
+                return BadRequest("Registration failed. Please check your input.");
 
             // 4. Ensure "User" role exists (optional but recommended)
             var roleExists = await _roleManager.RoleExistsAsync("Admin");
@@ -140,9 +176,7 @@ namespace WebApi.Controllers
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
-            Console.WriteLine(user.Email);
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
-            //if (user != null && model.Password == "!Test1234")
             {
                 var token = await GenerateJwtToken(user);
                 return Ok(new { token });
@@ -165,6 +199,11 @@ namespace WebApi.Controllers
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
     };
 
+            if (!string.IsNullOrEmpty(user.AufgussFriendId))
+            {
+                claims.Add(new Claim("friendId", user.AufgussFriendId));
+            }
+
             foreach (var role in userRoles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
@@ -182,6 +221,25 @@ namespace WebApi.Controllers
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        public static string NormalizeSwedishPhone(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+                return null;
+
+            // Remove spaces, dashes, parentheses
+            phone = Regex.Replace(phone, @"[\s\-\(\)]", "");
+
+            // If it starts with 00 (e.g., 0046), replace with +
+            if (phone.StartsWith("00"))
+                phone = "+" + phone.Substring(2);
+
+            // If it starts with 0 (e.g., 0701234567), replace with +46
+            if (phone.StartsWith("0"))
+                phone = "+46" + phone.Substring(1);
+
+            // Ensure it's now in +46... format
+            return phone;
         }
 
     }

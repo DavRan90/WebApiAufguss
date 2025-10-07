@@ -9,5 +9,6 @@ namespace WebApi.Models
         public string SurName { get; set; } = "";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public Gender? Gender { get; set; }
+        public string? AufgussFriendId { get; set; }
     }
 }

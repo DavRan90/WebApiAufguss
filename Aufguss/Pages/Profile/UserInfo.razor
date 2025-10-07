@@ -2,6 +2,7 @@
 @using Aufguss.Models
 @using System.Reflection
 @using System.ComponentModel.DataAnnotations;
+@using System.Text.RegularExpressions
 
 <h2 class="text-bg-danger">Sidan är inte klar</h2>
 <h3>Profilen för den inloggade</h3>
@@ -33,8 +34,8 @@ else
         <div class="row mb-3">
             <label class="col-md-2 col-form-label">Telefonnummer</label>
             <div class="col-md-4 mb-3">
-                <InputText class="form-control" @bind-Value="CurrentUser.Telephone" />
-                <ValidationMessage For="@(() => CurrentUser.Telephone)" />
+                <InputText class="form-control" @bind-Value="CurrentUser.PhoneNumber" />
+                <ValidationMessage For="@(() => CurrentUser.PhoneNumber)" />
             </div>
         </div>
         <div class="row mb-3">
@@ -63,13 +64,23 @@ else
         </div> *@
 
         <div class="row mb-3">
-            <label class="col-md-2 col-form-label">Aufgusskompis</label>
+            <label class="col-md-2 col-form-label">Aufgussvän</label>
             <div class="col-md-4">
                 <div class="d-flex align-items-center gap-2">
-                    <p class="form-control bg-body-tertiary mb-0">Mailaddress/namn</p>
-                    <button class="btn btn-success text-nowrap">Bli vän med</button>
+                    @if(CurrentUser.AufgussFriendId == null)
+                    {
+                        <InputText class="form-control" placeholder="Telefonnummer" @bind-Value="AufgussFriendPhoneNumber" />
+                        <button class="btn btn-success text-nowrap" onclick="AddFriend">Lägg till vän</button>
+                        @* <ValidationMessage For="@(() => CurrentUser.PhoneNumber)" /> *@
+                    }
+                    else
+                    {
+                        <p class="form-control bg-body-tertiary mb-0">@AufgussFriendPhoneNumber</p>
+                        <button class="btn btn-danger text-nowrap">Ta bort vän</button>
+                    }
+
                 </div>
-                
+
                 @* <InputText class="form-control" @bind-Value="CurrentUser.Email" /> *@
                 @* <ValidationMessage For="@(() => CurrentUser.Email)" /> *@
             </div>
@@ -99,6 +110,8 @@ else
     private List<Event>? events;
     private List<Booking>? bookings;
 
+    private string AufgussFriendPhoneNumber = "";
+
     protected override async Task OnInitializedAsync()
     {
         Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
@@ -121,7 +134,22 @@ else
     }
     private async Task SaveUser()
     {
-        
+
+    }
+
+    private async Task AddFriend()
+    {
+        try
+        {
+            var phoneNumber = NormalizeSwedishPhone(AufgussFriendPhoneNumber);
+            var url = $"api/auth/user?phoneNumber={Uri.EscapeDataString(phoneNumber)}";
+            var getUser = await Http.GetFromJsonAsync<UserWithRolesDto>(url);
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"Request failed: {ex.Message}");
+        }
+
     }
     public string GetEnumDisplayName(Enum value)
     {
@@ -130,5 +158,24 @@ else
                     .First()
                     .GetCustomAttribute<DisplayAttribute>()?
                     .Name ?? value.ToString();
+    }
+    public static string NormalizeSwedishPhone(string phone)
+    {
+        if (string.IsNullOrWhiteSpace(phone))
+            return null;
+
+        // Remove spaces, dashes, parentheses
+        phone = Regex.Replace(phone, @"[\s\-\(\)]", "");
+
+        // If it starts with 00 (e.g., 0046), replace with +
+        if (phone.StartsWith("00"))
+            phone = "+" + phone.Substring(2);
+
+        // If it starts with 0 (e.g., 0701234567), replace with +46
+        if (phone.StartsWith("0"))
+            phone = "+46" + phone.Substring(1);
+
+        // Ensure it's now in +46... format
+        return phone;
     }
 }

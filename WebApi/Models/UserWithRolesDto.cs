@@ -7,8 +7,9 @@
         public string UserName { get; set; }
         public string FirstName { get; set; }
         public string SurName { get; set; }
-        public string Telephone { get; set; }
+        public string PhoneNumber { get; set; }
         public List<string> Roles { get; set; }
         public Gender? Gender { get; set; }
+        public string? AufgussFriendId { get; set; }
     }
 }

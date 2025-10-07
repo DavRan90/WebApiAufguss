@@ -163,6 +163,9 @@ namespace WebApi.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("AufgussFriendId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -441,6 +444,34 @@ namespace WebApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Faqs");
+                });
+
+            modelBuilder.Entity("WebApi.Models.SiteSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AufgussHiddenDaysInAdvance")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxBookingsAufguss")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxBookingsVattenfys")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxNews")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VattenfysHiddenDaysInAdvance")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SiteSettings");
                 });
 
             modelBuilder.Entity("WebApi.Models.Survey.Survey", b =>

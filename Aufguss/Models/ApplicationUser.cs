@@ -8,6 +8,8 @@
         public string FirstName { get; set; }
         public string SurName { get; set; }
         public List<string> Roles { get; set; } = new();
+
+        public string? AufgussFriendId { get; set; }
     }
 }
 
