@@ -3,6 +3,7 @@
 @using System.Reflection
 @using System.ComponentModel.DataAnnotations;
 @using System.Text.RegularExpressions
+@using System.Text.Json.Nodes
 
 <h2 class="text-bg-danger">Sidan är inte klar</h2>
 <h3>Profilen för den inloggade</h3>
@@ -67,17 +68,25 @@ else
             <label class="col-md-2 col-form-label">Aufgussvän</label>
             <div class="col-md-4">
                 <div class="d-flex align-items-center gap-2">
-                    @if(CurrentUser.AufgussFriendId == null)
+                    @* @if(PendingInvite)
                     {
-                        <InputText class="form-control" placeholder="Telefonnummer" @bind-Value="AufgussFriendPhoneNumber" />
-                        <button class="btn btn-success text-nowrap" onclick="AddFriend">Lägg till vän</button>
+                        <p class="form-control bg-warning-subtle mb-0">Inbjudan skickad från @Invitee.FirstName @Invitee.SurName</p>
+                        <button class="btn btn-primary text-nowrap">Tacka ja</button>
+                    } *@
+
+                    @if (CurrentUser.AufgussFriendId == null)
+                    {
+                        <InputText class="form-control" placeholder="Telefonnummer" @bind-Value="AufgussFriend" />
+                        <button class="btn btn-success text-nowrap" @onclick="async () => await AddFriend()">Bjud in vän</button>
                         @* <ValidationMessage For="@(() => CurrentUser.PhoneNumber)" /> *@
                     }
                     else
                     {
-                        <p class="form-control bg-body-tertiary mb-0">@AufgussFriendPhoneNumber</p>
-                        <button class="btn btn-danger text-nowrap">Ta bort vän</button>
+                        <p class="form-control bg-primary-subtle mb-0">@AufgussFriend</p>
+                        <button class="btn btn-danger text-nowrap" @onclick="async () => await RemoveFriend()">Ta bort vän</button>
                     }
+
+
 
                 </div>
 
@@ -94,6 +103,75 @@ else
                 <a class="btn btn-outline-primary" href="/Info">Avbryt</a>
             </div>
         </div>
+
+        @if (Invitees != null)
+        {
+            <h3 class="mt-5 mb-5">Mottagna inbjudningar</h3>
+            <table class="table mb-5">
+                <thead>
+                    <tr>
+                        <th>Inbjudan från</th>
+                        <th>Inbjudan till</th>
+                        <th>Datum</th>
+                        @* <th></th> *@
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var inv in Invitees)
+                    {
+                        <tr style="cursor: pointer;">
+
+                            <td>@inv.InviterName</td>
+                            <td>@inv.InviteeName</td>
+                            <td>@inv.InvitedAt</td>
+                            <td style="white-space:nowrap; width:10px">
+                                <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1" @onclick="async () => await AcceptInvite(inv.Id)">
+                                    ✓
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger mb-1 mb-md-0 me-md-1">
+                                    X
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        @if (Inviters != null)
+        {
+            <h3 class="mt-5 mb-5">Skickade inbjudningar</h3>
+            <table class="table mb-5">
+                <thead>
+                    <tr>
+                        <th>Inbjudan från</th>
+                        <th>Inbjudan till</th>
+                        <th>Datum</th>
+                        @* <th></th> *@
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var inv in Inviters)
+                    {
+                        <tr style="cursor: pointer;">
+
+                            <td>@inv.InviterName</td>
+                            <td>@inv.InviteeName</td>
+                            <td>@inv.InvitedAt</td>
+                            <td style="white-space:nowrap; width:10px">
+                                <button class="btn btn-sm btn-outline-danger mb-1 mb-md-0 me-md-1">
+                                    X
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+
     </EditForm>
 }
 
@@ -106,11 +184,20 @@ else
 @code {
     private List<UserWithRolesDto>? Users;
     private UserWithRolesDto? CurrentUser;
+    private UserWithRolesDto? Inviter;
+    private UserWithRolesDto? Invitee;
+
+    private List<InviteDto> Invitees;
+    private List<InviteDto> Inviters;
 
     private List<Event>? events;
     private List<Booking>? bookings;
 
-    private string AufgussFriendPhoneNumber = "";
+    public JsonNode Errors { get; set; } = new JsonObject();
+
+    private bool PendingInvite = false;
+
+    private string AufgussFriend = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -119,7 +206,18 @@ else
         var loggedInUser = authState.User;
         var userIdString = loggedInUser.FindFirst("sub")?.Value;
 
+        var urlInvitee = $"api/invites/invitees?inviteeId={userIdString}";
+        var urlInviter = $"api/invites/inviters?inviterId={userIdString}";
+
+        LoadInvites();
+
         CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
+        if(CurrentUser.AufgussFriendId != null)
+        {
+            var friend = Users?.Where(u => u.Id == CurrentUser.AufgussFriendId).SingleOrDefault();
+            AufgussFriend = friend.FirstName + " " + friend.SurName;
+        }
+
 
         var allEvents = await Http.GetFromJsonAsync<List<Event>>("api/Events");
         bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
@@ -136,14 +234,172 @@ else
     {
 
     }
+    private async Task LoadInvites()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var loggedInUser = authState.User;
+        var userIdString = loggedInUser.FindFirst("sub")?.Value;
+
+        var urlInvitee = $"api/invites/invitees?inviteeId={userIdString}";
+        var urlInviter = $"api/invites/inviters?inviterId={userIdString}";
+        try
+        {
+            Invitees = await Http.GetFromJsonAsync<List<InviteDto>>(urlInvitee);
+            Invitees = Invitees.Where(i => i.Invited).ToList();
+        }
+        catch
+        {
+            Invitees = new(); // fallback
+        }
+
+        try
+        {
+            Inviters = await Http.GetFromJsonAsync<List<InviteDto>>(urlInviter);
+            Inviters = Inviters.Where(i => i.Invited).ToList();
+
+        }
+        catch (HttpRequestException ex)
+        {
+            // 404 or other non-success status
+            Console.WriteLine("No invites found or server error.");
+            Inviters = new List<InviteDto>();
+        }
+    }
+
+    private async Task RemoveFriend()
+    {
+        var userId = CurrentUser?.Id;
+        var friendId = CurrentUser?.AufgussFriendId;
+
+        if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(friendId))
+            return;
+
+        // Try to fetch invites (invitee and inviter)
+        var allInvites = new List<InviteDto>();
+
+        async Task FetchInvites(string role, string id)
+        {
+            try
+            {
+                var url = $"api/invites/{role}?{role}Id={id}";
+                var invites = await Http.GetFromJsonAsync<List<InviteDto>>(url);
+                if (invites != null)
+                    allInvites.AddRange(invites);
+            }
+            catch
+            {
+                // Ignore errors and proceed
+            }
+        }
+
+        await FetchInvites("invitees", userId);
+        await FetchInvites("inviters", userId);
+
+        // Find the invite connecting both users
+        var invite = allInvites.FirstOrDefault(i =>
+            (i.InviteeId == friendId && i.InviterId == userId) ||
+            (i.InviterId == friendId && i.InviteeId == userId));
+
+        if (invite == null)
+            return;
+
+        // Delete invite
+        var response = await Http.DeleteAsync($"api/Invites/{invite.Id}");
+        if (response.IsSuccessStatusCode)
+        {
+            await JSRuntime.InvokeVoidAsync("Swal.fire",
+                "Aufgussvän borttagen",
+                "Du har tagit bort din vän och blivit borttagen från dennes sida",
+                "success");
+
+            await LoadInvites();
+            AufgussFriend = string.Empty;
+        }
+        else
+        {
+            Console.Error.WriteLine("Failed to delete invite.");
+        }
+    }
+
+    private async Task AcceptInvite(int id)
+    {
+        var dto = new InviteDto
+            {
+                Accepted = true,
+                Invited = false,
+                InviterId = "inviterId",
+                InviteeId = "inviteeId",
+                InviterName = "inviterName",
+                InviteeName = "inviteeName"
+            };
+        var response = await Http.PutAsJsonAsync("api/Invites/" + id, dto);
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadInvites();
+        }
+        else
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Error accepting invite: " + error);
+        }
+    }
 
     private async Task AddFriend()
     {
         try
         {
-            var phoneNumber = NormalizeSwedishPhone(AufgussFriendPhoneNumber);
+            var phoneNumber = NormalizeSwedishPhone(AufgussFriend);
             var url = $"api/auth/user?phoneNumber={Uri.EscapeDataString(phoneNumber)}";
             var getUser = await Http.GetFromJsonAsync<UserWithRolesDto>(url);
+            if (getUser != null)
+            {
+                var inviteDto = new InviteDto
+                    {
+                        InviteeId = getUser.Id,
+                        InviterId = CurrentUser.Id,
+                        InviteeName = "",
+                        InviterName = "",
+                        
+                    };
+                var response = await Http.PostAsJsonAsync("api/Invites", inviteDto);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    await JSRuntime.InvokeVoidAsync("Swal.fire", "Inbjudan skickad", "Din vän behöver tacka ja innan du kan boka åt denne.", "success");
+                }
+
+                else
+                {
+                    // await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Bokningen går inte att dölja eftersom det finns gäster bokade", "error");
+                    var strResponse = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine("Json Response: \n" + strResponse);
+
+                    try
+                    {
+                        var jsonResponse = JsonNode.Parse(strResponse);
+
+                        // Try to read a general message first
+                        var message = jsonResponse?["message"]?.ToString();
+
+                        // If no general message, try to read validation errors
+                        Errors = jsonResponse?["errors"] ?? new JsonObject();
+
+                        if (!string.IsNullOrWhiteSpace(message))
+                        {
+                            await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", message, "error");
+                        }
+                        else
+                        {
+                            await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", "Ett fel inträffade. Kontrollera formuläret.", "error");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Exception: " + ex.Message);
+                    }
+                }
+
+            }
         }
         catch (HttpRequestException ex)
         {
