@@ -20,6 +20,25 @@ namespace WebApi.Controllers
             _context = context;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAllInvites()
+        {
+            var invites = await _context.Users
+                .Select(i => new UserDto
+                {
+                    Id = i.Id,
+                    Email = i.Email,
+                    FirstName = i.FirstName,
+                    SurName = i.SurName,
+                    PhoneNumber = i.PhoneNumber,
+                    Gender = i.Gender,
+                    AufgussFriendId = i.AufgussFriendId
+                })
+                .ToListAsync();
+
+            return Ok(invites);
+        }
+
         [HttpGet("invitees")]
         public async Task<IActionResult> GetInvitees([FromQuery] string inviteeId)
         {
@@ -27,10 +46,10 @@ namespace WebApi.Controllers
         .Where(i => i.InviteeId == inviteeId)
         .ToListAsync();
 
-            if (invites == null || invites.Count == 0)
-            {
-                return NotFound("No invites found");
-            }
+            //if (invites == null || invites.Count == 0)
+            //{
+            //    return NotFound("No invites found");
+            //}
 
             var userIds = invites
                 .Select(i => i.InviterId)
@@ -64,10 +83,10 @@ namespace WebApi.Controllers
         .Where(i => i.InviterId == inviterId)
         .ToListAsync();
 
-            if (invites == null || invites.Count == 0)
-            {
-                return NotFound("No invites found");
-            }
+            //if (invites == null || invites.Count == 0)
+            //{
+            //    return NotFound("No invites found");
+            //}
 
             var userIds = invites
                 .Select(i => i.InviteeId)
@@ -95,8 +114,33 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult SendInvite(InviteDto inviteDto)
+        public async Task<IActionResult> SendInvite(InviteDto inviteDto)
         {
+            // 🔍 Fetch both users
+            var inviter = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == inviteDto.InviterId);
+            var invitee = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == inviteDto.InviteeId);
+
+            if (inviter == null || invitee == null)
+                return BadRequest("One or both users not found.");
+
+            // ❗️ Enforce gender match
+            if (inviter.Gender != invitee.Gender)
+            {
+                return BadRequest("Du kan bara bjuda in användare av samma kön."); // or "You can only invite users of the same gender."
+            }
+
+            // 🔁 Optional: prevent duplicates
+            var existingInvite = await _context.Invites
+                .FirstOrDefaultAsync(i =>
+                    i.InviterId == inviteDto.InviterId &&
+                    i.InviteeId == inviteDto.InviteeId &&
+                    !i.Accepted);
+
+            if (existingInvite != null)
+            {
+                return BadRequest("En inbjudan har redan skickats till denna användare.");
+            }
+
             var invite = new Invite
             {
                 Invited = true,
@@ -107,57 +151,116 @@ namespace WebApi.Controllers
             };
 
             _context.Invites.Add(invite);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return Ok(invite);
         }
+
         [HttpPut("{id}")]
-        public async Task<IActionResult> InviteAccepted(int id, [FromBody] InviteDto model)
+        public async Task<IActionResult> AcceptInvite(int id, [FromBody] InviteDto dto)
         {
-            var invite = await _context.Invites.Where(i => i.Id == id).SingleOrDefaultAsync();
-            if (invite == null) return NotFound();
+            var invite = await _context.Invites.FirstOrDefaultAsync(i => i.Id == id);
+            if (invite == null)
+                return NotFound("Invite not found.");
 
-            
-            invite.Accepted = model.Accepted;
+            // Accept the invite
+            invite.Accepted = true;
             invite.AcceptedAt = DateTime.UtcNow;
-            invite.Invited = model.Invited;
+            invite.Invited = false;
 
-            var inviter = await _context.Users.FirstOrDefaultAsync(u => u.Id == invite.InviterId);
-            var invitee = await _context.Users.FirstOrDefaultAsync(u => u.Id == invite.InviteeId);
+            var inviter = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == invite.InviterId);
+            var invitee = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == invite.InviteeId);
 
             if (inviter == null || invitee == null)
-            {
                 return BadRequest("One or both users not found.");
+
+            // 🔥 Handle existing friendship (if any)
+            if (!string.IsNullOrEmpty(invitee.AufgussFriendId))
+            {
+                var oldFriend = await _userManager.Users
+                    .FirstOrDefaultAsync(u => u.Id == invitee.AufgussFriendId);
+
+                if (oldFriend != null)
+                {
+                    // Remove existing friendship on both ends
+                    oldFriend.AufgussFriendId = null;
+                    invitee.AufgussFriendId = null;
+                }
+
+                // Optionally, remove invites between them
+                var oldInvites = await _context.Invites
+                    .Where(i =>
+                        (i.InviterId == invitee.Id && i.InviteeId == oldFriend.Id) ||
+                        (i.InviterId == oldFriend.Id && i.InviteeId == invitee.Id))
+                    .ToListAsync();
+
+                _context.Invites.RemoveRange(oldInvites);
             }
 
-            inviter.AufgussFriendId = invitee.Id;
-            invitee.AufgussFriendId = inviter.Id;
+            // 🔥 Optional: Handle inviter's old friend too (only if one-friend rule applies both ways)
+            if (!string.IsNullOrEmpty(inviter.AufgussFriendId))
+            {
+                var inviterOldFriend = await _userManager.Users
+                    .FirstOrDefaultAsync(u => u.Id == inviter.AufgussFriendId);
+
+                if (inviterOldFriend != null)
+                {
+                    inviterOldFriend.AufgussFriendId = null;
+                    inviter.AufgussFriendId = null;
+
+                    var oldInvites = await _context.Invites
+                        .Where(i =>
+                            (i.InviterId == inviter.Id && i.InviteeId == inviterOldFriend.Id) ||
+                            (i.InviterId == inviterOldFriend.Id && i.InviteeId == inviter.Id))
+                        .ToListAsync();
+
+                    _context.Invites.RemoveRange(oldInvites);
+                }
+            }
+
+            // 🔁 Now set new mutual friendship
+            inviter.AufgussFriendId = invite.InviteeId;
+            invitee.AufgussFriendId = invite.InviterId;
+
+            // 🔥 Remove all other invites involving either user
+            var otherInvites = await _context.Invites
+                .Where(i => i.Id != invite.Id &&
+                    (i.InviteeId == invite.InviteeId || i.InviterId == invite.InviteeId ||
+                     i.InviteeId == invite.InviterId || i.InviterId == invite.InviterId))
+                .ToListAsync();
+
+            _context.Invites.RemoveRange(otherInvites);
 
             await _context.SaveChangesAsync();
 
-            return Ok("Invite accepted and users linked successfully.");
+            return Ok("Friendship accepted and updated. Old connections removed.");
         }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteInvite(int id)
         {
-            var invite = await _context.Invites.Where(i => i.Id == id).SingleOrDefaultAsync();
-            if (invite == null) return NotFound();
+            var invite = await _context.Invites.SingleOrDefaultAsync(i => i.Id == id);
+            if (invite == null)
+                return NotFound("Invite not found");
 
             var inviter = await _context.Users.FirstOrDefaultAsync(u => u.Id == invite.InviterId);
             var invitee = await _context.Users.FirstOrDefaultAsync(u => u.Id == invite.InviteeId);
 
             if (inviter == null || invitee == null)
-            {
                 return BadRequest("One or both users not found.");
-            }
 
-            inviter.AufgussFriendId = null;
-            invitee.AufgussFriendId = null;
+            // Clear the AufgussFriendId references
+            if (inviter.AufgussFriendId == invitee.Id)
+                inviter.AufgussFriendId = null;
+
+            if (invitee.AufgussFriendId == inviter.Id)
+                invitee.AufgussFriendId = null;
 
             _context.Invites.Remove(invite);
+
             await _context.SaveChangesAsync();
 
-            return Ok("Invite removed");
+            return Ok("Invite removed and friendship broken");
         }
     }
 }

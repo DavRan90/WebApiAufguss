@@ -1,8 +1,10 @@
 ﻿@page "/Inställningar"
+@using Aufguss.Models
+@using System.Text.Json.Nodes
 
 <h3 class="mb-5">Ändra inställningar för saker och ting</h3>
 
-<EditForm Model="SiteSettingsData" OnValidSubmit="SaveEntry">
+<EditForm Model="SiteSettingsData" OnValidSubmit="SaveSettings">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
@@ -83,9 +85,13 @@
 </EditForm>
 
 @inject HttpClient Http
+@inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager navManager
+@inject SweetAlertService Swal
+@inject IJSRuntime JSRuntime
 
 @code {
+    public JsonNode Errors { get; set; } = new JsonObject();
     private List<string> ImageOptions = new();
     private string SelectedImageUrl;
     private bool ImageSelected = false;
@@ -98,42 +104,39 @@
         // EntryDtoData.Image = SelectedImageUrl; // Bind selected image URL to your model
     }
 
-    private Models.SiteSettings SiteSettingsData = new();
+    private SiteSettings SiteSettingsData = new();
 
     protected override async Task OnInitializedAsync()
     {
         fileLocation = new Uri(Http.BaseAddress, "api/upload/").ToString();
         ImageOptions = await Http.GetFromJsonAsync<List<string>>("api/upload/news");
+        SiteSettingsData = await Http.GetFromJsonAsync<SiteSettings>("api/settings/");
     }
 
-    private async Task SaveEntry()
+    private async Task SaveSettings()
     {
-        // if (EntryDtoData.Image == "")
-        // {
-        //     EntryDtoData.Image = "aufguss 2.jpg";
-        // }
+        var response = await Http.PutAsJsonAsync("api/Settings", SiteSettingsData);
 
-        // var response = await Http.PostAsJsonAsync("api/Entries", EntryDtoData);
+        if (response.IsSuccessStatusCode)
+        {
+            await JSRuntime.InvokeVoidAsync("Swal.fire", "Inställnigar ändrade", "Dina inställningar har ändrats", "success");
+            navManager.NavigateTo("/Inställningar");
+        }
 
-        // if (response.IsSuccessStatusCode)
-        // {
-        //     navManager.NavigateTo("/");
-        // }
+        else
+        {
+            var strResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Json Response: \n" + strResponse);
 
-        // else
-        // {
-        //     var strResponse = await response.Content.ReadAsStringAsync();
-        //     Console.WriteLine("Json Response: \n" + strResponse);
-
-        //     try
-        //     {
-        //         var jsonResponse = JsonNode.Parse(strResponse);
-        //         Errors = jsonResponse?["errors"] ?? new JsonObject();
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         Console.WriteLine("Exception: " + ex.Message);
-        //     }
-        // }
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+                Errors = jsonResponse?["errors"] ?? new JsonObject();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception: " + ex.Message);
+            }
+        }
     }
 }

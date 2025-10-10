@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using Aufguss.Models
 
 <PageTitle>Startsida</PageTitle>
 
@@ -18,7 +19,7 @@ else
         <div class="card m-2 card-width mt-5">
             <h2 class="card-header">@entry.Title</h2>
             <img class="card-img-top" src="@entry.Image" />
-                    <div class="card-body bg-info-subtle">
+            <div class="card-body bg-info-subtle">
                 <p class="card-text linebreak">@entry.Description</p>
                 @if (!string.IsNullOrEmpty(entry.Url))
                 {
@@ -36,6 +37,7 @@ else
 
 @code {
     private List<Entry>? entries;
+    private SiteSettings siteSettings = new();
 
     // private string base64Image;
 
@@ -45,9 +47,25 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        entries = await Http.GetFromJsonAsync<List<Entry>>("api/Entries");
+        siteSettings = await Http.GetFromJsonAsync<SiteSettings>("api/settings/");
+
+        var allEntries = await Http.GetFromJsonAsync<List<Entry>>("api/Entries");
+
+        if (allEntries != null)
+        {
+            entries = allEntries
+                .OrderByDescending(e => e.CreatedAt)
+                .Take(siteSettings.MaxNews)
+                .ToList();
+        }
+        else
+        {
+            entries = new List<Entry>();
+        }
 
         fileLocation = new Uri(Http.BaseAddress, "api/upload/").ToString();
+
+        
     
 
         // var fileName = "flower.jpg"; // from DB or wherever

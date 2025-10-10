@@ -173,7 +173,7 @@ else
 
     private async Task LoadEventsAsync()
     {
-        evts = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        evts = await Http.GetFromJsonAsync<List<Event>>("api/Events/admin");
         bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
 
 

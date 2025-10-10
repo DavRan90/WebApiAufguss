@@ -19,11 +19,67 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
+        public IActionResult GetVisibleEvents()
+        {
+            var settings = context.SiteSettings.FirstOrDefault();
+            var today = DateTime.UtcNow.Date;
+            var visibleFromDate = today;
+            var visibleToDate = today.AddDays(settings.AufgussHiddenDaysInAdvance);
+
+            var events = context.Events
+                .Where(e => !e.Hidden || (e.Hidden && e.Start.Date <= visibleToDate && e.Start.Date >= visibleFromDate))
+                .OrderBy(e => e.Start)
+                .ToList();
+
+            // Adjust Hidden property on the fly for events that pass the threshold
+            var adjustedEvents = events.Select(e =>
+            {
+                if (e.Hidden && e.Start.Date >= visibleFromDate)
+                {
+                    // Return a copy or an anonymous object with Hidden set to false
+                    return new Event
+                    {
+                        Id = e.Id,
+                        Title = e.Title,
+                        Start = e.Start,
+                        End = e.End,
+                        Gender = e.Gender,
+                        MaxSlots = e.MaxSlots,
+                        Description = e.Description,
+                        Hidden = false,
+                        // Copy other properties as needed
+                    };
+                }
+                else
+                {
+                    return e;
+                }
+            }).ToList();
+
+            return Ok(adjustedEvents);
+        }
+
+        [HttpGet("admin")]
         public IActionResult GetEvents()
         {
             var events = context.Events.OrderBy(e => e.Start).ToList();
             return Ok(events);
         }
+
+        //[HttpGet]
+        //public IActionResult GetVisibleEvents()
+        //{
+        //    var settings = context.SiteSettings.FirstOrDefault();
+        //    var today = DateTime.UtcNow.Date;
+        //    var visibleFromDate = today.AddDays(-settings.AufgussHiddenDaysInAdvance);
+
+        //    var events = context.Events
+        //        .Where(e => !e.Hidden || (e.Hidden && e.Start.Date >= visibleFromDate))
+        //        .OrderBy(e => e.Start)
+        //        .ToList();
+
+        //    return Ok(events);
+        //}
 
         [HttpGet("{id}")]
         public IActionResult GetEvent(int id)

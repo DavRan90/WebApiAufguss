@@ -58,15 +58,25 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("user")]
-        //[Authorize(Roles = "Admin,SuperAdmin")]
-        public async Task<IActionResult> GetUser([FromQuery] string phoneNumber)
+        public async Task<IActionResult> GetUser([FromQuery] string? id, [FromQuery] string? phoneNumber)
         {
-            var user = await _userManager.Users.Where(u => u.PhoneNumber == NormalizeSwedishPhone(phoneNumber)).FirstOrDefaultAsync();
+            ApplicationUser user = null;
 
-            if(user == null)
+            if (!string.IsNullOrEmpty(id))
+            {
+                user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
+            }
+            else if (!string.IsNullOrEmpty(phoneNumber))
+            {
+                var normalizedPhone = NormalizeSwedishPhone(phoneNumber);
+                user = await _userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == normalizedPhone);
+            }
+
+            if (user == null)
             {
                 return NotFound("No user found");
             }
+
             var roles = await _userManager.GetRolesAsync(user);
             var userWithRoles = new UserWithRolesDto()
             {
@@ -80,7 +90,8 @@ namespace WebApi.Controllers
                 Roles = roles.ToList(),
                 Gender = user.Gender,
             };
-            return Ok(userWithRoles);            
+
+            return Ok(userWithRoles);
         }
 
         [HttpPost("register")]

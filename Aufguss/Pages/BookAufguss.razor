@@ -34,7 +34,7 @@ else
                     if (evt.Hidden == false)
                     {
                         <tr style="cursor: pointer;"
-                            @onclick="@(() => NavManager.NavigateTo($"/BokaAufguss/Book/{evt.Id}"))">
+                        @onclick="@(() => NavManager.NavigateTo($"/BokaAufguss/Book/{evt.Id}"))">
                             <td>
                                 @if (evt.Gender == 0)
                                 {
@@ -181,50 +181,7 @@ else
 
         CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
 
-        events = await Http.GetFromJsonAsync<List<Event>>("api/Events");
-        bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
-        events = events?.Where(e => e.Start > DateTime.Now).ToList();
-        if (userGender == Gender.Male.ToString())
-        {
-            events = events?.Where(e => e.Gender == Gender.Male).ToList();
-        }
-        else if (userGender == Gender.Female.ToString())
-        {
-            events = events?.Where(e => e.Gender == Gender.Female).ToList();
-        }
-
-        ModelTasks = new BlazorCalendar.Models.Tasks[events.Count];
-
-        for (int i = 0; i < events.Count; i++)
-        {
-            var evt = events[i];
-            guestCount = bookings.Where(b => b.EventId == evt.Id && b.Reserve == false && b.Unbooked == false).Count();
-            bool sessionFull = evt.MaxSlots == guestCount;
-            bool sessionOver = evt.Start < DateTime.Now;
-            // Map your Event to a Task
-            ModelTasks[i] = new BlazorCalendar.Models.Tasks
-                {
-                    ID = evt.Id,
-                    Caption = (evt.Gender, evt.Hidden) switch
-                    {
-                        (Gender.Male, false) => "Herrar",
-                        (Gender.Female, false) => "Damer",
-                        _ => "lightgray"
-                    },
-                    DateStart = evt.Start,   // Assuming your Event has StartDate
-                    DateEnd = evt.End ?? evt.Start,
-                    Color = (evt.Gender, sessionFull, sessionOver) switch
-                    {
-                        (Gender.Male, false, false) => "lightblue",
-                        (Gender.Female, false, false) => "lightpink",
-                        (Gender.Male, true, false) => "lightyellow",
-                        (Gender.Female, true, false) => "lightyellow",
-                        _ => "lightgray"
-                    },
-                    Comment = evt.Description    // Optional
-                };
-        }
-        
+        LoadEventsAsync();        
     }
 
     public int SpotsRemaining(int evtId)
@@ -242,6 +199,58 @@ else
             b.Reserve == false);
 
         return evt.MaxSlots - count;
+    }
+
+    private async Task LoadEventsAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var loggedInUser = authState.User;
+        var userIdString = loggedInUser.FindFirst("sub")?.Value;
+        var userGender = loggedInUser.FindFirst("gender")?.Value;
+
+        events = await Http.GetFromJsonAsync<List<Event>>("api/Events/admin");
+        bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
+
+        events = events?.Where(e => e.Start > DateTime.Now).ToList();
+        if (userGender == Gender.Male.ToString())
+        {
+            events = events?.Where(e => e.Gender == Gender.Male).ToList();
+        }
+        else if (userGender == Gender.Female.ToString())
+        {
+            events = events?.Where(e => e.Gender == Gender.Female).ToList();
+        }
+
+        ModelTasks = events.Select(evt =>
+    {
+        bool sessionFull = evt.MaxSlots == bookings.Where(b => b.EventId == evt.Id && !b.Reserve && !b.Unbooked).Count(); ;
+
+        return new BlazorCalendar.Models.Tasks
+            {
+                ID = evt.Id,
+                Caption = (evt.Gender, evt.Hidden) switch
+                {
+                    (Gender.Male, false) => "Herrar",
+                    (Gender.Female, false) => "Damer",
+                    (Gender.Male, true) => "Herrar", // Om jag behöver ett scenario för dolda
+                    (Gender.Female, true) => "Damer", // Om jag behöver ett scenario för dolda
+                    _ => "lightgray"
+                },
+                DateStart = evt.Start,
+                DateEnd = evt.Start,
+                Color = (evt.Hidden, evt.Gender, sessionFull) switch
+                {
+                    (false, Gender.Male, false) => "lightblue",
+                    (false, Gender.Female, false) => "lightpink",
+                    (false, Gender.Male, true) => "lightyellow",
+                    (false, Gender.Female, true) => "lightyellow",
+                    _ => "lightgray"
+                },
+                Comment = evt.Description
+            };
+    }).ToArray();
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnTaskClick(ClickTaskParameter clickInfo)
