@@ -20,21 +20,29 @@ namespace WebApi.Controllers
             _context = context;
         }
 
+        //[HttpGet]
+        //public async Task<IActionResult> GetAllInvites()
+        //{
+        //    var invites = await _context.Users
+        //        .Select(i => new UserDto
+        //        {
+        //            Id = i.Id,
+        //            Email = i.Email,
+        //            FirstName = i.FirstName,
+        //            SurName = i.SurName,
+        //            PhoneNumber = i.PhoneNumber,
+        //            Gender = i.Gender,
+        //            AufgussFriendId = i.AufgussFriendId
+        //        })
+        //        .ToListAsync();
+
+        //    return Ok(invites);
+        //}
+
         [HttpGet]
         public async Task<IActionResult> GetAllInvites()
         {
-            var invites = await _context.Users
-                .Select(i => new UserDto
-                {
-                    Id = i.Id,
-                    Email = i.Email,
-                    FirstName = i.FirstName,
-                    SurName = i.SurName,
-                    PhoneNumber = i.PhoneNumber,
-                    Gender = i.Gender,
-                    AufgussFriendId = i.AufgussFriendId
-                })
-                .ToListAsync();
+            var invites = await _context.Invites.ToListAsync();
 
             return Ok(invites);
         }

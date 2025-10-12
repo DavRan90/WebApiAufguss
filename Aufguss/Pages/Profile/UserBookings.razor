@@ -30,63 +30,34 @@ else
                 </tr>
             </thead>
             <tbody>
-                @foreach (var book in extendedBookings)
+                @if (extendedBookings != null && extendedBookings.Any())
                 {
-                    <tr style="cursor: pointer;"
-                    @onclick="@(() => NavManager.NavigateTo($"/Bookings/Book/{book.EventId}"))">
-                        <td>
-                            @if (book.Status == "Inbokad")
-                            {
-                                <span class="badge rounded-pill text-bg-success p-2">Inbokad</span>
-                            }
-                            else
-                            {
-                                <span class="badge rounded-pill text-bg-warning p-2">Reserv</span>
-                            }
-                        </td>
-                        <td>
-                            @if (book.Status == "Inbokad")
-                            {
-                                <span class="badge rounded-pill text-bg-success p-2">✓</span>
-                            }
-                            else
-                            {
-                                <span class="badge rounded-pill text-bg-warning p-2">@book.ReservePosition</span>
-                            }
-                        </td>
-                        <td>
-                            @if (book.Gender == 0)
-                            {
-                                <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
-                            }
-                            else
-                            {
-                                <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
-                            }
-                        </td>
-                        <td>@book.Title</td>
-                        <td>@book.Start.ToString("dd/MM/yyyy | HH:mm")</td>
-                        <td class="text-nowrap">
-                            <div class="d-flex flex-column flex-md-row">
-                                <button class="btn btn-sm btn-outline-danger"
-                                title="Ta bort"
-                                @onclick:stopPropagation
-                                @onclick="async () => await ShowAlert(book)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                }
-                @* @foreach (var evt in events)
-                {
-                    if (evt.Hidden == false)
+                    @foreach (var book in extendedBookings)
                     {
                         <tr style="cursor: pointer;"
-                        @onclick="@(() => NavManager.NavigateTo($"/Bookings/Book/{evt.Id}"))">
+                            @onclick="@(() => NavManager.NavigateTo($"/Bookings/Book/{book.EventId}"))">
                             <td>
-                                @if (evt.Gender == 0)
+                                @if (book.Status == "Inbokad")
+                                {
+                                    <span class="badge rounded-pill text-bg-success p-2">Inbokad</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill text-bg-warning p-2">Reserv</span>
+                                }
+                            </td>
+                            <td>
+                                @if (book.Status == "Inbokad")
+                                {
+                                    <span class="badge rounded-pill text-bg-success p-2">✓</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill text-bg-warning p-2">@book.ReservePosition</span>
+                                }
+                            </td>
+                            <td>
+                                @if (book.Gender == 0)
                                 {
                                     <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
                                 }
@@ -95,22 +66,27 @@ else
                                     <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
                                 }
                             </td>
-                            <td>Status</td>
-                            <td>@evt.Title</td>
-                            <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                            <td>@book.Title</td>
+                            <td>@book.Start.ToString("dd/MM/yyyy | HH:mm")</td>
                             <td class="text-nowrap">
                                 <div class="d-flex flex-column flex-md-row">
                                     <button class="btn btn-sm btn-outline-danger"
-                                    title="Ta bort"
+                                            title="Ta bort"
                                     @onclick:stopPropagation
-                                    @onclick="async () => await ShowAlert(evt)">
+                                            @onclick="async () => await ShowAlert(book)">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
                             </td>
                         </tr>
                     }
-                } *@
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-muted text-start">Du har inga bokningar</td>
+                    </tr>
+                }
             </tbody>
         </table>
     }
@@ -127,10 +103,10 @@ else
         </div>
         <CalendarContainer TasksList="@ModelTasks" DisplayedView="ShowWeek ? DisplayedView.Weekly : DisplayedView.Monthly" FirstDate="@FirstDate">
             <MonthlyView SaturdayColor="White"
-            SundayColor="White" />
+                         SundayColor="White" />
 
             <WeekView SaturdayColor="White"
-            SundayColor="White" />
+                      SundayColor="White" />
         </CalendarContainer>
     }
 }
@@ -219,7 +195,7 @@ else
                                       orderby e.Start
                                       select new { Booking = b, Event = e }).ToList();
 
-        
+
 
         userBookingsWithEvents = userBookingsWithEvents.Where(u => u.Booking.UserId == userIdString).ToList();
 
@@ -263,13 +239,13 @@ else
                     DateStart = be.Event.Start,
                     DateEnd = be.Event.End ?? be.Event.Start,
                     Color = be.Booking.Reserve
-                                        ? "lightyellow" // Highlight reserved bookings with yellow (for example)
-                                        : be.Event.Gender switch
-                                        {
-                                            Gender.Male => "lightblue",
-                                            Gender.Female => "lightpink",
-                                            _ => "lightgray"
-                                        },
+                                            ? "lightyellow" // Highlight reserved bookings with yellow (for example)
+                                            : be.Event.Gender switch
+                                            {
+                                                Gender.Male => "lightblue",
+                                                Gender.Female => "lightpink",
+                                                _ => "lightgray"
+                                            },
                     Comment = be.Event.Description
                 })
             .ToArray();

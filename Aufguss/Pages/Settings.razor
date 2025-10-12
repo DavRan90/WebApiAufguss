@@ -58,9 +58,11 @@
     </div>
 
     <h3>Vattenfys</h3>
-
+    <div class="alert alert-danger" role="alert">
+        ⚠️ Funktioner inte tillagda.
+    </div>
     <div class="row mb-3">
-        <label class="col-md-2 col-form-label">Max bokningar vattenfys</label>
+        <label class="col-md-2 col-form-label bg-warning-subtle">Max bokningar vattenfys</label>
         <div class="col-md-4">
             <InputNumber class="form-control" @bind-Value="SiteSettingsData.MaxBookingsVattenfys" />
             <ValidationMessage For="@(() => SiteSettingsData.MaxBookingsVattenfys)" />
@@ -68,7 +70,7 @@
     </div>
 
     <div class="row mb-3">
-        <label class="col-md-2 col-form-label">Dagar innan dold bokning blir synlig</label>
+        <label class="col-md-2 col-form-label bg-warning-subtle">Dagar innan dold bokning blir synlig</label>
         <div class="col-md-4">
             <InputNumber class="form-control" @bind-Value="SiteSettingsData.VattenfysHiddenDaysInAdvance" />
             <ValidationMessage For="@(() => SiteSettingsData.VattenfysHiddenDaysInAdvance)" />

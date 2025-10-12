@@ -1,0 +1,20 @@
+﻿.col-id {
+    width: 5%;
+}
+
+.col-from {
+    width: 25%;
+}
+
+.col-to {
+    width: 25%;
+}
+
+.col-date {
+    width: 25%;
+}
+
+.col-actions {
+    width: 120px;
+    white-space: nowrap;
+}

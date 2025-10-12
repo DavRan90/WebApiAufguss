@@ -22,19 +22,19 @@ namespace WebApi.Controllers
         public IActionResult GetVisibleEvents()
         {
             var settings = context.SiteSettings.FirstOrDefault();
-            var today = DateTime.UtcNow.Date;
-            var visibleFromDate = today;
-            var visibleToDate = today.AddDays(settings.AufgussHiddenDaysInAdvance);
+            //var today = DateTime.UtcNow.Date;
+            //var visibleFromDate = today;
+            //var visibleToDate = today.AddDays(settings.AufgussHiddenDaysInAdvance);
 
             var events = context.Events
-                .Where(e => !e.Hidden || (e.Hidden && e.Start.Date <= visibleToDate && e.Start.Date >= visibleFromDate))
+                .Where(e => !e.Hidden || (e.Hidden && e.Start.Date.AddDays(-settings.AufgussHiddenDaysInAdvance) <= DateTime.UtcNow))
                 .OrderBy(e => e.Start)
                 .ToList();
 
             // Adjust Hidden property on the fly for events that pass the threshold
             var adjustedEvents = events.Select(e =>
             {
-                if (e.Hidden && e.Start.Date >= visibleFromDate)
+                if (e.Hidden && e.Start.Date.AddDays(-settings.AufgussHiddenDaysInAdvance) <= DateTime.UtcNow)
                 {
                     // Return a copy or an anonymous object with Hidden set to false
                     return new Event

@@ -68,13 +68,26 @@ namespace WebApi.Controllers
         public async Task<IActionResult> DeleteUser(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
-            if (user == null) return NotFound();
+            if (user == null)
+                return NotFound("User not found");
 
+            // 2. Delete related invites first (optional, but safer if user has constraints)
+            var invites = await _context.Invites
+                .Where(i => i.InviteeId == id || i.InviterId == id)
+                .ToListAsync();
+
+            if (invites.Any())
+            {
+                _context.Invites.RemoveRange(invites); // Better than looping
+                await _context.SaveChangesAsync();     // Save before deleting user if FK constraints exist
+            }
+
+            // 3. Delete user
             var result = await _userManager.DeleteAsync(user);
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            return Ok("User deleted successfully");
+            return Ok("User and related invites deleted successfully");
         }
 
         // Reuse the normalization method from your AuthController

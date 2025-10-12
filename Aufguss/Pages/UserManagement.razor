@@ -2,7 +2,7 @@
 @attribute [Authorize(Roles = "Admin,SuperAdmin")]
 @using Aufguss.Models
 
-<h1>Användare</h1>
+<h1 class="mb-5">Hantera användare</h1>
 <div class="container-fluid">
     @if (Users == null)
     {
@@ -11,42 +11,82 @@
     else
     {
         <h3>Användare</h3>
-        <table class="table mb-5">
+        <table class="table table-fixed mb-5">
             <thead>
                 <tr>
-                    <th class="text-nowrap">ID</th>
-                    <th>Förnamn</th>
-                    <th>Efternamn</th>
-                    <th>Användarnamn</th>
-                    <th>Roll</th>
-                    <th style="width: 80px;"></th> <!-- Icons column -->
+                    <!-- ID -->
+                    <th class="col-id">ID</th>
+
+                    <!-- Medium and up: separate name columns -->
+                    <th class="col-firstname d-none d-md-table-cell">Förnamn</th>
+                    <th class="col-lastname d-none d-md-table-cell">Efternamn</th>
+
+                    <!-- Small: combined name column -->
+                    <th class="col-name d-table-cell d-md-none">Namn</th>
+
+                    <!-- Username (email) -->
+                    <th class="col-username">Användare</th>
+
+                    <!-- Roles -->
+                    <th class="col-role">Roll</th>
+
+                    <!-- Actions -->
+                    <th class="col-actions"></th>
                 </tr>
             </thead>
+
             <tbody>
                 @foreach (var user in Users)
                 {
                     <tr>
-                        <td class="text-truncate text-nowrap" style="max-width: 150px;">@user.Id</td>
-                        <td>@user.FirstName</td>
-                        <td>@user.SurName</td>
-                        <td>@user.UserName</td>
-                        <td>@string.Join(", ", user.Roles)</td>
-                        <td class="text-nowrap">
-                        <div class="d-flex flex-column flex-md-row">
-                            <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
-                            title="Ändra">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger"
-                            title="Ta bort">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </td>
+                        <!-- ID column -->
+                        <td class="col-id">
+                            <span class="d-none d-md-inline">@user.Id</span>
+                            <a class="d-inline d-md-none" role="button" title="Kopiera ID"
+                               @onclick="() => CopyToClipboard(user.Id)">
+                                <i class="bi bi-clipboard"></i>
+                            </a>
+                        </td>
+
+                        <!-- Förnamn - visible only on md and up -->
+                        <td class="col-firstname d-none d-md-table-cell">@user.FirstName</td>
+
+                        <!-- Efternamn - visible only on md and up -->
+                        <td class="col-lastname d-none d-md-table-cell">@user.SurName</td>
+
+                        <!-- Combined name - visible only on small screens -->
+                        <td class="col-name d-table-cell d-md-none">
+                            <div>@user.FirstName</div>
+                            <div>@user.SurName</div>
+                        </td>
+
+                        <!-- Username / Email -->
+                        <td class="col-username">
+                            <span class="d-none d-md-inline">@user.UserName</span>
+                            <a class="d-inline d-md-none" href="mailto:@user.UserName" title="Skicka e-post">
+                                <i class="bi bi-envelope-fill"></i>
+                            </a>
+                        </td>
+
+                        <!-- Roles -->
+                        <td class="col-role">@string.Join(", ", user.Roles)</td>
+
+                        <!-- Actions -->
+                        <td class="col-actions">
+                            <div class="d-flex flex-column flex-md-row">
+                                <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1" title="Ändra">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Ta bort" @onclick="async () => await ShowAlert(user.Id)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                 }
             </tbody>
         </table>
+
     }
 
     @if (AdminUsers == null)
@@ -57,34 +97,66 @@
     {
         <h3> Administratörer </h3>
 
-        <table class="table mb-5">
+        <table class="table table-fixed mb-5">
             <thead>
                 <tr>
-                    <th class="text-nowrap">ID</th>
-                    <th>Förnamn</th>
-                    <th>Efternamn</th>
-                    <th>Användarnamn</th>
-                    <th>Roll</th>
-                    <th style="width: 80px;"></th> <!-- Icons column -->
+                    <th class="col-id">ID</th>
+
+                    <!-- Medium and up: separate name columns -->
+                    <th class="col-firstname d-none d-md-table-cell">Förnamn</th>
+                    <th class="col-lastname d-none d-md-table-cell">Efternamn</th>
+
+                    <!-- Small: combined name column -->
+                    <th class="col-name d-table-cell d-md-none">Namn</th>
+
+                    <th class="col-username">Användare</th>
+                    <th class="col-role">Roll</th>
+                    <th class="col-actions"></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var admin in AdminUsers)
                 {
                     <tr>
-                        <td class="text-truncate text-nowrap" style="max-width: 150px;">@admin.Id</td>
-                        <td>@admin.FirstName</td>
-                        <td>@admin.SurName</td>
-                        <td>@admin.UserName</td>
-                        <td>@string.Join(", ", admin.Roles)</td>
-                        <td class="text-nowrap">
+                        <!-- ID -->
+                        <td>
+                            <span class="d-none d-md-inline">@admin.Id</span>
+                            <a class="d-inline d-md-none" role="button" title="Kopiera ID"
+                               @onclick="() => CopyToClipboard(admin.Id)">
+                                <i class="bi bi-clipboard"></i>
+                            </a>
+                        </td>
+
+                        <!-- Förnamn (visible on md and up) -->
+                        <td class="col-firstname d-none d-md-table-cell">@admin.FirstName</td>
+
+                        <!-- Efternamn (visible on md and up) -->
+                        <td class="col-lastname d-none d-md-table-cell">@admin.SurName</td>
+
+                        <!-- Combined name (visible on small screens only) -->
+                        <td class="col-name d-table-cell d-md-none">
+                            <div>@admin.FirstName</div>
+                            <div>@admin.SurName</div>
+                        </td>
+
+                        <!-- Användarnamn -->
+                        <td>
+                            <span class="d-none d-md-inline">@admin.UserName</span>
+                            <a class="d-inline d-md-none" href="mailto:@admin.UserName" title="Skicka e-post">
+                                <i class="bi bi-envelope-fill"></i>
+                            </a>
+                        </td>
+
+                        <!-- Roll -->
+                        <td class="col-role">@string.Join(", ", admin.Roles)</td>
+
+                        <!-- Actions -->
+                        <td class="col-actions">
                             <div class="d-flex flex-column flex-md-row">
-                                <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
-                                title="Ändra">
+                                <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1" title="Ändra">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger"
-                                title="Ta bort">
+                                <button class="btn btn-sm btn-outline-danger" title="Ta bort">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>
@@ -100,6 +172,8 @@
 
 @inject HttpClient Http
 @inject NavigationManager NavManager
+@inject IJSRuntime JS
+@inject SweetAlertService Swal
 
 @code {
 
@@ -111,5 +185,33 @@
         Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
         AdminUsers = Users?.Where(u => u.Roles.Contains("Admin")).ToList();
         Users = Users?.Where(u => u.Roles.Contains("User")).ToList();
+    }
+    private async Task CopyToClipboard(string text)
+    {
+        await JS.InvokeVoidAsync("copyTextToClipboard", text);
+    }
+
+    private async Task DeleteUser(string id)
+    {
+        await Http.DeleteAsync("api/Users/" + id);
+        Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
+        AdminUsers = Users?.Where(u => u.Roles.Contains("Admin")).ToList();
+        Users = Users?.Where(u => u.Roles.Contains("User")).ToList();
+    }
+
+    private async Task ShowAlert(string id)
+    {
+        var result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Bekräfta borttagning",
+                Text = $"Vill du ta bort användare med ID {id}?",
+                ShowCancelButton = true,
+                ConfirmButtonText = "Ja, ta bort",
+                CancelButtonText = "Nej, ta inte bort",
+            });
+        if (result.IsConfirmed)
+        {
+            await DeleteUser(id);
+        }
     }
 }

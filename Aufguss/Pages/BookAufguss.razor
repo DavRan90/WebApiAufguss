@@ -1,5 +1,5 @@
 ﻿@page "/BokaAufguss"
-
+@using System.Globalization
 @using Aufguss.Models
 @using BlazorCalendar
 @using BlazorCalendar.Models
@@ -208,7 +208,7 @@ else
         var userIdString = loggedInUser.FindFirst("sub")?.Value;
         var userGender = loggedInUser.FindFirst("gender")?.Value;
 
-        events = await Http.GetFromJsonAsync<List<Event>>("api/Events/admin");
+        events = await Http.GetFromJsonAsync<List<Event>>("api/Events");
         bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
 
         events = events?.Where(e => e.Start > DateTime.Now).ToList();

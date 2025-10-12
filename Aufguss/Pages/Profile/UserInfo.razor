@@ -5,8 +5,7 @@
 @using System.Text.RegularExpressions
 @using System.Text.Json.Nodes
 
-<h2 class="text-bg-danger">Sidan är inte klar</h2>
-<h3>Profilen för den inloggade</h3>
+<h3>Dina uppgifter</h3>
 
 @if (CurrentUser == null)
 {
@@ -84,72 +83,89 @@ else
         </div>
     </EditForm>
 
-    @if (Invitees != null)
-    {
-        <h3 class="mt-5 mb-5">Mottagna inbjudningar</h3>
+    <h3 class="mt-5 mb-5">Mottagna inbjudningar</h3>
+    <div style="min-height: 200px;">
         <table class="table mb-5">
             <thead>
                 <tr>
-                    <th>Id</th>
-                    <th>Inbjudan från</th>
-                    <th>Inbjudan till</th>
-                    <th>Datum</th>
-                    <th></th>
+                    <th class="col-id">Id</th>
+                    <th class="col-from">Inbjudan från</th>
+                    <th class="col-to">Inbjudan till</th>
+                    <th class="col-date">Datum</th>
+                    <th class="col-actions"></th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var inv in Invitees)
+                @if (Invitees != null && Invitees.Any())
                 {
-                    <tr style="cursor: pointer;">
-                        <td>@inv.Id</td>
-                        <td>@inv.InviterName</td>
-                        <td>@inv.InviteeName</td>
-                        <td>@inv.InvitedAt</td>
-                        <td style="white-space:nowrap; width:10px">
-                            <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1" @onclick="async () => await AcceptInvite(inv.Id)">
-                                ✓
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger mb-1 mb-md-0 me-md-1" @onclick="async () => await RejectInvite(inv.Id)">
-                                X
-                            </button>
-                        </td>
+                    foreach (var inv in Invitees)
+                    {
+                        <tr style="cursor: pointer;">
+                            <td class="col-id">@inv.Id</td>
+                            <td class="col-from">@inv.InviterName</td>
+                            <td class="col-to">@inv.InviteeName</td>
+                            <td class="col-date">@inv.InvitedAt</td>
+                            <td class="col-actions">
+                                <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1" @onclick="async () => await AcceptInvite(inv.Id)">
+                                    ✓
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger mb-1 mb-md-0 me-md-1" @onclick="async () => await RejectInvite(inv.Id)">
+                                    X
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-muted text-start">Inga mottagna inbjudningar</td>
                     </tr>
                 }
             </tbody>
         </table>
-    }
+    </div>
 
-    @if (Inviters != null)
-    {
-        <h3 class="mt-5 mb-5">Skickade inbjudningar</h3>
+    <h3 class="mb-5">Skickade inbjudningar</h3>
+    <div style="min-height: 200px;">
         <table class="table mb-5">
             <thead>
                 <tr>
-                    <th>Id</th>
-                    <th>Inbjudan från</th>
-                    <th>Inbjudan till</th>
-                    <th>Datum</th>
-                    <th></th>
+                    <th class="col-id">Id</th>
+                    <th class="col-from">Inbjudan från</th>
+                    <th class="col-to">Inbjudan till</th>
+                    <th class="col-date">Datum</th>
+                    <th class="col-actions"></th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var inv in Inviters)
+                @if (Inviters != null && Inviters.Any())
                 {
-                    <tr style="cursor: pointer;">
-                        <td>@inv.Id</td>
-                        <td>@inv.InviterName</td>
-                        <td>@inv.InviteeName</td>
-                        <td>@inv.InvitedAt</td>
-                        <td style="white-space:nowrap; width:10px">
-                            <button class="btn btn-sm btn-outline-danger mb-1 mb-md-0 me-md-1" @onclick="async () => await RejectInvite(inv.Id)">
-                                X
-                            </button>
-                        </td>
+                    foreach (var inv in Inviters)
+                    {
+                        <tr style="cursor: pointer;">
+                            <td class="col-id">@inv.Id</td>
+                            <td class="col-from">@inv.InviterName</td>
+                            <td class="col-to">@inv.InviteeName</td>
+                            <td class="col-date">@inv.InvitedAt</td>
+                            <td class="col-actions">
+                                <button class="btn btn-sm btn-outline-danger mb-1 mb-md-0 me-md-1" @onclick="async () => await RejectInvite(inv.Id)">
+                                    X
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-muted text-start">Inga skickade inbjudningar</td>
                     </tr>
                 }
             </tbody>
         </table>
-    }
+    </div>
+
 }
 
 @inject HttpClient Http

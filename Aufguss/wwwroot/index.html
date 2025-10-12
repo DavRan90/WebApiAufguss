@@ -44,6 +44,13 @@
             });
         });
     </script>
+    <script>
+        window.copyTextToClipboard = (text) => {
+            navigator.clipboard.writeText(text)
+                .then(() => console.log("Copied to clipboard:", text))
+                .catch(err => console.error("Clipboard error:", err));
+        };
+    </script>
 </body>
 
 </html>

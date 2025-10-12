@@ -21,6 +21,9 @@
                     <InputText class="form-control" @bind-Value="registerModel.Password" type="password" placeholder="Lösenord" />
                 </div>
                 <div class="mt-3">
+                    <InputText class="form-control" @bind-Value="registerModel.ConfirmPassword" type="password" placeholder="Bekräfta lösenord" />
+                </div>
+                <div class="mt-3">
                     <InputText class="form-control" @bind-Value="registerModel.PhoneNumber" type="tel" placeholder="Telefonnummer" />
                 </div>
                 <div class="mt-3">
@@ -103,6 +106,10 @@
         [Required(ErrorMessage = "Lösenord är obligatoriskt")]
         [StringLength(100, MinimumLength = 6, ErrorMessage = "Lösenordet måste vara minst 6 tecken långt")]
         public string Password { get; set; }
+
+        [Required(ErrorMessage = "Bekräfta lösenord är obligatoriskt")]
+        [Compare("Password", ErrorMessage = "Lösenorden matchar inte")]
+        public string ConfirmPassword { get; set; }
 
         [Required(ErrorMessage = "Telefonnummer är obligatoriskt")]
         [Phone(ErrorMessage = "Ogiltigt telefonnummer")]

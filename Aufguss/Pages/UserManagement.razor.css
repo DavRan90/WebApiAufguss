@@ -1,0 +1,43 @@
+﻿/* Column width classes */
+.col-id {
+    width: 25%;
+    max-width: 150px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.col-firstname,
+.col-lastname,
+.col-username {
+    width: 15%;
+}
+
+.col-role {
+    width: 20%;
+}
+
+.col-actions {
+    width: 80px;
+    white-space: nowrap;
+}
+
+.table-fixed {
+    table-layout: fixed;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .col-id {
+        width: 10%;
+    }
+    .col-name {
+        width: 20%;
+    }
+    .col-username {
+        width: 25%;
+    }
+    .col-role {
+        width: 25%;
+    }
+}
