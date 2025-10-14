@@ -28,6 +28,8 @@ namespace WebApi
 
             builder.Services.AddScoped<NotificationService>();
 
+            builder.Services.AddScoped<FriendService>();
+
             builder.Services.AddScoped<EmailService>();
 
             builder.Services.AddScoped<MailgunEmailService>();

@@ -129,13 +129,10 @@ namespace WebApi.Controllers
             var invitee = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == inviteDto.InviteeId);
 
             if (inviter == null || invitee == null)
-                return BadRequest("One or both users not found.");
+                return BadRequest(new { message = "One or both users not found." });
 
-            // ❗️ Enforce gender match
             if (inviter.Gender != invitee.Gender)
-            {
-                return BadRequest("Du kan bara bjuda in användare av samma kön."); // or "You can only invite users of the same gender."
-            }
+                return BadRequest(new { message = "Du kan bara bjuda in användare av samma kön." });
 
             // 🔁 Optional: prevent duplicates
             var existingInvite = await _context.Invites
@@ -145,9 +142,7 @@ namespace WebApi.Controllers
                     !i.Accepted);
 
             if (existingInvite != null)
-            {
-                return BadRequest("En inbjudan har redan skickats till denna användare.");
-            }
+                return BadRequest(new { message = "En inbjudan har redan skickats till denna användare." });
 
             var invite = new Invite
             {

@@ -63,6 +63,7 @@ namespace WebApi.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateBooking(BookingDto bookingDto)
         {
+            var settings = context.SiteSettings.FirstOrDefault();
             Console.WriteLine("CreateBooking called.");
 
             var alreadyBooked = context.Bookings.Any(b =>
@@ -85,8 +86,19 @@ namespace WebApi.Controllers
                                              e.Start > DateTime.Now
                                        select b).Count();
 
-            if (countActiveBookings < 3)
+            if (countActiveBookings < settings.MaxBookingsAufguss)
             {
+                var currEvent = context.Events.FirstOrDefault(e => e.Id == bookingDto.EventId);
+                if (currEvent == null)
+                    return NotFound(new { message = "Eventet hittades inte." });
+
+                var existingBookings = context.Bookings.Count(b =>
+                    b.EventId == bookingDto.EventId &&
+                    !b.Unbooked &&
+                    !b.Reserve); // Only count real bookings
+
+                bool isReserve = existingBookings >= currEvent.MaxSlots;
+
                 var booking = new Booking
                 {
                     Name = bookingDto.Name,
@@ -96,16 +108,32 @@ namespace WebApi.Controllers
                     BookedAt = DateTime.Now,
                     EventId = bookingDto.EventId,
                     CancellationToken = Guid.NewGuid().ToString("N"),
+                    Reserve = isReserve,
+                    ReserveAt = isReserve ? DateTime.Now : null
                 };
 
-                if (bookingDto.Reserve)
-                {
-                    booking.Reserve = true;
-                    booking.ReserveAt = DateTime.Now;
-                }
-
                 context.Bookings.Add(booking);
-                context.SaveChanges();
+                await context.SaveChangesAsync();
+
+                //var booking = new Booking
+                //{
+                //    Name = bookingDto.Name,
+                //    Email = bookingDto.Email,
+                //    Tel = bookingDto.Tel,
+                //    UserId = bookingDto.UserId,
+                //    BookedAt = DateTime.Now,
+                //    EventId = bookingDto.EventId,
+                //    CancellationToken = Guid.NewGuid().ToString("N"),
+                //};
+
+                //if (bookingDto.Reserve)
+                //{
+                //    booking.Reserve = true;
+                //    booking.ReserveAt = DateTime.Now;
+                //}
+
+                //context.Bookings.Add(booking);
+                //await context.SaveChangesAsync();
 
                 Console.WriteLine("Booking saved. Attempting to send email...");
 
@@ -117,22 +145,26 @@ namespace WebApi.Controllers
 
                     var cancelUrl = $"https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net/api/bookings/cancel-booking?token={booking.CancellationToken}";
 
+                    string statusMessage = isReserve
+                    ? "Du är placerad på reservlistan till"
+                    : "Du är inbokad till";
+
                     var htmlMessage = $@"
-                        <div style='font-family: Arial, sans-serif; font-size: 16px; color: #333;'>
-                            <p><strong>Tack för din bokning {booking.Name}!</strong></p>
-        
-                            <p>Du är inbokad till <strong>{currentEvent.Title}</strong> den {currentEvent.Start.ToString("yyyy-MM-dd HH:mm")} .</p>
-        
-                            <p>Om du vill avboka din plats, klicka på länken nedan:</p>
-        
-                            <p>
-                                <a href='{cancelUrl}' style='color: #007bff; text-decoration: none;'>Avboka din plats</a>
-                            </p>
-        
-                            <br>
-        
-                            <p>Vi ses på <strong>Freja Bad & Gym</strong>!</p>
-                        </div>";
+                    <div style='font-family: Arial, sans-serif; font-size: 16px; color: #333;'>
+                        <p><strong>Tack för din bokning {booking.Name}!</strong></p>
+
+                        <p>{statusMessage} <strong>{currentEvent.Title}</strong> den {currentEvent.Start:yyyy-MM-dd HH:mm}.</p>
+
+                        <p>Om du vill avboka din plats, klicka på länken nedan:</p>
+
+                        <p>
+                            <a href='{cancelUrl}' style='color: #007bff; text-decoration: none;'>Avboka din plats</a>
+                        </p>
+
+                        <br>
+
+                        <p>Vi ses på <strong>Freja Bad & Gym</strong>!</p>
+                    </div>";
                     await _resendEmail.SendEmailAsync(
                             to: $"david.rantanen@telia.com",
                             subject: "Bokningsbekräftelse Aufguss",
@@ -193,7 +225,7 @@ namespace WebApi.Controllers
             //        promote.BookedAt = DateTime.Now;
             //    }
             //}
-            
+
 
             return Ok(booking);
         }

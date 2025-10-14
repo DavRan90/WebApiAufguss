@@ -46,6 +46,8 @@ namespace WebApi.Controllers
                         Gender = e.Gender,
                         MaxSlots = e.MaxSlots,
                         Description = e.Description,
+                        AllowFriendBooking = e.AllowFriendBooking,
+                        IncludeSurvey = e.IncludeSurvey,
                         Hidden = false,
                         // Copy other properties as needed
                     };
@@ -84,13 +86,34 @@ namespace WebApi.Controllers
         [HttpGet("{id}")]
         public IActionResult GetEvent(int id)
         {
+            var settings = context.SiteSettings.FirstOrDefault();
+
             var evt = context.Events.Find(id);
             if (evt == null)
             {
                 return NotFound();
             }
-
-            return Ok(evt);
+            if (evt.Hidden && evt.Start.Date.AddDays(-settings.AufgussHiddenDaysInAdvance) <= DateTime.UtcNow)
+            {
+                // Return a copy or an anonymous object with Hidden set to false
+                return Ok(new Event
+                {
+                    Id = evt.Id,
+                    Title = evt.Title,
+                    Start = evt.Start,
+                    End = evt.End,
+                    Gender = evt.Gender,
+                    MaxSlots = evt.MaxSlots,
+                    Description = evt.Description,
+                    AllowFriendBooking = evt.AllowFriendBooking,
+                    IncludeSurvey = evt.IncludeSurvey,
+                    Hidden = false,
+                });
+            }
+            else
+            {
+                return Ok(evt);
+            }
         }
 
         [HttpPost]
@@ -108,6 +131,8 @@ namespace WebApi.Controllers
                 Recurring = eventDto.Recurring,
                 Gender = eventDto.Gender,
                 Hidden = eventDto.Hidden,
+                AllowFriendBooking = eventDto.AllowFriendBooking,
+                IncludeSurvey = eventDto.IncludeSurvey,
             };
 
             context.Events.Add(evt);
@@ -151,6 +176,8 @@ namespace WebApi.Controllers
             evt.Recurring = eventDto.Recurring;
             evt.Gender = eventDto.Gender;
             evt.Hidden = eventDto.Hidden;
+            evt.AllowFriendBooking = eventDto.AllowFriendBooking;
+            evt.IncludeSurvey = eventDto.IncludeSurvey;
 
             context.SaveChanges();
 

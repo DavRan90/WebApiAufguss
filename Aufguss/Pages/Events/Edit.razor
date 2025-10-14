@@ -88,6 +88,17 @@
                 </div>
             </div>
 
+            <div class="row mb-3">
+                <div class="col-md-8 offset-md-4">
+                    <div>
+                        <input type="checkbox" id="gridCheck3" @bind="EventDtoData.AllowFriendBooking">
+                        <label style="vertical-align: top;" class="form-check-label m-1" for="gridCheck3">
+                            Tillåt vänbokning
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             <div class="row">
                 <div class="offset-md-4 col-md-4 d-grid">
                     <button class="btn btn-primary" @onclick="SaveEvent">Spara</button>
@@ -265,6 +276,7 @@
             EventDtoData.Recurring = eventData?.Recurring ?? false;
             EventDtoData.Gender = eventData?.Gender ?? Gender.Male;
             EventDtoData.Hidden = eventData?.Hidden ?? false;
+            EventDtoData.AllowFriendBooking = eventData?.AllowFriendBooking ?? false;
 
             var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
             Bookings = allBookings?.Where(b => b.EventId == Id).ToList();

@@ -22,8 +22,7 @@ public class Program
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
-        
-       builder.Services.AddSweetAlert2();
+        builder.Services.AddSweetAlert2();
 
 
         // 1. Default HttpClient (unauthenticated)

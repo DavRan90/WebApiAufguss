@@ -50,6 +50,8 @@ namespace WebApi.Controllers
                 Recurring = eventTemplateDto.Recurring,
                 Gender = eventTemplateDto.Gender,
                 Hidden = eventTemplateDto.Hidden,
+                AllowFriendBooking = eventTemplateDto.AllowFriendBooking,
+                IncludeSurvey = eventTemplateDto.IncludeSurvey,
             };
 
             context.EventTemplates.Add(evt);
@@ -76,6 +78,8 @@ namespace WebApi.Controllers
             evt.Recurring = eventTemplateDto.Recurring;
             evt.Gender = eventTemplateDto.Gender;
             evt.Hidden = eventTemplateDto.Hidden;
+            evt.AllowFriendBooking = eventTemplateDto.AllowFriendBooking;
+            evt.IncludeSurvey = eventTemplateDto.IncludeSurvey;
 
             context.SaveChanges();
 

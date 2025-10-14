@@ -4,15 +4,22 @@
 
 <div class="row mb-5">
     <div class="col-lg-8">
-        <h1 class=mb-5>@EventDtoData.Title</h1>
+
 
         @if (eventData == null)
         {
             <p><em>Loading...</em></p>
         }
 
+        else if(eventData.Hidden)
+        {
+            <div class="alert alert-danger" role="alert">
+                ⚠️ Passet är dolt.
+            </div>
+        }
         else
         {
+            <h1 class=mb-5>@EventDtoData.Title</h1>
             @* if (eventData.Start < DateTime.Now)
             {
                 <div class="alert alert-danger" role="alert">
@@ -190,21 +197,23 @@
 
                     </div>
                 </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-8 offset-md-4 bg-danger-subtle rounded">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="gridCheck1">
-                            <label class="form-check-label" for="gridCheck1">
-                                Boka in min aufgusskompis också
-                                
-                            </label>
-                            <span class="ms-1" data-bs-toggle="tooltip" data-bs-trigger="click" title="Om du har en aufgusskompis kan även denne bokas in av dig">
-                                <i class="bi bi-info-circle text-secondary" @onclick:stopPropagation></i>
-                            </span>
+                @if (EventDtoData.AllowFriendBooking)
+                {
+                    <div class="row mb-3">
+                        <div class="col-md-8 offset-md-4 bg-danger-subtle rounded">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="gridCheck1" @bind="BookFriend">
+                                <label class="form-check-label" for="gridCheck1">
+                                    Boka in min aufgusskompis också
+                                </label>
+                                <span class="ms-1" data-bs-toggle="tooltip" data-bs-trigger="click" title="Om du har en aufgusskompis kan även denne bokas in av dig">
+                                    <i class="bi bi-info-circle text-secondary" @onclick:stopPropagation></i>
+                                </span>
+                            </div>
                         </div>
                     </div>
-                </div>
+                }
+
 
 
                 <div class="row">
@@ -239,8 +248,10 @@
 @inject AuthenticationStateProvider AuthProvider
 
 @code {
+    private bool BookFriend = false;
     private List<UserWithRolesDto>? Users;
     private UserWithRolesDto? CurrentUser;
+    private UserWithRolesDto? AufgussFriend;
 
     private bool CurrentUserIsBooked = false;
 
@@ -252,6 +263,7 @@
 
     public Booking? booking { get; set; }
     public BookingDto BookingDtoData { get; set; } = new();
+    public BookingDto FriendBookingDtoData { get; set; } = new();
 
     public Event? eventData { get; set; } = null;
     public EventDto EventDtoData { get; set; } = new();
@@ -263,7 +275,7 @@
     //     // var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
     //     // Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
 
-        
+
 
     //     Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
 
@@ -275,7 +287,7 @@
     //     // {
     //     //     CurrentUserIsBooked = Bookings.Where(b => b.UserId == userIdString && b.Unbooked == false).Any();
     //     // }
-        
+
 
     //     CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
 
@@ -348,7 +360,8 @@
                 AllDay = eventData?.AllDay ?? false,
                 MaxSlots = eventData?.MaxSlots ?? 0,
                 Recurring = eventData?.Recurring ?? false,
-                Gender = eventData?.Gender ?? Gender.Male
+                Gender = eventData?.Gender ?? Gender.Male,
+                AllowFriendBooking = eventData?.AllowFriendBooking ?? false,
             };
 
         var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
@@ -381,6 +394,14 @@
 
             Users ??= await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
             CurrentUser = Users?.FirstOrDefault(u => u.Id == userId);
+            if (CurrentUser.AufgussFriendId != null)
+            {
+                AufgussFriend = Users?.FirstOrDefault(u => u.Id == CurrentUser.AufgussFriendId);
+            }
+            FriendBookingDtoData.Name = (AufgussFriend?.FirstName + " " + AufgussFriend?.SurName) ?? "";
+            FriendBookingDtoData.Email = AufgussFriend?.Email ?? "";
+            FriendBookingDtoData.Tel = AufgussFriend?.PhoneNumber ?? "";
+            FriendBookingDtoData.UserId = AufgussFriend?.Id ?? "";
         }
     }
 
@@ -388,6 +409,20 @@
     {
         BookingDtoData.EventId = Id;
         var response = await Http.PostAsJsonAsync("api/Bookings", BookingDtoData);
+        if(BookFriend)
+        {
+            FriendBookingDtoData.EventId = Id;
+            var friendBookResponse = await Http.PostAsJsonAsync("api/Bookings", FriendBookingDtoData);
+            if (response.IsSuccessStatusCode && friendBookResponse.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", $"Du och {FriendBookingDtoData.Name} är nu inbokade till passet!", "success");
+                navManager.NavigateTo("/Dina_bokningar");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Ett fel inträffade. Kontrollera bokningen.", "error");
+            }
+        }
 
         if (response.IsSuccessStatusCode)
         {

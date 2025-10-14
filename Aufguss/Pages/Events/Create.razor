@@ -134,7 +134,20 @@
         <div class="row mb-3">
             <div class="col-md-8 offset-md-4">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="gridCheck1" @bind="Survey" disabled>
+                    <input class="form-check-input" type="checkbox" id="gridCheck2" @bind="EventDtoData.AllowFriendBooking">
+                    <label class="form-check-label" for="gridCheck2">
+                        Tillåt vänbokning
+                        <span class="ms-1" data-bs-toggle="tooltip" title="TIllåt inbokning av en registrerad aufgussvän">
+                            <i class="bi bi-info-circle text-secondary"></i>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-8 offset-md-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="gridCheck1" @bind="EventDtoData.IncludeSurvey" disabled>
                     <label class="form-check-label" for="gridCheck1">
                         Enkät
                         <span class="ms-1" data-bs-toggle="tooltip" title="Om enkät ska göras i samband med passet">
@@ -246,7 +259,7 @@
                 EventDtoData.MaxSlots = selectedTemplate.MaxSlots;
                 EventDtoData.Recurring = selectedTemplate.Recurring;
                 EventDtoData.Hidden = selectedTemplate.Hidden;
-
+                EventDtoData.AllowFriendBooking = selectedTemplate.AllowFriendBooking;
                 StateHasChanged();
             }
         }
@@ -274,6 +287,7 @@
                 EventDtoData.MaxSlots = selectedTemplate.MaxSlots;
                 EventDtoData.Recurring = selectedTemplate.Recurring;
                 EventDtoData.Hidden = selectedTemplate.Hidden;
+                EventDtoData.AllowFriendBooking = selectedTemplate.AllowFriendBooking;
             }
 
             await InvokeAsync(StateHasChanged);

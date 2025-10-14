@@ -15,5 +15,7 @@ namespace WebApi.Models
         public bool Recurring { get; set; }
         public int MaxSlots { get; set; }
         public Gender Gender { get; set; }
+        public bool AllowFriendBooking { get; set; }
+        public bool IncludeSurvey { get; set; }
     }
 }

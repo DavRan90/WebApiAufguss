@@ -12,16 +12,18 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     public class UsersController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _context;
+        private readonly FriendService _friendService;
 
-        public UsersController(UserManager<ApplicationUser> userManager, ApplicationDbContext context)
+        public UsersController(UserManager<ApplicationUser> userManager, ApplicationDbContext context, FriendService friendService)
         {
             _userManager = userManager;
             _context = context;
+            _friendService = friendService;
         }
 
         // GET: api/users
@@ -48,6 +50,7 @@ namespace WebApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserDto model)
         {
+            
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
@@ -67,27 +70,38 @@ namespace WebApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(string id)
         {
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
-                return NotFound("User not found");
-
-            // 2. Delete related invites first (optional, but safer if user has constraints)
-            var invites = await _context.Invites
-                .Where(i => i.InviteeId == id || i.InviterId == id)
-                .ToListAsync();
-
-            if (invites.Any())
+            try
             {
-                _context.Invites.RemoveRange(invites); // Better than looping
-                await _context.SaveChangesAsync();     // Save before deleting user if FK constraints exist
+                var user = await _userManager.FindByIdAsync(id);
+                if (user == null)
+                    return NotFound("User not found");
+
+                var invites = await _context.Invites
+                    .Where(i => i.InviteeId == id || i.InviterId == id)
+                    .ToListAsync();
+
+                foreach (var invite in invites)
+                {
+                    var success = await _friendService.RemoveInviteAndBreakFriendship(invite.Id);
+                    if (!success)
+                        return BadRequest($"Failed to remove invite ID {invite.Id}");
+                }
+
+                
+
+                var result = await _userManager.DeleteAsync(user);
+                if (!result.Succeeded)
+                    return BadRequest(result.Errors);
+
+
+                await _context.SaveChangesAsync();
+                return Ok("User and related invites deleted successfully");
             }
-
-            // 3. Delete user
-            var result = await _userManager.DeleteAsync(user);
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
-
-            return Ok("User and related invites deleted successfully");
+            catch (Exception ex)
+            {
+                // This will send back a JSON error so you can see it
+                return StatusCode(500, new { message = "Unexpected error", details = ex.Message });
+            }
         }
 
         // Reuse the normalization method from your AuthController

@@ -17,9 +17,9 @@
     </div>
 
     <div class="row mb-3">
-        <label class="col-md-2 col-form-label">Välj en bild</label>
+        <label class="col-md-2 col-form-label">Ta bort bild</label>
         <div class="col-md-4">
-            <select class="form-select" @onchange="OnImageSelect">
+            <select class="form-select" disabled @onchange="OnImageSelect">
                 <option disabled selected>Välj en bild</option>
                 @foreach (var image in ImageOptions)
                 {
@@ -57,22 +57,24 @@
         </div>
     </div>
 
+    <div class="row mb-3">
     <h3>Vattenfys</h3>
-    <div class="alert alert-danger" role="alert">
+        <div class="alert alert-danger col-md-6 mt-2" role="alert">
         ⚠️ Funktioner inte tillagda.
     </div>
+    </div>
     <div class="row mb-3">
-        <label class="col-md-2 col-form-label bg-warning-subtle">Max bokningar vattenfys</label>
+        <label class="col-md-2 col-form-label">Max bokningar vattenfys</label>
         <div class="col-md-4">
-            <InputNumber class="form-control" @bind-Value="SiteSettingsData.MaxBookingsVattenfys" />
+            <InputNumber class="form-control" disabled @bind-Value="SiteSettingsData.MaxBookingsVattenfys" />
             <ValidationMessage For="@(() => SiteSettingsData.MaxBookingsVattenfys)" />
         </div>
     </div>
 
     <div class="row mb-3">
-        <label class="col-md-2 col-form-label bg-warning-subtle">Dagar innan dold bokning blir synlig</label>
+        <label class="col-md-2 col-form-label">Dagar innan dold bokning blir synlig</label>
         <div class="col-md-4">
-            <InputNumber class="form-control" @bind-Value="SiteSettingsData.VattenfysHiddenDaysInAdvance" />
+            <InputNumber class="form-control" disabled @bind-Value="SiteSettingsData.VattenfysHiddenDaysInAdvance" />
             <ValidationMessage For="@(() => SiteSettingsData.VattenfysHiddenDaysInAdvance)" />
         </div>
     </div>

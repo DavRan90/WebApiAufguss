@@ -341,6 +341,9 @@ namespace WebApi.Migrations
                     b.Property<bool>("AllDay")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("AllowFriendBooking")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -355,6 +358,9 @@ namespace WebApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("Hidden")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IncludeSurvey")
                         .HasColumnType("bit");
 
                     b.Property<int>("MaxSlots")
@@ -386,6 +392,9 @@ namespace WebApi.Migrations
                     b.Property<bool>("AllDay")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("AllowFriendBooking")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -400,6 +409,9 @@ namespace WebApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("Hidden")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IncludeSurvey")
                         .HasColumnType("bit");
 
                     b.Property<int>("MaxSlots")
