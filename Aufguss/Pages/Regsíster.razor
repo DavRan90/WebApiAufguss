@@ -35,11 +35,17 @@
                 <div class="mt-3">
                     <InputSelect class="form-control" @bind-Value="registerModel.Gender">
                         <option value="">-- Kön --</option>
-                        @foreach (var gender in Enum.GetValues(typeof(Gender)).Cast<Gender>())
+                        @foreach (var gender in Enum.GetValues(typeof(Gender)).Cast<Gender>().Where(g => g != Gender.Other))
                         {
                             <option value="@gender">@GetDisplayName(gender)</option>
                         }
                     </InputSelect>
+                </div>
+                <div class="form-check mt-3">
+                    <InputCheckbox @bind-Value="ConsentGiven" class="form-check-input" id="consentCheck" />
+                    <label class="form-check-label" for="consentCheck">
+                        Jag godkänner lagring av mina personuppgifter
+                    </label>
                 </div>
                 <button class="btn btn-primary mt-3" type="submit">Spara</button>
             </EditForm>
@@ -56,6 +62,8 @@
 @code {
     private RegisterDto registerModel = new();
     private string errorMessage;
+
+    private bool ConsentGiven;
 
     private async Task HandleRegister()
     {

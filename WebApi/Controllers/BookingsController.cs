@@ -115,26 +115,6 @@ namespace WebApi.Controllers
                 context.Bookings.Add(booking);
                 await context.SaveChangesAsync();
 
-                //var booking = new Booking
-                //{
-                //    Name = bookingDto.Name,
-                //    Email = bookingDto.Email,
-                //    Tel = bookingDto.Tel,
-                //    UserId = bookingDto.UserId,
-                //    BookedAt = DateTime.Now,
-                //    EventId = bookingDto.EventId,
-                //    CancellationToken = Guid.NewGuid().ToString("N"),
-                //};
-
-                //if (bookingDto.Reserve)
-                //{
-                //    booking.Reserve = true;
-                //    booking.ReserveAt = DateTime.Now;
-                //}
-
-                //context.Bookings.Add(booking);
-                //await context.SaveChangesAsync();
-
                 Console.WriteLine("Booking saved. Attempting to send email...");
 
                 try
@@ -173,19 +153,17 @@ namespace WebApi.Controllers
                         //$"Du är inbokad till {eventTitle} <br>" +
                         //$"Vi ses på Freja Bad & Gym!"
                         );
-                    return Ok();
+                    return Ok(new { message = $"{statusMessage} till det här passet" });
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine("Email sending failed: " + ex.Message);
                     return StatusCode(500, new { error = ex.Message });
                 }
-
-                return Ok(booking);
             }
             else
             {
-                return BadRequest(new { message = "För många aktiva bokningar, max 3" });
+                return BadRequest(new { message = $"För många aktiva bokningar, max {settings.MaxBookingsAufguss}" });
             }
         }
 

@@ -197,6 +197,23 @@
 
                     </div>
                 </div>
+                if(CurrentUser == null)
+                {
+                    <div class="row mb-3">
+                        <div class="col-md-8 offset-md-4 bg-danger-subtle rounded">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="gridCheck5">
+                                <label class="form-check-label" for="gridCheck5">
+                                    Jag godkänner lagring av personuppgifter
+                                </label>
+                                <span class="ms-1" data-bs-toggle="tooltip" data-bs-trigger="click" title="Vi behöver lagra dina angivna uppgifter i bokningssyfte">
+                                    <i class="bi bi-info-circle text-secondary" @onclick:stopPropagation></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                }
+                
                 @if (EventDtoData.AllowFriendBooking)
                 {
                     <div class="row mb-3">
@@ -213,11 +230,24 @@
                         </div>
                     </div>
                 }
-
+                
+                
+                    
+                
+                
 
 
                 <div class="row">
-                    @if (SpotsRemaining > 0)
+                    <div class="offset-md-4 col-md-4 d-grid">
+                        <button class="btn @GetButtonClass()"
+                                @onclick="SaveBooking">
+                            @GetButtonText()
+                        </button>
+                    </div>
+                    <div class="col-md-4 d-grid">
+                        <a class="btn btn-outline-primary" href="/Bookings">Avbryt</a>
+                    </div>
+                    @* @if (SpotsRemaining > 0)
                     {
                         <div class="offset-md-4 col-md-4 d-grid">
                             <button class="btn btn-primary" @onclick="SaveBooking">Boka</button>
@@ -231,7 +261,7 @@
                     }
                     <div class="col-md-4 d-grid">
                         <a class="btn btn-outline-primary" href="/Bookings">Avbryt</a>
-                    </div>
+                    </div> *@
                 </div>
             }
             @* } *@
@@ -269,70 +299,15 @@
     public EventDto EventDtoData { get; set; } = new();
     public JsonNode Errors { get; set; } = new JsonObject();
 
-    // protected override async Task OnInitializedAsync()
-    // {
-    //     // eventData = await Http.GetFromJsonAsync<Event>("api/Events/" + Id);
-    //     // var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
-    //     // Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
+    private string GetButtonClass()
+    {
+        return SpotsRemaining > 0 ? "btn-primary" : "btn-warning";
+    }
 
-
-
-    //     Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
-
-    //     var authState = await AuthProvider.GetAuthenticationStateAsync();
-    //     var loggedInUser = authState.User;
-    //     var userIdString = loggedInUser.FindFirst("sub")?.Value;
-
-    //     // if (loggedInUser.Identity != null && loggedInUser.Identity.IsAuthenticated)
-    //     // {
-    //     //     CurrentUserIsBooked = Bookings.Where(b => b.UserId == userIdString && b.Unbooked == false).Any();
-    //     // }
-
-
-    //     CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
-
-    //     if (loggedInUser.Identity is not null && loggedInUser.Identity.IsAuthenticated)
-    //     {
-    //         BookingDtoData.Name = loggedInUser.FindFirst("fullName")?.Value ?? "";
-    //         BookingDtoData.Email = loggedInUser.FindFirst("email")?.Value ?? "";
-    //         BookingDtoData.Tel = loggedInUser.FindFirst("phone_number")?.Value ?? "";
-    //         BookingDtoData.UserId = loggedInUser.FindFirst("sub")?.Value ?? "";
-    //     }
-    // }
-
-    // protected override async Task OnParametersSetAsync()
-    // {
-    //     try
-    //     {
-    //         eventData = await Http.GetFromJsonAsync<Event>("api/Events/" + Id);
-    //         EventDtoData.Title = eventData?.Title ?? "";
-    //         EventDtoData.Description = eventData?.Description ?? "";
-    //         EventDtoData.Start = eventData?.Start ?? DateTime.Now;
-    //         EventDtoData.End = eventData?.End;
-    //         EventDtoData.AllDay = eventData?.AllDay ?? false;
-    //         EventDtoData.MaxSlots = eventData?.MaxSlots ?? 0;
-    //         EventDtoData.Recurring = eventData?.Recurring ?? false;
-    //         EventDtoData.Gender = eventData?.Gender ?? Gender.Male;
-
-    //         var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
-    //         Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
-
-    //         var authState = await AuthProvider.GetAuthenticationStateAsync();
-    //         var loggedInUser = authState.User;
-    //         var userIdString = loggedInUser.FindFirst("sub")?.Value;
-
-    //         if (loggedInUser.Identity != null && loggedInUser.Identity.IsAuthenticated)
-    //         {
-    //             CurrentUserIsBooked = Bookings.Where(b => b.UserId == userIdString && b.Unbooked == false).Any();
-    //         }
-
-    //         SpotsRemaining = EventDtoData.MaxSlots - Bookings.Where(b => b.Unbooked == false && b.Reserve == false).Count();
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         Console.WriteLine("Exception: " + ex.Message);
-    //     }
-    // }
+    private string GetButtonText()
+    {
+        return SpotsRemaining > 0 ? "Boka" : "Reservlista";
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -426,8 +401,28 @@
 
         if (response.IsSuccessStatusCode)
         {
-            await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", "Du är nu inbokad!", "success");
-            navManager.NavigateTo("/Dina_bokningar");
+            var strResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Json Response: \n" + strResponse);
+
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+
+                var message = jsonResponse?["message"]?.ToString() ?? "Din bokning har registrerats.";
+
+                await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", message, "success");
+
+                // Optional: Redirect or refresh booking list
+                // navManager.NavigateTo("/Dina_bokningar");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("JSON Parse Error: " + ex.Message);
+                await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", "Din bokning lyckades, men ett oväntat fel inträffade vid bearbetning av svaret.", "warning");
+            }
+
+            // await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", "Du är nu inbokad!", "success");
+            // navManager.NavigateTo("/Dina_bokningar");
         }
 
         else

@@ -1,11 +1,11 @@
 ﻿@media (min-width: 0px) {
     .card-width {
-        width: 75% !important;
+        width: 90% !important;
     }
 }
 
 @media (min-width: 768px) {
     .card-width {
-        width: 50% !important;
+        width: 70% !important;
     }
 }

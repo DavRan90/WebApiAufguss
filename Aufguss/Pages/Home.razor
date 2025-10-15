@@ -14,19 +14,59 @@
 
 else
 {
+    @* <div class="row">
+        @foreach (var entry in entries)
+        {
+            <div class="col-12 col-md-6">
+                <div class="card card-width mt-5 bg-info-subtle p-5">
+                    <h2 class="card-header rounded rounded-4 bg-warning-subtle m-4">@entry.Title</h2>
+                    <img class="card-img-top p-4 rounded rounded-5" src="@entry.Image" />
+                    <div class="card-body">
+                        <p class="card-text linebreak m-2">@entry.Description</p>
+                        @if (!string.IsNullOrEmpty(entry.Url))
+                        {
+                            <button class="btn btn-primary m-2" @onclick="async () => await BookEvent(entry.Url)">Boka</button>
+                        }
+                    </div>
+                    <p class="card-footer m-4 rounded bg-body-tertiary">
+                        Publicerad: @entry.CreatedAt.ToString("dd/MM/yyyy | HH:mm")
+                    </p>
+                </div>
+            </div>
+        }
+    </div> *@
+
     foreach(var entry in entries)
     {
-        <div class="card m-2 card-width mt-5">
+        @* <div class="card m-2 card-width mt-5">
             <h2 class="card-header">@entry.Title</h2>
-            <img class="card-img-top" src="@entry.Image" />
             <div class="card-body bg-info-subtle">
-                <p class="card-text linebreak">@entry.Description</p>
+                <img src="@entry.Image"
+                     class="img-fluid float-start me-3 mb-2 p-4 rounded rounded-5"
+                     style="max-width: 50vw;" />
+
+                <p class="card-text p-4">
+                    @entry.Description
+                </p>
                 @if (!string.IsNullOrEmpty(entry.Url))
                 {
                     <button class="btn btn-primary" @onclick="async () => await BookEvent(entry.Url)">Boka</button>
                 }
             </div>
             <p class="card-footer">Publicerad: @entry.CreatedAt.ToString("dd/MM/yyyy | HH:mm")</p>
+        </div> *@
+
+        <div class="card card-width mt-5 bg-info-subtle p-3">
+            <h2 class="card-header rounded rounded-4 bg-warning-subtle m-4">@entry.Title</h2>
+            <img class="card-img-top p-4 rounded rounded-5" src="@entry.Image" />
+            <div class="card-body">
+                <p class="card-text linebreak m-2">@entry.Description</p>
+                @if (!string.IsNullOrEmpty(entry.Url))
+                {
+                    <button class="btn btn-primary m-2" @onclick="async () => await BookEvent(entry.Url)">Boka</button>
+                }
+            </div>
+            <p class="card-footer m-4 rounded bg-body-tertiary">Publicerad: @entry.CreatedAt.ToString("dd/MM/yyyy | HH:mm")</p>
         </div>
     }
 }
@@ -80,6 +120,6 @@ else
 
     private async Task BookEvent(string id)
     {
-        NavManager.NavigateTo($"/Bookings/Book/{id}");
+        NavManager.NavigateTo($"/BokaAufguss/Book/{id}");
     }
 }
