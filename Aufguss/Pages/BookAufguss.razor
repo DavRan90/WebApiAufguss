@@ -3,6 +3,7 @@
 @using Aufguss.Models
 @using BlazorCalendar
 @using BlazorCalendar.Models
+@using Aufguss.Services.Interface
 
 <h3>Tillgängliga pass</h3>
 
@@ -118,6 +119,8 @@ else
 @inject SweetAlertService Swal
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavManager
+@inject IEventService EventService
+@inject IBookingService BookingService
 
 @code {
     private BlazorCalendar.Models.Tasks[]? ModelTasks;
@@ -208,8 +211,10 @@ else
         var userIdString = loggedInUser.FindFirst("sub")?.Value;
         var userGender = loggedInUser.FindFirst("gender")?.Value;
 
-        events = await Http.GetFromJsonAsync<List<Event>>("api/Events");
-        bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
+        // events = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        events = await EventService.GetEventsAsync();
+        // bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
+        bookings = await BookingService.GetBookingsAsync();
 
         events = events?.Where(e => e.Start > DateTime.Now).ToList();
         if (userGender == Gender.Male.ToString())

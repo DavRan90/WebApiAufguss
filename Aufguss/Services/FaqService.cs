@@ -1,8 +1,9 @@
-﻿using System.Net.Http.Json;
+﻿using Aufguss.Services.Interface;
+using System.Net.Http.Json;
 
 namespace Aufguss.Services
 {
-    public class FaqService : IFaqService
+    public class FaqService
     {
         private readonly HttpClient _http;
 

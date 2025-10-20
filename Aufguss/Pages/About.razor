@@ -1,13 +1,17 @@
 ﻿@using Aufguss.Models
+@using Aufguss.Services.Interface
 
 @page "/About"
 
 <div class="card m-2 card-width mt-5">
     <h2 class="card-header">Om Aufguss</h2>
     <div class="card-body bg-info-subtle">
-        <img src="@String.Concat(fileLocation + "aufguss 2.jpg")"
-             class="img-fluid float-start me-3 mb-2 p-4 rounded rounded-5"
-             style="max-width: 50vw;" />
+        @if (!string.IsNullOrEmpty(fileLocation))
+        {
+            <img src="@($"{fileLocation}aufguss 2.jpg")"
+                 class="img-fluid float-start me-3 mb-2 p-4 rounded rounded-5"
+                 style="max-width: 50vw;" />
+        }
 
         <p class="card-text p-4">
             Relax i bastu med härliga dofter och svepande värme. Flera tillfällen under året bjuder vi in till aufguss i vår sköna bastu.
@@ -78,15 +82,17 @@ else
 }
 
 @inject HttpClient Http
+@inject IFaqService FaqService
 
 @code {
-    private string fileLocation = "";
+    private string fileLocation = string.Empty;
 
     private List<Faq>? faqs;
 
     protected override async Task OnInitializedAsync()
     {
-        faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+        // faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+        faqs = await FaqService.GetFaqsAsync();
         fileLocation = new Uri(Http.BaseAddress, "api/upload/").ToString();
     }
 }

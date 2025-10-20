@@ -213,7 +213,7 @@
                         </div>
                     </div>
                 }
-                
+
                 @if (EventDtoData.AllowFriendBooking)
                 {
                     <div class="row mb-3">
@@ -230,17 +230,17 @@
                         </div>
                     </div>
                 }
-                
-                
-                    
-                
-                
+
+
+
+
+
 
 
                 <div class="row">
                     <div class="offset-md-4 col-md-4 d-grid">
                         <button class="btn @GetButtonClass()"
-                                @onclick="SaveBooking">
+                        @onclick="SaveBooking">
                             @GetButtonText()
                         </button>
                     </div>
@@ -276,6 +276,8 @@
 @inject IJSRuntime JS
 @inject SweetAlertService Swal
 @inject AuthenticationStateProvider AuthProvider
+@inject IEventService EventService
+@inject IBookingService BookingService
 
 @code {
     private bool BookFriend = false;
@@ -324,7 +326,8 @@
 
     private async Task LoadEventAndBookings()
     {
-        eventData = await Http.GetFromJsonAsync<Event>($"api/Events/{Id}");
+        // eventData = await Http.GetFromJsonAsync<Event>($"api/Events/{Id}");
+        eventData = await EventService.GetEventByIdAsync(Id);
 
         EventDtoData = new EventDto
             {
@@ -339,7 +342,8 @@
                 AllowFriendBooking = eventData?.AllowFriendBooking ?? false,
             };
 
-        var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+        // var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+        var allBookings = await BookingService.GetBookingsAsync();
         Bookings = allBookings?.Where(b => b.EventId == Id).ToList() ?? new();
 
         SpotsRemaining = EventDtoData.MaxSlots - Bookings

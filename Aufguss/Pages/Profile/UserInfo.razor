@@ -170,6 +170,7 @@ else
 @inject SweetAlertService Swal
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JSRuntime
+@inject IUserService UserService
 
 @code {
     private List<UserWithRolesDto>? Users;
@@ -191,7 +192,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
+        // Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
+        Users = await UserService.GetUsersAsync();
+
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var loggedInUser = authState.User;
         var userIdString = loggedInUser.FindFirst("sub")?.Value;
@@ -209,16 +212,16 @@ else
         await LoadInvites();
 
 
-        var allEvents = await Http.GetFromJsonAsync<List<Event>>("api/Events");
-        bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
+        // var allEvents = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        // bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
 
-        events = (from b in bookings
-                  join e in allEvents on b.EventId equals e.Id
-                  where b.Email == CurrentUser.Email &&
-                       !b.Unbooked &&
-                       !b.Reserve &&
-                       e.Start > DateTime.Now
-                  select e).ToList();
+        // events = (from b in bookings
+        //           join e in allEvents on b.EventId equals e.Id
+        //           where b.Email == CurrentUser.Email &&
+        //                !b.Unbooked &&
+        //                !b.Reserve &&
+        //                e.Start > DateTime.Now
+        //           select e).ToList();
     }
     private async Task SaveUser()
     {

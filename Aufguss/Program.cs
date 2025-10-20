@@ -1,4 +1,8 @@
 using System.Globalization;
+using Aufguss.Services;
+using Aufguss.Services.API;
+using Aufguss.Services.Demo;
+using Aufguss.Services.Interface;
 using CurrieTechnologies.Razor.SweetAlert2;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -24,6 +28,31 @@ public class Program
 
         builder.Services.AddSweetAlert2();
 
+        bool useDemo = builder.Configuration.GetValue<bool>("UseDemoData");
+
+        // Register services based on mode
+        if (useDemo)
+        {
+            builder.Services.AddScoped<AuthenticationStateProvider, DemoAuthenticationStateProvider>();
+            builder.Services.AddScoped<IEntryService, DemoEntryService>();
+            builder.Services.AddScoped<IFaqService, DemoFaqService>();
+            builder.Services.AddScoped<IEventService, DemoEventService>();
+            builder.Services.AddScoped<IBookingService, DemoBookingService>();
+            builder.Services.AddScoped<IUserService, DemoUserService>();
+            // Add more demo services here
+        }
+        else
+        {
+            builder.Services.AddAuthorizationCore();  // Required!
+            builder.Services.AddScoped<AuthenticationStateProvider, Services.CustomAuthStateProvider>();
+            builder.Services.AddScoped<IEntryService, ApiEntryService>();
+            builder.Services.AddScoped<IFaqService, ApiFaqService>();
+            builder.Services.AddScoped<IEventService, ApiEventService>();
+            builder.Services.AddScoped<IBookingService, ApiBookingService>();
+            builder.Services.AddScoped<IUserService, ApiUserService>();
+            // Add more real services here
+        }
+
 
         // 1. Default HttpClient (unauthenticated)
         //builder.Services.AddHttpClient("UnauthenticatedClient", client =>
@@ -32,13 +61,13 @@ public class Program
         //});
 
         // 2. Authenticated HttpClient (adds JWT)
-        builder.Services.AddScoped<AuthorizationMessageHandler>();
+        builder.Services.AddScoped<Services.AuthorizationMessageHandler>();
 
         builder.Services.AddHttpClient("AuthenticatedClient", client =>
         {
             //client.BaseAddress = new Uri("https://localhost:7162");
             client.BaseAddress = new Uri("https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net");
-        }).AddHttpMessageHandler<AuthorizationMessageHandler>();
+        }).AddHttpMessageHandler<Services.AuthorizationMessageHandler>();
 
 
         //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7162") });
@@ -60,8 +89,8 @@ public class Program
 
 
 
-        builder.Services.AddAuthorizationCore();  // Required!
-        builder.Services.AddScoped<AuthenticationStateProvider, Services.CustomAuthStateProvider>();
+        //builder.Services.AddAuthorizationCore();  // Required!
+        //builder.Services.AddScoped<AuthenticationStateProvider, Services.CustomAuthStateProvider>();
 
 
         builder.Services.AddOidcAuthentication(options =>

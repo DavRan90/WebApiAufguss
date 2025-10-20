@@ -1,5 +1,7 @@
 ﻿@page "/"
 @using Aufguss.Models
+@using Aufguss.Services
+@using Aufguss.Services.Interface
 
 <PageTitle>Startsida</PageTitle>
 
@@ -74,6 +76,7 @@ else
 
 @inject HttpClient Http
 @inject NavigationManager NavManager
+@inject IEntryService EntryService
 
 @code {
     private List<Entry>? entries;
@@ -89,7 +92,8 @@ else
     {
         siteSettings = await Http.GetFromJsonAsync<SiteSettings>("api/settings/");
 
-        var allEntries = await Http.GetFromJsonAsync<List<Entry>>("api/Entries");
+        // var allEntries = await Http.GetFromJsonAsync<List<Entry>>("api/Entries");
+        var allEntries = await EntryService.GetEntriesAsync();
 
         if (allEntries != null)
         {
