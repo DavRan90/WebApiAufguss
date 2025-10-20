@@ -33,23 +33,27 @@ public class Program
         // Register services based on mode
         if (useDemo)
         {
+            builder.Services.AddScoped<IAuthService, DemoAuthenticationStateProvider>();
             builder.Services.AddScoped<AuthenticationStateProvider, DemoAuthenticationStateProvider>();
             builder.Services.AddScoped<IEntryService, DemoEntryService>();
             builder.Services.AddScoped<IFaqService, DemoFaqService>();
             builder.Services.AddScoped<IEventService, DemoEventService>();
             builder.Services.AddScoped<IBookingService, DemoBookingService>();
             builder.Services.AddScoped<IUserService, DemoUserService>();
+            builder.Services.AddScoped<IInviteService, DemoInviteService>();
             // Add more demo services here
         }
         else
         {
             builder.Services.AddAuthorizationCore();  // Required!
-            builder.Services.AddScoped<AuthenticationStateProvider, Services.CustomAuthStateProvider>();
+            builder.Services.AddScoped<IAuthService, CustomAuthStateProvider>();
+            builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
             builder.Services.AddScoped<IEntryService, ApiEntryService>();
             builder.Services.AddScoped<IFaqService, ApiFaqService>();
             builder.Services.AddScoped<IEventService, ApiEventService>();
             builder.Services.AddScoped<IBookingService, ApiBookingService>();
             builder.Services.AddScoped<IUserService, ApiUserService>();
+            builder.Services.AddScoped<IInviteService, ApiInviteService>();
             // Add more real services here
         }
 

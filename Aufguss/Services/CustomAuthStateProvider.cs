@@ -1,12 +1,13 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
+using Aufguss.Services.Interface;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 
 namespace Aufguss.Services
 {
-    public class CustomAuthStateProvider : AuthenticationStateProvider
+    public class CustomAuthStateProvider : AuthenticationStateProvider, IAuthService
     {
         private readonly IJSRuntime _js;
         private const string TokenKey = "authToken";

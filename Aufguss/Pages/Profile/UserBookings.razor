@@ -35,7 +35,7 @@ else
                     @foreach (var book in extendedBookings)
                     {
                         <tr style="cursor: pointer;"
-                            @onclick="@(() => NavManager.NavigateTo($"/Bookings/Book/{book.EventId}"))">
+                        @onclick="@(() => NavManager.NavigateTo($"/Bookings/Book/{book.EventId}"))">
                             <td>
                                 @if (book.Status == "Inbokad")
                                 {
@@ -71,9 +71,9 @@ else
                             <td class="text-nowrap">
                                 <div class="d-flex flex-column flex-md-row">
                                     <button class="btn btn-sm btn-outline-danger"
-                                            title="Ta bort"
+                                    title="Ta bort"
                                     @onclick:stopPropagation
-                                            @onclick="async () => await ShowAlert(book)">
+                                    @onclick="async () => await ShowAlert(book)">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -103,10 +103,10 @@ else
         </div>
         <CalendarContainer TasksList="@ModelTasks" DisplayedView="ShowWeek ? DisplayedView.Weekly : DisplayedView.Monthly" FirstDate="@FirstDate">
             <MonthlyView SaturdayColor="White"
-                         SundayColor="White" />
+            SundayColor="White" />
 
             <WeekView SaturdayColor="White"
-                      SundayColor="White" />
+            SundayColor="White" />
         </CalendarContainer>
     }
 }
@@ -116,6 +116,10 @@ else
 @inject SweetAlertService Swal
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JSRuntime
+@inject IBookingService BookingService
+@inject IEventService EventService
+@inject IUserService UserService
+@inject IAuthService AuthService
 
 @code {
     private BlazorCalendar.Models.Tasks[]? ModelTasks;
@@ -170,15 +174,19 @@ else
     protected override async Task OnInitializedAsync()
     {
         extendedBookings = new();
-        Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        // Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
+        Users = await UserService.GetUsersAsync();
+        // var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authState = await AuthService.GetAuthenticationStateAsync();
         var loggedInUser = authState.User;
         var userIdString = loggedInUser.FindFirst("sub")?.Value;
 
         CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
 
-        var allEvents = await Http.GetFromJsonAsync<List<Event>>("api/Events");
-        bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
+        // var allEvents = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        var allEvents = await EventService.GetEventsAsync();
+        // bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
+        bookings = await BookingService.GetBookingsAsync();
         events = (from b in bookings
                   join e in allEvents on b.EventId equals e.Id
                   where b.UserId == userIdString &&

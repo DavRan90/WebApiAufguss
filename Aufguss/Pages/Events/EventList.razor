@@ -42,7 +42,7 @@ else
                 @foreach (var evt in evts)
                 {
                     <tr style="cursor: pointer;"
-                        @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
+                    @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
 
                         @* <td>@evt.Id</td> *@
                         <td>
@@ -74,11 +74,11 @@ else
                             <div class="progress position-relative" style="height: 20px;">
                                 <!-- Colored fill bar -->
                                 <div class="progress-bar @progressColor"
-                                     role="progressbar"
-                                     style="width: @percent%;"
-                                     aria-valuenow="@percent"
-                                     aria-valuemin="0"
-                                     aria-valuemax="100">
+                                role="progressbar"
+                                style="width: @percent%;"
+                                aria-valuenow="@percent"
+                                aria-valuemin="0"
+                                aria-valuemax="100">
                                 </div>
 
                                 <!-- Centered text on top of the bar -->
@@ -101,15 +101,15 @@ else
                         <td class="text-nowrap">
                             <div class="d-flex flex-column flex-md-row">
                                 <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
-                                        title="Ändra"
+                                title="Ändra"
                                 @onclick:stopPropagation
-                                        @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
+                                @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button class="btn btn-sm btn-outline-danger"
-                                        title="Ta bort"
+                                title="Ta bort"
                                 @onclick:stopPropagation
-                                        @onclick="async () => await ShowAlert(evt.Id)">
+                                @onclick="async () => await ShowAlert(evt.Id)">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>
@@ -129,11 +129,11 @@ else
         </div>
         <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate">
             <MonthlyView TaskClick="OnTaskClick"
-                         Draggable DragStart="OnDragStart"
-                         DropTask="OnDragDrop"
-                         DayClick="OnDayClick"
-                         SaturdayColor="White"
-                         SundayColor="White" />
+            Draggable DragStart="OnDragStart"
+            DropTask="OnDragDrop"
+            DayClick="OnDayClick"
+            SaturdayColor="White"
+            SundayColor="White" />
         </CalendarContainer>
 
         <p class="btn btn-sm bg-primary-subtle mt-2">Herrar</p>
@@ -149,6 +149,9 @@ else
 @inject NavigationManager NavManager
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
+@inject IEventService EventService
+@inject IBookingService BookingService
+@inject IUserService UserService
 
 @code {
 
@@ -173,9 +176,10 @@ else
 
     private async Task LoadEventsAsync()
     {
-        evts = await Http.GetFromJsonAsync<List<Event>>("api/Events/admin");
-        bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
-
+        // evts = await Http.GetFromJsonAsync<List<Event>>("api/Events/admin");
+        // bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
+        evts = await EventService.GetEventsAsync();
+        bookings = await BookingService.GetBookingsAsync();
 
         ModelTasks = evts.Select(evt =>
     {

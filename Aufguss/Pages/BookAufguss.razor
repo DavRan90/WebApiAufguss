@@ -121,6 +121,8 @@ else
 @inject NavigationManager NavManager
 @inject IEventService EventService
 @inject IBookingService BookingService
+@inject IAuthService AuthService
+@inject IUserService UserService
 
 @code {
     private BlazorCalendar.Models.Tasks[]? ModelTasks;
@@ -176,8 +178,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        // Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
+        Users = await UserService.GetUsersAsync();
+        var authState = await AuthService.GetAuthenticationStateAsync();
         var loggedInUser = authState.User;
         var userIdString = loggedInUser.FindFirst("sub")?.Value;
         var userGender = loggedInUser.FindFirst("gender")?.Value;
@@ -206,7 +209,7 @@ else
 
     private async Task LoadEventsAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authState = await AuthService.GetAuthenticationStateAsync();
         var loggedInUser = authState.User;
         var userIdString = loggedInUser.FindFirst("sub")?.Value;
         var userGender = loggedInUser.FindFirst("gender")?.Value;

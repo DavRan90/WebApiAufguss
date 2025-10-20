@@ -29,17 +29,17 @@
                     <div class="row gap-2 gap-md-1">
                         <div class="col-12 col-md-6 d-flex align-items-center">
                             <input type="radio"
-                                   checked="@(EventDtoData.Gender == Gender.Male)"
-                                   name="Gender"
-                                   @onchange="@(() => EventDtoData.Gender = Gender.Male)" />
+                            checked="@(EventDtoData.Gender == Gender.Male)"
+                            name="Gender"
+                            @onchange="@(() => EventDtoData.Gender = Gender.Male)" />
                             <label class="btn btn-primary ms-2">Herrar</label>
                         </div>
 
                         <div class="col-12 col-md-6 d-flex align-items-center">
                             <input type="radio"
-                                   checked="@(EventDtoData.Gender == Gender.Female)"
-                                   name="Gender"
-                                   @onchange="@(() => EventDtoData.Gender = Gender.Female)" />
+                            checked="@(EventDtoData.Gender == Gender.Female)"
+                            name="Gender"
+                            @onchange="@(() => EventDtoData.Gender = Gender.Female)" />
                             <label class="btn btn-danger ms-2">Damer</label>
                         </div>
                     </div>
@@ -124,7 +124,7 @@
     <table class="table mb-5">
         <thead>
             <tr>
-            
+
                 @* <th>ID</th> *@
                 <th>Namn</th>
                 <th>Mail</th>
@@ -140,7 +140,7 @@
             {
                 @* <tr> *@
                 <tr style="cursor: pointer;"
-                    @onclick="@(() => NavManager.NavigateTo($"/Booking/{booking.Id}"))">
+                @onclick="@(() => NavManager.NavigateTo($"/Booking/{booking.Id}"))">
                     @* <td>@booking.Id</td> *@
                     <td>@booking.Name</td>
                     <!-- Email -->
@@ -218,6 +218,9 @@
 @inject SweetAlertService Swal
 @inject HttpClient Http
 @inject NavigationManager NavManager
+@inject IEventService EventService
+@inject IBookingService BookingService
+@inject IUserService UserService
 
 @code {
     [Parameter]
@@ -266,7 +269,8 @@
     {
         try
         {
-            eventData = await Http.GetFromJsonAsync<Event>("api/Events/" + Id);
+            // eventData = await Http.GetFromJsonAsync<Event>("api/Events/" + Id);
+            eventData = await EventService.GetEventByIdAsync(Id);
             EventDtoData.Title = eventData?.Title ?? "";
             EventDtoData.Description = eventData?.Description ?? "";
             EventDtoData.Start = eventData?.Start ?? DateTime.Now;
@@ -278,7 +282,7 @@
             EventDtoData.Hidden = eventData?.Hidden ?? false;
             EventDtoData.AllowFriendBooking = eventData?.AllowFriendBooking ?? false;
 
-            var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+            var allBookings = await BookingService.GetBookingsAsync();
             Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
         }
         catch (Exception ex)

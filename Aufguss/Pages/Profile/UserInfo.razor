@@ -171,6 +171,7 @@ else
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JSRuntime
 @inject IUserService UserService
+@inject IInviteService InviteService
 
 @code {
     private List<UserWithRolesDto>? Users;
@@ -292,7 +293,8 @@ else
         // Fetch Invitees
         try
         {
-            var invitees = await Http.GetFromJsonAsync<List<InviteDto>>(urlInvitee);
+            // var invitees = await Http.GetFromJsonAsync<List<InviteDto>>(urlInvitee);
+            var invitees = await InviteService.GetInvitesAsync(urlInvitee);
             Invitees = invitees?.Where(i => i.Invited).ToList() ?? new();
         }
         catch (Exception ex)
@@ -304,7 +306,8 @@ else
         // Fetch Inviters
         try
         {
-            var inviters = await Http.GetFromJsonAsync<List<InviteDto>>(urlInviter);
+            // var inviters = await Http.GetFromJsonAsync<List<InviteDto>>(urlInviter);
+            var inviters = await InviteService.GetInvitesAsync(urlInviter);
             Inviters = inviters?.Where(i => i.Invited).ToList() ?? new();
         }
         catch (Exception ex)

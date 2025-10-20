@@ -13,6 +13,7 @@ namespace Aufguss.Services.Demo
                 Start = DateTime.Today.AddDays(1).AddHours(19).AddMinutes(30),
                 End = DateTime.Today.AddDays(1).AddHours(20).AddMinutes(15),
                 MaxSlots = 5,
+                Hidden = false,
                 Gender = Gender.Male,
                 Description = $"Aufguss pass 1"
             },
@@ -22,8 +23,19 @@ namespace Aufguss.Services.Demo
                 Start = DateTime.Today.AddDays(2).AddHours(19).AddMinutes(30),
                 End = DateTime.Today.AddDays(2).AddHours(20).AddMinutes(15),
                 MaxSlots = 5,
+                Hidden = false,
                 Gender = Gender.Female,
                 Description = $"Aufguss pass 2"
+            },
+            new Event {
+                Title = "Aufguss herrar",
+                Id = 3,
+                Start = DateTime.Today.AddDays(3).AddHours(19).AddMinutes(30),
+                End = DateTime.Today.AddDays(3).AddHours(20).AddMinutes(15),
+                MaxSlots = 5,
+                Hidden = false,
+                Gender = Gender.Male,
+                Description = $"Aufguss pass 3"
             }
         // Add more mock data as needed
     };
@@ -35,7 +47,7 @@ namespace Aufguss.Services.Demo
 
         public Task<Event?> GetEventByIdAsync(int id)
         {
-            var ev = demoEvents.FirstOrDefault(e => e.Id == id);
+            var ev = demoEvents.SingleOrDefault(e => e.Id == id);
             return Task.FromResult(ev);
         }
     }
