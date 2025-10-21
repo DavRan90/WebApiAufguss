@@ -4,5 +4,6 @@
     {
         Task<List<Event>> GetEventsAsync();
         Task<Event?> GetEventByIdAsync(int id);
+        Task<List<Event>> AddEventAsync(EventDto EventDtoData);
     }
 }

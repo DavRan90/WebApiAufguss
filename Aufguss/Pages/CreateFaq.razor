@@ -180,41 +180,44 @@ else
 
     private async Task DeleteFaq(int id)
     {
-        await Http.DeleteAsync("api/Faqs/" + id);
-        faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+        // await Http.DeleteAsync("api/Faqs/" + id);
+        // faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+        await FaqService.RemoveFaqAsync(id);
+        faqs = await FaqService.GetFaqsAsync();
     }
 
     private async Task SaveFaq()
     {
-        var response = await Http.PostAsJsonAsync("api/Faqs", FaqDtoData);
+        var createdFaq = await FaqService.AddFaqAsync(FaqDtoData);
+        faqs.Add(createdFaq);
+        // var response = await Http.PostAsJsonAsync("api/Faqs", FaqDtoData);
 
-        if (response.IsSuccessStatusCode)
-        {
-            faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
-            FaqDtoData = new();
-            navManager.NavigateTo("/Info");
-        }
+        // if (response.IsSuccessStatusCode)
+        // {
+        //     faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+        //     FaqDtoData = new();
+        //     navManager.NavigateTo("/Info");
+        // }
 
-        else
-        {
-            var strResponse = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Json Response: \n" + strResponse);
+        // else
+        // {
+        //     var strResponse = await response.Content.ReadAsStringAsync();
+        //     Console.WriteLine("Json Response: \n" + strResponse);
 
-            try
-            {
-                var jsonResponse = JsonNode.Parse(strResponse);
-                Errors = jsonResponse?["errors"] ?? new JsonObject();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.Message);
-            }
-        }
+        //     try
+        //     {
+        //         var jsonResponse = JsonNode.Parse(strResponse);
+        //         Errors = jsonResponse?["errors"] ?? new JsonObject();
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Console.WriteLine("Exception: " + ex.Message);
+        //     }
+        // }
     }
     private async Task EditAlert(int id)
     {
-        // var bookings = Bookings.Count();
-        var getFaq = await Http.GetFromJsonAsync<Faq>("api/Faqs/" + id);
+        var getFaq = await FaqService.GetFaqAsync(id);
         string json = await JS.InvokeAsync<string>("showFaqAlert", getFaq);
 
         if (!string.IsNullOrEmpty(json))
@@ -225,16 +228,30 @@ else
                     {
                         PropertyNameCaseInsensitive = true
                     });
-                var response = await Http.PutAsJsonAsync($"api/Faqs/{id}", faq);
-                if (response.IsSuccessStatusCode)
+
+                if (faq is null)
                 {
+                    await JS.InvokeVoidAsync("Swal.fire", "Fel", "Ogiltiga FAQ-data.", "error");
+                    return;
+                }
+
+                try
+                {
+                    await FaqService.EditFaqAsync(id, faq);
+
                     await JS.InvokeVoidAsync("Swal.fire", "Lyckades", "FAQ ändrad!", "success");
-                    faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
+                    faqs = await FaqService.GetFaqsAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error editing FAQ: {ex.Message}");
+                    await JS.InvokeVoidAsync("Swal.fire", "Fel", "Kunde inte spara FAQ.", "error");
                 }
             }
             catch (JsonException ex)
             {
-                Console.WriteLine($"Error deserializing booking: {ex.Message}");
+                Console.WriteLine($"Error deserializing FAQ: {ex.Message}");
+                await JS.InvokeVoidAsync("Swal.fire", "Fel", "Kunde inte läsa FAQ-data.", "error");
             }
         }
     }

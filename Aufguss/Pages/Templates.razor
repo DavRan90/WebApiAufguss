@@ -44,7 +44,7 @@
                 @foreach (var evt in EventTemplates)
                 {
                     <tr style="cursor: pointer;"
-                        @onclick="@(() => NavManager.NavigateTo($"/Templates/Edit/{evt.Id}"))">
+                    @onclick="@(() => NavManager.NavigateTo($"/Templates/Edit/{evt.Id}"))">
 
                         @* <td>@evt.Id</td> *@
                         <td>
@@ -74,17 +74,17 @@
                         <td class="text-nowrap">
                             <div class="d-flex flex-column flex-md-row">
                                 <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
-                                        title="Ändra"
+                                title="Ändra"
                                 @onclick:stopPropagation
-                                        @onclick="@(() => NavManager.NavigateTo($"/Templates/Edit/{evt.Id}"))">
+                                @onclick="@(() => NavManager.NavigateTo($"/Templates/Edit/{evt.Id}"))">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button class="btn btn-sm btn-outline-danger"
-                                            title="Ta bort"
-                                    @onclick:stopPropagation
-                                            @onclick="async () => await ShowAlert(evt.Id)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                title="Ta bort"
+                                @onclick:stopPropagation
+                                @onclick="async () => await ShowAlert(evt.Id)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -97,6 +97,7 @@
 @inject HttpClient Http
 @inject NavigationManager NavManager
 @inject SweetAlertService Swal
+@inject ITemplateService TemplateService
 
 @code {
     private List<EventTemplate>? EventTemplates;
@@ -149,7 +150,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        EventTemplates = await Http.GetFromJsonAsync<List<EventTemplate>>("api/EventTemplates");
+        // EventTemplates = await Http.GetFromJsonAsync<List<EventTemplate>>("api/EventTemplates");
+        EventTemplates = await TemplateService.GetTemplatesAsync();
     }
 
 

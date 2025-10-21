@@ -45,6 +45,27 @@ namespace Aufguss.Services.Demo
             return Task.FromResult(demoEvents);
         }
 
+        public Task<List<Event>> AddEventAsync(EventDto eventDto)
+        {
+            var newEvent = new Event
+            {
+                Id = demoEvents.Any() ? demoEvents.Max(f => f.Id) + 1 : 1,
+                Title = eventDto.Title,
+                Description = eventDto.Description,
+                Start = eventDto.Start,
+                End = eventDto.End,
+                MaxSlots = eventDto.MaxSlots,
+                Hidden = eventDto.Hidden,
+                Gender = eventDto.Gender,
+                Recurring = eventDto.Recurring,
+                IncludeSurvey = eventDto.IncludeSurvey,
+                AllowFriendBooking = eventDto.AllowFriendBooking
+            };
+
+            demoEvents.Add(newEvent);
+            return Task.FromResult(demoEvents.OrderByDescending(f => f.Id).ToList());
+        }
+
         public Task<Event?> GetEventByIdAsync(int id)
         {
             var ev = demoEvents.SingleOrDefault(e => e.Id == id);
