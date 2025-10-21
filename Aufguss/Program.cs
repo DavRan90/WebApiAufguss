@@ -41,6 +41,7 @@ public class Program
             builder.Services.AddScoped<IBookingService, DemoBookingService>();
             builder.Services.AddScoped<IUserService, DemoUserService>();
             builder.Services.AddScoped<IInviteService, DemoInviteService>();
+            builder.Services.AddScoped<ISettingsService, DemoSettingsService>();
             // Add more demo services here
         }
         else
@@ -54,6 +55,7 @@ public class Program
             builder.Services.AddScoped<IBookingService, ApiBookingService>();
             builder.Services.AddScoped<IUserService, ApiUserService>();
             builder.Services.AddScoped<IInviteService, ApiInviteService>();
+            builder.Services.AddScoped<ISettingsService, ApiSettingsService>();
             // Add more real services here
         }
 

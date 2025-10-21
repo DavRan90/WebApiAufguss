@@ -264,7 +264,8 @@ else
     private async Task OnTaskClick(ClickTaskParameter clickInfo)
     {
         var task = clickInfo.IDList;
-        var booking = await Http.GetFromJsonAsync<Event>($"api/Events/{task[0]}");
+        // var booking = await Http.GetFromJsonAsync<Event>($"api/Events/{task[0]}");
+        var booking = await EventService.GetEventByIdAsync(task[0]);
         if (booking.Start > DateTime.Now)
         {
             NavManager.NavigateTo($"/BokaAufguss/Book/{task[0]}");

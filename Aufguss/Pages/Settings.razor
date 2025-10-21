@@ -94,6 +94,7 @@
 @inject NavigationManager navManager
 @inject SweetAlertService Swal
 @inject IJSRuntime JSRuntime
+@inject ISettingsService SettingsService
 
 @code {
     public JsonNode Errors { get; set; } = new JsonObject();
@@ -115,7 +116,8 @@
     {
         fileLocation = new Uri(Http.BaseAddress, "api/upload/").ToString();
         ImageOptions = await Http.GetFromJsonAsync<List<string>>("api/upload/news");
-        SiteSettingsData = await Http.GetFromJsonAsync<SiteSettings>("api/settings/");
+        // SiteSettingsData = await Http.GetFromJsonAsync<SiteSettings>("api/settings/");
+        SiteSettingsData = await SettingsService.GetSettingsAsync();
     }
 
     private async Task SaveSettings()
