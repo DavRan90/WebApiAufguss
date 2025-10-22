@@ -125,7 +125,7 @@
         <thead>
             <tr>
 
-                @* <th>ID</th> *@
+                <th>ID</th>
                 <th>Namn</th>
                 <th>Mail</th>
                 <th>Tel</th>
@@ -141,6 +141,7 @@
                 @* <tr> *@
                 <tr style="cursor: pointer;"
                 @onclick="@(() => NavManager.NavigateTo($"/Booking/{booking.Id}"))">
+                    <td>@booking.UserId</td>
                     @* <td>@booking.Id</td> *@
                     <td>@booking.Name</td>
                     <!-- Email -->
@@ -293,42 +294,17 @@
 
     private async Task SaveEvent()
     {
-        var response = await Http.PutAsJsonAsync("api/Events/" + Id, EventDtoData);
-
-        if (response.IsSuccessStatusCode)
+        try
         {
+            await EventService.EditEventAsync(Id, EventDtoData);
+
+            await JS.InvokeVoidAsync("Swal.fire", "Lyckades", "Pass ändrat!", "success");
             NavManager.NavigateTo("/Events");
         }
-
-        else
+        catch (Exception ex)
         {
-            // await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Bokningen går inte att dölja eftersom det finns gäster bokade", "error");
-            var strResponse = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Json Response: \n" + strResponse);
-
-            try
-            {
-                var jsonResponse = JsonNode.Parse(strResponse);
-
-                // Try to read a general message first
-                var message = jsonResponse?["message"]?.ToString();
-
-                // If no general message, try to read validation errors
-                Errors = jsonResponse?["errors"] ?? new JsonObject();
-
-                if (!string.IsNullOrWhiteSpace(message))
-                {
-                    await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", message, "error");
-                }
-                else
-                {
-                    await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Ett fel inträffade. Kontrollera formuläret.", "error");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.Message);
-            }
+            Console.WriteLine($"Error editing FAQ: {ex.Message}");
+            await JS.InvokeVoidAsync("Swal.fire", "Fel", "Kunde inte spara ändring.", "error");
         }
     }
 
@@ -337,50 +313,41 @@
         var result = await Swal.FireAsync(new SweetAlertOptions
             {
                 Title = "Bekräfta avbokning",
-                Text = $"Ta bort bokning med ID {id}?",
+                Text = $"Avboka bokning med ID {id}?",
                 ShowCancelButton = true,
-                ConfirmButtonText = "Ja, ta bort",
-                CancelButtonText = "Nej, ta inte bort",
+                ConfirmButtonText = "Ja, avboka",
+                CancelButtonText = "Nej, avboka inte",
             });
         if (result.IsConfirmed)
         {
-            var response = await Http.PutAsync("api/Bookings/Unbook/" + id, null);
-
-            if (response.IsSuccessStatusCode)
+            try
             {
+                await BookingService.UnbookAsync(id);
                 var res = await Swal.FireAsync(new SweetAlertOptions
                     {
                         Title = "Avbokad",
                         Text = $"Bokning med id {id} är avbokad",
                         Icon = SweetAlertIcon.Warning,
                     });
-                var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+                var allBookings = await BookingService.GetBookingsAsync();
                 Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
             }
-
-            else
+            catch (Exception ex)
             {
-                var strResponse = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("Json Response: \n" + strResponse);
-
-                try
-                {
-                    var jsonResponse = JsonNode.Parse(strResponse);
-                    Errors = jsonResponse?["errors"] ?? new JsonObject();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Exception: " + ex.Message);
-                }
+                Console.WriteLine($"Error unbooking: {ex.Message}");
+                await JS.InvokeVoidAsync("Swal.fire", "Fel", "Kunde inte avboka.", "error");
             }
         }
-        
+
     }
 
     private async Task DeleteBooking(int id)
     {
-        await Http.DeleteAsync("api/Bookings/" + id);
-        var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+        // await Http.DeleteAsync("api/Bookings/" + id);
+        // var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+        // Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
+        await BookingService.RemoveBookingAsync(id);
+        var allBookings = await BookingService.GetBookingsAsync();
         Bookings = allBookings?.Where(b => b.EventId == Id).ToList();
     }
 

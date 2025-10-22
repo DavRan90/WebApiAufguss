@@ -280,9 +280,11 @@ else
     private async Task DeleteBooking(int id)
     {
         var bookingToRemove = bookings.Where(b => b.EventId == id && b.Email == CurrentUser.Email && b.Unbooked == false).SingleOrDefault();
-        await Http.DeleteAsync("api/Bookings/" + bookingToRemove.Id);
-        bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
-        await JSRuntime.InvokeVoidAsync("Swal.fire", "Bokning borttagen", "Du är nu avbokad från passet", "success");
+        // await Http.DeleteAsync("api/Bookings/" + bookingToRemove.Id);
+        // bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
+        await BookingService.UnbookAsync(bookingToRemove.Id);
+        bookings = await BookingService.GetBookingsAsync();
+        await JSRuntime.InvokeVoidAsync("Swal.fire", "Avbokad", "Du är nu avbokad från passet", "success");
         await OnInitializedAsync();
     }
 

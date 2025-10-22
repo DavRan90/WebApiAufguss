@@ -5,7 +5,7 @@ namespace Aufguss.Services.Demo
 {
     public class DemoEventService : IEventService
     {
-        private readonly List<Event> demoEvents = new()
+        private readonly List<Event> _events = new()
     {
         new Event {
                 Title = "Aufguss herrar",
@@ -15,7 +15,8 @@ namespace Aufguss.Services.Demo
                 MaxSlots = 5,
                 Hidden = false,
                 Gender = Gender.Male,
-                Description = $"Aufguss pass 1"
+                Description = $"Aufguss pass 1",
+                AllowFriendBooking = true
             },
             new Event {
                 Title = "Aufguss damer",
@@ -42,14 +43,14 @@ namespace Aufguss.Services.Demo
 
         public Task<List<Event>> GetEventsAsync()
         {
-            return Task.FromResult(demoEvents);
+            return Task.FromResult(_events);
         }
 
         public Task<List<Event>> AddEventAsync(EventDto eventDto)
         {
             var newEvent = new Event
             {
-                Id = demoEvents.Any() ? demoEvents.Max(f => f.Id) + 1 : 1,
+                Id = _events.Any() ? _events.Max(e => e.Id) + 1 : 1,
                 Title = eventDto.Title,
                 Description = eventDto.Description,
                 Start = eventDto.Start,
@@ -62,13 +63,44 @@ namespace Aufguss.Services.Demo
                 AllowFriendBooking = eventDto.AllowFriendBooking
             };
 
-            demoEvents.Add(newEvent);
-            return Task.FromResult(demoEvents.OrderByDescending(f => f.Id).ToList());
+            _events.Add(newEvent);
+            return Task.FromResult(_events.OrderByDescending(f => f.Id).ToList());
+        }
+
+        public Task EditEventAsync(int id, EventDto eventDto)
+        {
+            var existing = _events.FirstOrDefault(e => e.Id == id);
+            if (existing == null)
+                throw new Exception($"FAQ med ID {id} hittades inte.");
+
+            existing.Title = eventDto.Title;
+            existing.Description = eventDto.Description;
+            existing.Start = eventDto.Start;
+            existing.End = eventDto.End;
+            existing.MaxSlots = eventDto.MaxSlots;
+            existing.Hidden = eventDto.Hidden;
+            existing.Gender = eventDto.Gender;
+            existing.Recurring = eventDto.Recurring;
+            existing.IncludeSurvey = eventDto.IncludeSurvey;
+            existing.AllowFriendBooking = eventDto.AllowFriendBooking;
+
+            return Task.CompletedTask;
+        }
+
+        public Task RemoveEventAsync(int id)
+        {
+            var evt = _events.SingleOrDefault(e => e.Id == id);
+            if (evt != null)
+            {
+                _events.Remove(evt);
+            }
+
+            return Task.CompletedTask;
         }
 
         public Task<Event?> GetEventByIdAsync(int id)
         {
-            var ev = demoEvents.SingleOrDefault(e => e.Id == id);
+            var ev = _events.SingleOrDefault(e => e.Id == id);
             return Task.FromResult(ev);
         }
     }

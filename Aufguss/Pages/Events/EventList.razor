@@ -371,8 +371,10 @@ else
 
     private async Task DeleteEvent(int id)
     {
-        await Http.DeleteAsync("api/Events/" + id);
-        evts = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        // await Http.DeleteAsync("api/Events/" + id);
+        // evts = await Http.GetFromJsonAsync<List<Event>>("api/Events");
+        await EventService.RemoveEventAsync(id);
+        evts = await EventService.GetEventsAsync();
         await LoadEventsAsync();
     }
 
@@ -394,8 +396,10 @@ else
 
     private async Task SaveEvent(int id)
     {
-        var evt = evts.Where(e => e.Id == id).SingleOrDefault();
-        if (evt.Hidden == false && bookings.Where(b => b.EventId == evt.Id).ToList().Count < 1)
+        var evt = evts.SingleOrDefault(e => e.Id == id);
+        if (evt == null) return;
+
+        if (!evt.Hidden && bookings.Count(b => b.EventId == evt.Id) < 1)
         {
             evt.Hidden = true;
         }
@@ -404,29 +408,48 @@ else
             evt.Hidden = false;
         }
 
-        var response = await Http.PutAsJsonAsync("api/Events/" + id, evt);
-
-
-        if (response.IsSuccessStatusCode)
-        {
-            await LoadEventsAsync();
-        }
-
-        else
-        {
-            var strResponse = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Json Response: \n" + strResponse);
-
-            try
+        // 🟡 Create the DTO from the event
+        var eventDto = new EventDto
             {
-                var jsonResponse = JsonNode.Parse(strResponse);
-                Errors = jsonResponse?["errors"] ?? new JsonObject();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.Message);
-            }
-        }
+                Title = evt.Title,
+                Description = evt.Description,
+                Start = evt.Start,
+                End = evt.End,
+                AllDay = evt.AllDay,
+                MaxSlots = evt.MaxSlots,
+                Recurring = evt.Recurring,
+                Gender = evt.Gender,
+                AllowFriendBooking = evt.AllowFriendBooking,
+                Hidden = evt.Hidden
+            // Include any other matching properties
+            };
+
+        // 🟢 Send the DTO instead of the full Event model
+        await EventService.EditEventAsync(id, eventDto);
+
+        // var response = await Http.PutAsJsonAsync("api/Events/" + id, evt);
+
+
+        // if (response.IsSuccessStatusCode)
+        // {
+        //     await LoadEventsAsync();
+        // }
+
+        // else
+        // {
+        //     var strResponse = await response.Content.ReadAsStringAsync();
+        //     Console.WriteLine("Json Response: \n" + strResponse);
+
+        //     try
+        //     {
+        //         var jsonResponse = JsonNode.Parse(strResponse);
+        //         Errors = jsonResponse?["errors"] ?? new JsonObject();
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Console.WriteLine("Exception: " + ex.Message);
+        //     }
+        // }
     }
     public int SpotsRemaining(int evtId)
     {

@@ -317,8 +317,9 @@
         eventData = await EventService.GetEventByIdAsync(Id);
         if (eventData != null)
         {
-            await LoadEventAndBookings();
             await LoadAuthAndCurrentUser();
+            await LoadEventAndBookings();
+            
         }
         // try
         // {
@@ -346,7 +347,7 @@
                 MaxSlots = eventData?.MaxSlots ?? 0,
                 Recurring = eventData?.Recurring ?? false,
                 Gender = eventData?.Gender ?? Gender.Male,
-                AllowFriendBooking = eventData?.AllowFriendBooking ?? false,
+                AllowFriendBooking = eventData?.AllowFriendBooking ?? true,
             };
 
         // var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
@@ -396,78 +397,104 @@
     private async Task SaveBooking()
     {
         BookingDtoData.EventId = Id;
-        var response = await Http.PostAsJsonAsync("api/Bookings", BookingDtoData);
         if(BookFriend)
         {
             FriendBookingDtoData.EventId = Id;
-            var friendBookResponse = await Http.PostAsJsonAsync("api/Bookings", FriendBookingDtoData);
-            if (response.IsSuccessStatusCode && friendBookResponse.IsSuccessStatusCode)
+            try
             {
+                await BookingService.AddBookingAsync(BookingDtoData);
+                await BookingService.AddBookingAsync(FriendBookingDtoData);
                 await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", $"Du och {FriendBookingDtoData.Name} är nu inbokade till passet!", "success");
                 navManager.NavigateTo("/Dina_bokningar");
             }
-            else
-            {
-                await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Ett fel inträffade. Kontrollera bokningen.", "error");
-            }
-        }
+            
+            // var friendBookResponse = await Http.PostAsJsonAsync("api/Bookings", FriendBookingDtoData);
+            // if (response.IsSuccessStatusCode && friendBookResponse.IsSuccessStatusCode)
+            // {
+            
 
-        if (response.IsSuccessStatusCode)
+        catch(Exception ex)
         {
-            var strResponse = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Json Response: \n" + strResponse);
-
-            try
-            {
-                var jsonResponse = JsonNode.Parse(strResponse);
-
-                var message = jsonResponse?["message"]?.ToString() ?? "Din bokning har registrerats.";
-
-                await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", message, "success");
-
-                // Optional: Redirect or refresh booking list
-                // navManager.NavigateTo("/Dina_bokningar");
+                Console.WriteLine($"Error booking: {ex.Message}");
+                await JS.InvokeVoidAsync("Swal.fire", "Fel", "Kunde inte boka.", "error");
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine("JSON Parse Error: " + ex.Message);
-                await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", "Din bokning lyckades, men ett oväntat fel inträffade vid bearbetning av svaret.", "warning");
-            }
-
-            // await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", "Du är nu inbokad!", "success");
-            // navManager.NavigateTo("/Dina_bokningar");
+            // }
+            // else
+            // {
+            //     await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Ett fel inträffade. Kontrollera bokningen.", "error");
+            // }
         }
-
         else
         {
-            // await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Bokningen går inte att dölja eftersom det finns gäster bokade", "error");
-            var strResponse = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Json Response: \n" + strResponse);
-
             try
             {
-                var jsonResponse = JsonNode.Parse(strResponse);
-
-                // Try to read a general message first
-                var message = jsonResponse?["message"]?.ToString();
-
-                // If no general message, try to read validation errors
-                Errors = jsonResponse?["errors"] ?? new JsonObject();
-
-                if (!string.IsNullOrWhiteSpace(message))
-                {
-                    await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", message, "error");
-                }
-                else
-                {
-                    await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Ett fel inträffade. Kontrollera formuläret.", "error");
-                }
+                await BookingService.AddBookingAsync(BookingDtoData);
+                await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", $"Du är nu inbokad till passet!", "success");
+                navManager.NavigateTo("/Dina_bokningar");
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
-                Console.WriteLine("Exception: " + ex.Message);
+                Console.WriteLine($"Error booking: {ex.Message}");
+                await JS.InvokeVoidAsync("Swal.fire", "Fel", "Kunde inte boka.", "error");
             }
         }
+
+        // if (response.IsSuccessStatusCode)
+        // {
+        //     var strResponse = await response.Content.ReadAsStringAsync();
+        //     Console.WriteLine("Json Response: \n" + strResponse);
+
+        //     try
+        //     {
+        //         var jsonResponse = JsonNode.Parse(strResponse);
+
+        //         var message = jsonResponse?["message"]?.ToString() ?? "Din bokning har registrerats.";
+
+        //         await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", message, "success");
+
+        //         // Optional: Redirect or refresh booking list
+        //         // navManager.NavigateTo("/Dina_bokningar");
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Console.WriteLine("JSON Parse Error: " + ex.Message);
+        //         await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", "Din bokning lyckades, men ett oväntat fel inträffade vid bearbetning av svaret.", "warning");
+        //     }
+
+        //     // await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", "Du är nu inbokad!", "success");
+        //     // navManager.NavigateTo("/Dina_bokningar");
+        // }
+
+        // else
+        // {
+        //     // await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Bokningen går inte att dölja eftersom det finns gäster bokade", "error");
+        //     var strResponse = await response.Content.ReadAsStringAsync();
+        //     Console.WriteLine("Json Response: \n" + strResponse);
+
+        //     try
+        //     {
+        //         var jsonResponse = JsonNode.Parse(strResponse);
+
+        //         // Try to read a general message first
+        //         var message = jsonResponse?["message"]?.ToString();
+
+        //         // If no general message, try to read validation errors
+        //         Errors = jsonResponse?["errors"] ?? new JsonObject();
+
+        //         if (!string.IsNullOrWhiteSpace(message))
+        //         {
+        //             await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", message, "error");
+        //         }
+        //         else
+        //         {
+        //             await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Ett fel inträffade. Kontrollera formuläret.", "error");
+        //         }
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Console.WriteLine("Exception: " + ex.Message);
+        //     }
+        // }
     }
 
     private async Task ReserveBooking(bool reserve)

@@ -16,8 +16,14 @@ else
     <EditForm Model="CurrentUser" OnValidSubmit="SaveUser">
         <DataAnnotationsValidator />
         <ValidationSummary />
-
         <div class="row mb-3 mt-5">
+            <label class="col-md-2 col-form-label">Id</label>
+            <div class="col-md-4 mb-3">
+                <InputText class="form-control" @bind-Value="CurrentUser.Id" />
+                <ValidationMessage For="@(() => CurrentUser.Id)" />
+            </div>
+        </div>
+        <div class="row mb-3">
             <label class="col-md-2 col-form-label">Förnamn</label>
             <div class="col-md-4 mb-3">
                 <InputText class="form-control" @bind-Value="CurrentUser.FirstName" />
