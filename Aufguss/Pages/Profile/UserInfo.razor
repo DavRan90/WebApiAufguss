@@ -92,7 +92,7 @@ else
                 <tr>
                     <th class="col-id">Id</th>
                     <th class="col-from">Inbjudan från</th>
-                    <th class="col-to">Inbjudan till</th>
+                    @* <th class="col-to">Inbjudan till</th> *@
                     <th class="col-date">Datum</th>
                     <th class="col-actions"></th>
                 </tr>
@@ -105,7 +105,7 @@ else
                         <tr style="cursor: pointer;">
                             <td class="col-id">@inv.Id</td>
                             <td class="col-from">@inv.InviterName</td>
-                            <td class="col-to">@inv.InviteeName</td>
+                            @* <td class="col-to">@inv.InviteeName</td> *@
                             <td class="col-date">@inv.InvitedAt</td>
                             <td class="col-actions">
                                 <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1" @onclick="async () => await AcceptInvite(inv.Id)">
@@ -134,7 +134,7 @@ else
             <thead>
                 <tr>
                     <th class="col-id">Id</th>
-                    <th class="col-from">Inbjudan från</th>
+                    @* <th class="col-from">Inbjudan från</th> *@
                     <th class="col-to">Inbjudan till</th>
                     <th class="col-date">Datum</th>
                     <th class="col-actions"></th>
@@ -147,7 +147,7 @@ else
                     {
                         <tr style="cursor: pointer;">
                             <td class="col-id">@inv.Id</td>
-                            <td class="col-from">@inv.InviterName</td>
+                            @* <td class="col-from">@inv.InviterName</td> *@
                             <td class="col-to">@inv.InviteeName</td>
                             <td class="col-date">@inv.InvitedAt</td>
                             <td class="col-actions">

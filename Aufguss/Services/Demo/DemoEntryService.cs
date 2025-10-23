@@ -35,7 +35,7 @@ namespace Aufguss.Services.Demo
                 Title = entryDto.Title,
                 Description = entryDto.Description,
                 CreatedAt = DateTime.Now,
-                Image = "images/strand.jpg"
+                Image = entryDto.Image
             };
 
             _entries.Add(newEntry);

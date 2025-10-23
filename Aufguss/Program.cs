@@ -17,7 +17,7 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        var culture = new CultureInfo("sv-SE"); // Swedish, Monday is first day
+        var culture = new CultureInfo("sv-SE");
         CultureInfo.DefaultThreadCurrentCulture = culture;
         CultureInfo.DefaultThreadCurrentUICulture = culture;
 
@@ -30,7 +30,6 @@ public class Program
 
         bool useDemo = builder.Configuration.GetValue<bool>("UseDemoData");
 
-        // Register services based on mode
         if (useDemo)
         {
             builder.Services.AddScoped<IAuthService, DemoAuthenticationStateProvider>();
@@ -43,11 +42,11 @@ public class Program
             builder.Services.AddScoped<IInviteService, DemoInviteService>();
             builder.Services.AddScoped<ISettingsService, DemoSettingsService>();
             builder.Services.AddScoped<ITemplateService, DemoTemplateService>();
-            // Add more demo services here
+            builder.Services.AddScoped<IImageService, DemoImageService>();
         }
         else
         {
-            builder.Services.AddAuthorizationCore();  // Required!
+            builder.Services.AddAuthorizationCore();
             builder.Services.AddScoped<IAuthService, CustomAuthStateProvider>();
             builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
             builder.Services.AddScoped<IEntryService, ApiEntryService>();
@@ -58,47 +57,18 @@ public class Program
             builder.Services.AddScoped<IInviteService, ApiInviteService>();
             builder.Services.AddScoped<ISettingsService, ApiSettingsService>();
             builder.Services.AddScoped<ITemplateService, ApiTemplateService>();
-            // Add more real services here
+            builder.Services.AddScoped<IImageService, ApiImageService>();
         }
 
-
-        // 1. Default HttpClient (unauthenticated)
-        //builder.Services.AddHttpClient("UnauthenticatedClient", client =>
-        //{
-        //    client.BaseAddress = new Uri("https://localhost:7162");
-        //});
-
-        // 2. Authenticated HttpClient (adds JWT)
         builder.Services.AddScoped<Services.AuthorizationMessageHandler>();
 
         builder.Services.AddHttpClient("AuthenticatedClient", client =>
         {
-            //client.BaseAddress = new Uri("https://localhost:7162");
             client.BaseAddress = new Uri("https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net");
         }).AddHttpMessageHandler<Services.AuthorizationMessageHandler>();
 
-
-        //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7162") });
-
         
         builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net") });
-
-
-        //builder.Services.AddScoped<AuthorizationMessageHandler>();
-
-        //builder.Services.AddScoped(sp =>
-        //{
-        //    var handler = sp.GetRequiredService<AuthorizationMessageHandler>();
-        //    return new HttpClient(handler)
-        //    {
-        //        BaseAddress = new Uri("https://localhost:7162")
-        //    };
-        //});
-
-
-
-        //builder.Services.AddAuthorizationCore();  // Required!
-        //builder.Services.AddScoped<AuthenticationStateProvider, Services.CustomAuthStateProvider>();
 
 
         builder.Services.AddOidcAuthentication(options =>

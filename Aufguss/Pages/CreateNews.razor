@@ -87,6 +87,7 @@ else
 @inject NavigationManager navManager
 @inject IEntryService EntryService
 @inject IEventService EventService
+@inject IImageService ImageService
 
 
 @code {
@@ -117,7 +118,8 @@ else
         entries = await EntryService.GetEntriesAsync();
         Events = await EventService.GetEventsAsync();
         Events = Events.Where(e => e.Start > DateTime.Now && e.Hidden == false).ToList();
-        ImageOptions = await Http.GetFromJsonAsync<List<string>>("api/upload/news");
+        ImageOptions = await ImageService.GetImageListAsync();
+        // ImageOptions = await Http.GetFromJsonAsync<List<string>>("api/upload/news");
     }
 
     private string statusMessage = "";
@@ -168,35 +170,19 @@ else
         }
 
         entries = await EntryService.AddEntryAsync(EntryDtoData);
-        // var response = await Http.PostAsJsonAsync("api/Entries", EntryDtoData);
-
-        // if (response.IsSuccessStatusCode)
-        // {
-        //     navManager.NavigateTo("/");
-        // }
-
-        // else
-        // {
-        //     var strResponse = await response.Content.ReadAsStringAsync();
-        //     Console.WriteLine("Json Response: \n" + strResponse);
-
-        //     try
-        //     {
-        //         var jsonResponse = JsonNode.Parse(strResponse);
-        //         Errors = jsonResponse?["errors"] ?? new JsonObject();
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         Console.WriteLine("Exception: " + ex.Message);
-        //     }
-        // }
     }
 
     private async Task DeleteEntry(int id)
     {
-        // await Http.DeleteAsync("api/Entries/" + id);
-        // entries = await Http.GetFromJsonAsync<List<Entry>>("api/Entries");
-        await EntryService.RemoveEntryAsync(id);
-        entries = await EntryService.GetEntriesAsync();
+        try
+        {
+            await EntryService.RemoveEntryAsync(id);
+            entries = await EntryService.GetEntriesAsync();
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error: {ex.Message}";
+        }
+    
     }
 }

@@ -111,7 +111,7 @@
                     </div>
                 }
                 <div class="col-md-4 d-grid">
-                    <a class="btn btn-outline-primary" href="/Events/Edit/@evnt.Id">Avbryt</a>
+                    <a class="btn btn-outline-primary" href="/Dina_bokningar">Avbryt</a>
                 </div>
             </div>
         }
@@ -124,6 +124,8 @@
 @inject IJSRuntime JS
 @inject SweetAlertService Swal
 @inject AuthenticationStateProvider AuthProvider
+@inject IBookingService BookingService
+@inject IEventService EventService
 
 @code {
     [Parameter]
@@ -152,8 +154,10 @@
 
     private async Task LoadEventAndBookings()
     {
-        var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
-        var allEvents = await Http.GetFromJsonAsync<List<Event>>("api/Events/");
+        // var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
+        // var allEvents = await Http.GetFromJsonAsync<List<Event>>("api/Events/");
+        var allBookings = await BookingService.GetBookingsAsync();
+        var allEvents = await EventService.GetEventsAsync();
         booking = allBookings?.Where(b => b.Id == Id).SingleOrDefault();
         evnt = allEvents?.Where(e => e.Id == booking?.EventId).SingleOrDefault();
     }
@@ -170,35 +174,48 @@
             });
         if (result.IsConfirmed)
         {
-            var response = await Http.PutAsync("api/Bookings/Unbook/" + id, null);
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var res = await Swal.FireAsync(new SweetAlertOptions
-                    {
-                        Title = "Avbokad",
-                        Text = $"Bokning med id {id} är avbokad",
-                        Icon = SweetAlertIcon.Warning,
-                    });
-                // Navigate to page
-                NavManager.NavigateTo($"/Events/Edit/{evnt.Id}");
+                await BookingService.UnbookAsync(id);
+                await JS.InvokeVoidAsync("Swal.fire", "Avbokad", $"Du är nu avbokad från {evnt.Title}", "success");
+                NavManager.NavigateTo($"/Dina_bokningar");
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception: " + ex.Message);
+                await JS.InvokeVoidAsync("Swal.fire", "Fel", $"Avbokningen misslyckades", "error");
             }
 
-            else
-            {
-                var strResponse = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("Json Response: \n" + strResponse);
+            // var response = await Http.PutAsync("api/Bookings/Unbook/" + id, null);
 
-                try
-                {
-                    var jsonResponse = JsonNode.Parse(strResponse);
-                    Errors = jsonResponse?["errors"] ?? new JsonObject();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Exception: " + ex.Message);
-                }
-            }
+            // if (response.IsSuccessStatusCode)
+            // {
+            //     var res = await Swal.FireAsync(new SweetAlertOptions
+            //         {
+            //             Title = "Avbokad",
+            //             Text = $"Bokning med id {id} är avbokad",
+            //             Icon = SweetAlertIcon.Warning,
+            //         });
+            //     // Navigate to page
+            //     NavManager.NavigateTo($"/Events/Edit/{evnt.Id}");
+            // }
+
+            // else
+            // {
+            //     var strResponse = await response.Content.ReadAsStringAsync();
+            //     Console.WriteLine("Json Response: \n" + strResponse);
+
+            //     try
+            //     {
+            //         var jsonResponse = JsonNode.Parse(strResponse);
+            //         Errors = jsonResponse?["errors"] ?? new JsonObject();
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         Console.WriteLine("Exception: " + ex.Message);
+            //     }
+            // }
         }
 
     }
