@@ -59,10 +59,10 @@
     </div>
 
     <div class="row mb-3">
-    <h3>Vattenfys</h3>
+        <h3>Vattenfys</h3>
         <div class="alert alert-danger col-md-6 mt-2" role="alert">
-        ⚠️ Funktioner inte tillagda.
-    </div>
+            ⚠️ Funktioner inte tillagda.
+        </div>
     </div>
     <div class="row mb-3">
         <label class="col-md-2 col-form-label">Max bokningar vattenfys</label>
@@ -122,28 +122,15 @@
 
     private async Task SaveSettings()
     {
-        var response = await Http.PutAsJsonAsync("api/Settings", SiteSettingsData);
-
-        if (response.IsSuccessStatusCode)
+        try
         {
-            await JSRuntime.InvokeVoidAsync("Swal.fire", "Inställnigar ändrade", "Dina inställningar har ändrats", "success");
-            navManager.NavigateTo("/Inställningar");
+            await SettingsService.EditSettingsAsync(SiteSettingsData);
+            await JSRuntime.InvokeVoidAsync("Swal.fire", "Ändrat", "Inställningarna är nu ändrade", "success");
         }
-
-        else
-        {
-            var strResponse = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Json Response: \n" + strResponse);
-
-            try
-            {
-                var jsonResponse = JsonNode.Parse(strResponse);
-                Errors = jsonResponse?["errors"] ?? new JsonObject();
-            }
-            catch (Exception ex)
+        catch (Exception ex)
             {
                 Console.WriteLine("Exception: " + ex.Message);
+                await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", "Inställningarna gick inte att ändra", "error");
             }
-        }
     }
 }

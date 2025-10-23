@@ -40,13 +40,6 @@
             }
         </div>
     </div>
-    @* <div class="row mb-3">
-        <label class="col-md-2 col-form-label">Beskrivning</label>
-        <div class="col-md-4">
-            <InputFile rows="4" accept="image/*" class="form-control" @bind-Value="EntryDtoData.Image" />
-            <ValidationMessage For="@(() => EntryDtoData.Image)" />
-        </div>
-    </div> *@
 
     <div class="row">
         <div class="offset-md-2 col-md-2 d-grid">
@@ -62,62 +55,6 @@
 <br />
 <br />
 
-@* <div class="row mb-5">
-    <div class="col-lg-8">
-        <h1 class=mb-5>Lägg till nyhet</h1>
-
-
-        <div class="row mb-3">
-            <label class="col-md-4 col-form-label">Titel</label>
-            <div class="col-md-8">
-                <input class="form-control" @bind="EntryDtoData.Title">
-            </div>
-        </div>
-
-        <div class="row mb-3">
-            <label class="col-md-4 col-form-label">Beskrivning</label>
-            <div class="col-md-8">
-                <textarea class="form-control" @bind="EntryDtoData.Description"></textarea>
-            </div>
-        </div>
-
-        <div class="row mb-3">
-            <label class="col-md-4 col-form-label">Välj en bild</label>
-            <div class="col-md-8">
-                <InputFile onchange ="UploadFile" accept="image/*" />
-                <input class="form-control" @bind="EntryDtoData.Image"> 
-            </div>
-        </div> 
-
-        <div class="row mb-3">
-            <label class="col-md-4 col-form-label">Länka till pass</label>
-            <div class="col-md-8">
-                <InputSelect class="form-control" @bind-Value="EntryDtoData.Url">
-                    <option value="">-- Välj ett pass --</option>
-                    @foreach (var evt in Events)
-                    {
-                        <option value="@evt.Id">@evt.Title (@evt.Start.ToString("dd/MM-yyyy | HH:mm"))</option>
-                    }
-                </InputSelect>
-            </div>
-        </div>
-        <div class="row mb-3">
-            <label class="col-md-4 col-form-label">Länka till pass</label>
-            <div class="col-md-8">
-                <input class="form-control" @bind="EntryDtoData.Url">
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="offset-md-4 col-md-4 d-grid">
-                <button class="btn btn-primary" @onclick="SaveEntry">Spara</button>
-            </div>
-            <div class="col-md-4 d-grid">
-                <a class="btn btn-outline-primary" href="/CreateNews">Avbryt</a>
-            </div>
-        </div>
-    </div>
-</div> *@
 
 <h1>Nyheter</h1>
 
@@ -221,12 +158,6 @@ else
         {
             statusMessage = $"Error: {ex.Message}";
         }
-    }
-
-    private async Task DeleteEvent(int id)
-    {
-        await Http.DeleteAsync("api/Entries/" + id);
-        entries = await Http.GetFromJsonAsync<List<Entry>>("api/Entries");
     }
 
     private async Task SaveEntry()

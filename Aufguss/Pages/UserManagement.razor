@@ -26,9 +26,10 @@
 
                     <!-- Username (email) -->
                     <th class="col-username">Användare</th>
+                    <th class="col-phone">Telefonnummer</th>
 
                     <!-- Roles -->
-                    <th class="col-role">Roll</th>
+                    @* <th class="col-role">Roll</th> *@
 
                     <!-- Actions -->
                     <th class="col-actions"></th>
@@ -68,8 +69,15 @@
                             </a>
                         </td>
 
+                        <td class="col-username">
+                            <span class="d-none d-md-inline">@user.PhoneNumber</span>
+                            <a class="d-inline d-md-none" href="tel:@user.PhoneNumber" title="Ring">
+                                <i class="bi bi-telephone-fill"></i>
+                            </a>
+                        </td>
+
                         <!-- Roles -->
-                        <td class="col-role">@string.Join(", ", user.Roles)</td>
+                        @* <td class="col-role">@string.Join(", ", user.Roles)</td> *@
 
                         <!-- Actions -->
                         <td class="col-actions">

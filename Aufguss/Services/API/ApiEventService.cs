@@ -10,6 +10,7 @@ namespace Aufguss.Services.API
 
         public Task<List<Event>> GetEventsAsync() =>
             _http.GetFromJsonAsync<List<Event>>("api/events");
+
         public async Task<Event?> GetEventByIdAsync(int id)
         {
             return await _http.GetFromJsonAsync<Event>($"api/Events/{id}");

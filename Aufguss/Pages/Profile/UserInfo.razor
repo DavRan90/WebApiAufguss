@@ -18,9 +18,8 @@ else
         <ValidationSummary />
         <div class="row mb-3 mt-5">
             <label class="col-md-2 col-form-label">Id</label>
-            <div class="col-md-4 mb-3">
-                <InputText class="form-control" @bind-Value="CurrentUser.Id" />
-                <ValidationMessage For="@(() => CurrentUser.Id)" />
+            <div class="col-md-4">
+                <p class="form-control bg-body-tertiary">@CurrentUser.Id</p>
             </div>
         </div>
         <div class="row mb-3">
@@ -68,12 +67,12 @@ else
                     @if (CurrentUser.AufgussFriendId == null)
                     {
                         <InputText class="form-control" placeholder="Telefonnummer" @bind-Value="AufgussFriend" />
-                        <button class="btn btn-success text-nowrap" @onclick="async () => await AddFriend()">Bjud in vän</button>
+                        <button type="button" class="btn btn-success text-nowrap" @onclick="async () => await AddFriend()">Bjud in vän</button>
                     }
                     else
                     {
                         <p class="form-control bg-primary-subtle mb-0">@AufgussFriend</p>
-                        <button class="btn btn-danger text-nowrap" @onclick="async () => await RemoveFriend()">Ta bort vän</button>
+                        <button type="button" class="btn btn-danger text-nowrap" @onclick="async () => await RemoveFriend()">Ta bort vän</button>
                     }
                 </div>
             </div>
@@ -232,48 +231,58 @@ else
     }
     private async Task SaveUser()
     {
-        if(CurrentUser.Gender == null)
+        try
         {
-            CurrentUser.Gender = Gender.Other;
-        }
-        var response = await Http.PutAsJsonAsync("api/Users/" + CurrentUser.Id, CurrentUser);
+            await UserService.EditUserAsync(CurrentUser.Id, CurrentUser);
 
-        if (response.IsSuccessStatusCode)
+            await JSRuntime.InvokeVoidAsync("Swal.fire", "Ändrat", "Dina uppgifter är nu ändrade", "success");
+        }
+        catch (Exception ex)
         {
-            await InvokeAsync(StateHasChanged);
-            // NavManager.NavigateTo("/Uppgifter");
+            Console.WriteLine($"Error fetching inviters: {ex.Message}");
         }
+        // if (CurrentUser.Gender == null)
+        // {
+        //     CurrentUser.Gender = Gender.Other;
+        // }
+        // var response = await Http.PutAsJsonAsync("api/Users/" + CurrentUser.Id, CurrentUser);
 
-        else
-        {
-            // await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Bokningen går inte att dölja eftersom det finns gäster bokade", "error");
-            var strResponse = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Json Response: \n" + strResponse);
+        // if (response.IsSuccessStatusCode)
+        // {
+        //     await InvokeAsync(StateHasChanged);
+        //     // NavManager.NavigateTo("/Uppgifter");
+        // }
 
-            try
-            {
-                var jsonResponse = JsonNode.Parse(strResponse);
+        // else
+        // {
+        //     // await JS.InvokeVoidAsync("Swal.fire", "Misslyckades", "Bokningen går inte att dölja eftersom det finns gäster bokade", "error");
+        //     var strResponse = await response.Content.ReadAsStringAsync();
+        //     Console.WriteLine("Json Response: \n" + strResponse);
 
-                // Try to read a general message first
-                var message = jsonResponse?["message"]?.ToString();
+        //     try
+        //     {
+        //         var jsonResponse = JsonNode.Parse(strResponse);
 
-                // If no general message, try to read validation errors
-                Errors = jsonResponse?["errors"] ?? new JsonObject();
+        //         // Try to read a general message first
+        //         var message = jsonResponse?["message"]?.ToString();
 
-                if (!string.IsNullOrWhiteSpace(message))
-                {
-                    await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", message, "error");
-                }
-                else
-                {
-                    await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", "Ett fel inträffade. Kontrollera formuläret.", "error");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.Message);
-            }
-        }
+        //         // If no general message, try to read validation errors
+        //         Errors = jsonResponse?["errors"] ?? new JsonObject();
+
+        //         if (!string.IsNullOrWhiteSpace(message))
+        //         {
+        //             await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", message, "error");
+        //         }
+        //         else
+        //         {
+        //             await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", "Ett fel inträffade. Kontrollera formuläret.", "error");
+        //         }
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Console.WriteLine("Exception: " + ex.Message);
+        //     }
+        // }
     }
     private async Task LoadInvites()
     {
@@ -300,7 +309,7 @@ else
         try
         {
             // var invitees = await Http.GetFromJsonAsync<List<InviteDto>>(urlInvitee);
-            var invitees = await InviteService.GetInvitesAsync(urlInvitee);
+            var invitees = await InviteService.GetInviteeAsync(userIdString);
             Invitees = invitees?.Where(i => i.Invited).ToList() ?? new();
         }
         catch (Exception ex)
@@ -313,7 +322,7 @@ else
         try
         {
             // var inviters = await Http.GetFromJsonAsync<List<InviteDto>>(urlInviter);
-            var inviters = await InviteService.GetInvitesAsync(urlInviter);
+            var inviters = await InviteService.GetInviterAsync(userIdString);
             Inviters = inviters?.Where(i => i.Invited).ToList() ?? new();
         }
         catch (Exception ex)
@@ -332,48 +341,24 @@ else
         if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(friendId))
             return;
 
-        // Try to fetch invites (invitee and inviter)
-        var allInvites = new List<InviteDto>();
-
-
-        async Task FetchInvites(string role, string id)
+        try
         {
-            try
+            var allInvites = await InviteService.GetInvitesAsync();
+
+            var invite = allInvites.FirstOrDefault(i =>
+                (i.InviteeId == friendId && i.InviterId == userId) ||
+                (i.InviterId == friendId && i.InviteeId == userId));
+
+            if (invite == null)
             {
-                string param = role == "invitees" ? "inviteeId" : "inviterId";
-                var url = $"api/invites/{role}?{param}={id}";
-                var invites = await Http.GetFromJsonAsync<List<InviteDto>>(url);
-                if (invites != null)
-                    allInvites.AddRange(invites);
+                await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", "Ingen inbjudan hittades mellan dig och din vän.", "warning");
+                return;
             }
-            catch
-            {
-                // Ignore and continue
-            }
-        }
 
-        await FetchInvites("invitees", userId); // becomes: /invitees?inviteeId=
-        await FetchInvites("inviters", userId); // becomes: /inviters?inviterId=
-
-        // Find the invite connecting both users
-        var invite = allInvites.FirstOrDefault(i =>
-            (i.InviteeId == friendId && i.InviterId == userId) ||
-            (i.InviterId == friendId && i.InviteeId == userId));
-
-        if (invite == null)
-            return;
-
-        // Delete invite
-        var response = await Http.DeleteAsync($"api/Invites/{invite.Id}");
-        if (response.IsSuccessStatusCode)
-        {
-            var updatedUser = await Http.GetFromJsonAsync<UserWithRolesDto>($"api/auth/user?id={CurrentUser.Id}");
-            if (updatedUser != null)
-            {
-                CurrentUser = updatedUser;
-            }
+            await InviteService.RemoveInviteAsync(invite.Id);
 
             await LoadInvites();
+            CurrentUser.AufgussFriendId = null;
             AufgussFriend = string.Empty;
 
             await JSRuntime.InvokeVoidAsync("Swal.fire",
@@ -381,24 +366,26 @@ else
                 "Du har tagit bort din vän och blivit borttagen från dennes sida",
                 "success");
         }
-        else
+        catch (HttpRequestException ex)
         {
-            Console.Error.WriteLine("Failed to delete invite.");
+            Console.WriteLine($"Error removing friend: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", "Kunde inte ta bort vän.", "error");
         }
     }
 
+
     private async Task RejectInvite(int id)
     {
-        var response = await Http.DeleteAsync("api/Invites/" + id);
-        if (response.IsSuccessStatusCode)
+        try
         {
+            await InviteService.RemoveInviteAsync(id);
             await LoadInvites();
-            await InvokeAsync(StateHasChanged);
         }
-        else
+
+        catch (HttpRequestException ex)
         {
-            var error = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Error deleting invite: " + error);
+            Console.WriteLine($"Error: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", "Kunde inte avböja inbjudan.", "error");
         }
     }
 
@@ -413,113 +400,55 @@ else
                 InviterName = "inviterName",
                 InviteeName = "inviteeName"
             };
-
-        var response = await Http.PutAsJsonAsync("api/Invites/" + id, dto);
-
-        if (response.IsSuccessStatusCode)
+        try
         {
-            // Refresh invites
+            await InviteService.AcceptInviteAsync(id, dto);
             await LoadInvites();
-
-            // ✅ Refresh current user
-            var updatedUser = await Http.GetFromJsonAsync<UserWithRolesDto>($"api/auth/user?id={CurrentUser.Id}");
-            if (updatedUser != null)
-            {
-                CurrentUser = updatedUser;
-
-                // Also set friend name (if available)
-                var friend = Users?.FirstOrDefault(u => u.Id == CurrentUser.AufgussFriendId);
-                if (friend != null)
-                {
-                    AufgussFriend = $"{friend.FirstName} {friend.SurName}";
-                }
-            }
-
             await JSRuntime.InvokeVoidAsync("Swal.fire",
                 "Inbjudan accepterad",
                 "Du är nu kopplad till din vän.",
                 "success");
-
-            StateHasChanged(); // ✅ Trigger re-render
         }
-        else
+        catch (HttpRequestException ex)
         {
-            var error = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Error accepting invite: " + error);
+            Console.WriteLine($"Error: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", "Kunde inte godkänna inbjudan.", "error");
+            return;
         }
     }
 
     private async Task AddFriend()
     {
+        var phoneNumber = AufgussFriend;
+        UserWithRolesDto getUser = null;
+
         try
         {
-            var phoneNumber = NormalizeSwedishPhone(AufgussFriend);
-            var url = $"api/auth/user?phoneNumber={Uri.EscapeDataString(phoneNumber)}";
-
-            UserWithRolesDto getUser = null;
-
-            try
-            {
-                getUser = await Http.GetFromJsonAsync<UserWithRolesDto>(url);
-            }
-            catch (HttpRequestException ex)
-            {
-                // This happens when the user is not found (404)
-                Console.WriteLine($"User not found: {ex.Message}");
-                await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", "Det finns ingen registrerad användare med detta telefonnummer.", "error");
-                return;
-            }
-
+            getUser = await UserService.GetUserAsync(null, phoneNumber);
             if (getUser != null)
             {
                 var inviteDto = new InviteDto
                     {
                         InviteeId = getUser.Id,
                         InviterId = CurrentUser.Id,
-                        InviteeName = "",
-                        InviterName = ""
+                        InviteeName = $"{getUser.FirstName} {getUser.SurName}",
+                        InviterName = $"{CurrentUser.FirstName} {CurrentUser.SurName}"
                     };
 
-                var response = await Http.PostAsJsonAsync("api/Invites", inviteDto);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    await JSRuntime.InvokeVoidAsync("Swal.fire", "Inbjudan skickad", "Din vän behöver tacka ja innan du kan boka åt denne.", "success");
-                    await LoadInvites();
-                }
-                else
-                {
-                    var strResponse = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine("Json Response: \n" + strResponse);
-
-                    try
-                    {
-                        var jsonResponse = JsonNode.Parse(strResponse);
-                        var message = jsonResponse?["message"]?.ToString();
-                        Errors = jsonResponse?["errors"] ?? new JsonObject();
-
-                        if (!string.IsNullOrWhiteSpace(message))
-                        {
-                            await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", message, "error");
-                        }
-                        else
-                        {
-                            await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", "Ett fel inträffade. Kontrollera formuläret.", "error");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Exception while parsing error: " + ex.Message);
-                    }
-                }
+                var response = await InviteService.AddInviteAsync(inviteDto);
+                await JSRuntime.InvokeVoidAsync("Swal.fire", "Inbjudan skickad", "Din vän behöver tacka ja innan du kan boka åt denne.", "success");
+                await LoadInvites();
             }
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
-            Console.WriteLine($"Unexpected error: {ex.Message}");
-            await JSRuntime.InvokeVoidAsync("Swal.fire", "Fel", "Ett oväntat fel inträffade. Försök igen senare.", "error");
+            // This happens when the user is not found (404)
+            Console.WriteLine($"User not found: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", "Det finns ingen registrerad användare med detta telefonnummer.", "error");
+            return;
         }
     }
+
     public string GetEnumDisplayName(Enum value)
     {
         return value.GetType()

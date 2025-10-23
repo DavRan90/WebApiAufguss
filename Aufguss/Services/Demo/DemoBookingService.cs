@@ -1,4 +1,5 @@
 ﻿using Aufguss.Models;
+using Aufguss.Pages;
 using Aufguss.Services.Interface;
 using System.Xml.Linq;
 
@@ -6,9 +7,23 @@ namespace Aufguss.Services.Demo
 {
     public class DemoBookingService : IBookingService
     {
-        private readonly List<Booking> _bookings = new()
-    {
-            new Booking {
+        
+        private readonly List<Booking> _bookings;
+        private SiteSettings _settings;
+
+        private readonly ISettingsService _settingsService;
+        private readonly IEventService _eventService;
+
+
+        public DemoBookingService(ISettingsService settingsService, IEventService eventService)
+        {
+            _settings = null;
+            _settingsService = settingsService;
+            _eventService = eventService;
+
+            _bookings = new List<Booking>
+            {
+                new Booking {
                 Id = 0,
                 Name = "Demo",
                 UserId = "demo-user-id",
@@ -103,14 +118,63 @@ namespace Aufguss.Services.Demo
                 EventId = 2,
 }
         };
+        }
+        private List<Event> _events;
+
+        private async Task EnsureEventsLoadedAsync()
+        {
+            if (_events == null)
+            {
+                _events = await _eventService.GetEventsAsync();
+            }
+        }
+        private async Task EnsureSettingsLoadedAsync()
+        {
+            if (_settings == null)
+            {
+                _settings = await _settingsService.GetSettingsAsync();
+            }
+        }
 
         public Task<List<Booking>> GetBookingsAsync()
         {
             return Task.FromResult(_bookings);
         }
 
-        public Task<List<Booking>> AddBookingAsync(BookingDto bookingDto)
+        public async Task<List<Booking>> AddBookingAsync(BookingDto bookingDto)
         {
+            _settings = await _settingsService.GetSettingsAsync();
+            await EnsureEventsLoadedAsync();
+            await EnsureSettingsLoadedAsync();
+
+            var bookingEvent = _events.FirstOrDefault(e => e.Id == bookingDto.EventId);
+            int maxSlots = bookingEvent?.MaxSlots ?? 3;
+
+            // 2. Count active bookings for this user
+            int countActiveBookings = _bookings.Count(b =>
+                b.Email == bookingDto.Email &&
+                !b.Unbooked &&
+                !b.Reserve &&
+                // Here you could filter by event date > now if you have event info, else skip
+                true);
+
+            // 3. Check against max allowed bookings
+            if (countActiveBookings >= _settings.MaxBookingsAufguss)
+            {
+                
+                throw new Exception($"För många aktiva bokningar, max {_settings.MaxBookingsAufguss}");
+            }
+
+            // 4. Check event max slots and existing bookings for that event
+
+            int existingBookings = _bookings.Count(b =>
+                b.EventId == bookingDto.EventId &&
+                !b.Unbooked &&
+                !b.Reserve);
+
+            bool isReserve = existingBookings >= maxSlots;
+
+            // 5. Create booking
             var newBooking = new Booking
             {
                 Id = _bookings.Any() ? _bookings.Max(b => b.Id) + 1 : 1,
@@ -119,12 +183,13 @@ namespace Aufguss.Services.Demo
                 Email = bookingDto.Email,
                 Tel = bookingDto.Tel,
                 BookedAt = DateTime.Now,
-                Reserve = bookingDto.Reserve,
+                Reserve = isReserve,
                 EventId = bookingDto.EventId,
             };
 
             _bookings.Add(newBooking);
-            return Task.FromResult(_bookings.OrderByDescending(b => b.Id).ToList());
+
+            return _bookings.OrderByDescending(b => b.Id).ToList();
         }
 
         public Task EditBookingAsync(int id, BookingDto bookingDto)

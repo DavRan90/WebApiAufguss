@@ -11,5 +11,11 @@ namespace Aufguss.Services.API
 
         public Task<SiteSettings> GetSettingsAsync() =>
             _http.GetFromJsonAsync<SiteSettings>("api/settings");
+
+        public async Task EditSettingsAsync(SiteSettings settingsDto)
+        {
+            var response = await _http.PutAsJsonAsync($"api/Settings", settingsDto);
+            response.EnsureSuccessStatusCode();
+        }
     }
 }
