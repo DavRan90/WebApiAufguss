@@ -39,36 +39,6 @@
 <br />
 <br />
 
-@* <div class="row mb-5">
-    <div class="col-lg-8">
-        <h1 class=mb-5>Lägg till Frågor och Svar</h1>
-
-
-        <div class="row mb-3">
-            <label class="col-md-4 col-form-label">Fråga</label>
-            <div class="col-md-8">
-                <input class="form-control" @bind="FaqDtoData.Question">
-            </div>
-        </div>
-
-        <div class="row mb-3">
-            <label class="col-md-4 col-form-label">Svar</label>
-            <div class="col-md-8">
-                <textarea rows="4" class="form-control" @bind="FaqDtoData.Answer"></textarea>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="offset-md-4 col-md-4 d-grid">
-                <button class="btn btn-primary" @onclick="SaveFaq">Spara</button>
-            </div>
-            <div class="col-md-4 d-grid">
-                <a class="btn btn-outline-primary" href="/Info">Avbryt</a>
-            </div>
-        </div>
-    </div>
-</div> *@
-
 <p></p>
 
 
@@ -149,7 +119,6 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
         faqs = await FaqService.GetFaqsAsync();
     }
 
@@ -175,7 +144,8 @@ else
             faq.Position = i;
         }
 
-        await Http.PutAsJsonAsync("api/Faqs/update-order", faqs);
+        // await Http.PutAsJsonAsync("api/Faqs/update-order", faqs);
+        await FaqService.UpdateFaqOrderAsync(faqs);
     }
 
     private async Task DeleteFaq(int id)
@@ -190,30 +160,6 @@ else
     {
         var createdFaq = await FaqService.AddFaqAsync(FaqDtoData);
         faqs.Add(createdFaq);
-        // var response = await Http.PostAsJsonAsync("api/Faqs", FaqDtoData);
-
-        // if (response.IsSuccessStatusCode)
-        // {
-        //     faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
-        //     FaqDtoData = new();
-        //     navManager.NavigateTo("/Info");
-        // }
-
-        // else
-        // {
-        //     var strResponse = await response.Content.ReadAsStringAsync();
-        //     Console.WriteLine("Json Response: \n" + strResponse);
-
-        //     try
-        //     {
-        //         var jsonResponse = JsonNode.Parse(strResponse);
-        //         Errors = jsonResponse?["errors"] ?? new JsonObject();
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         Console.WriteLine("Exception: " + ex.Message);
-        //     }
-        // }
     }
     private async Task EditAlert(int id)
     {

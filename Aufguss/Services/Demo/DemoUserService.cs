@@ -103,6 +103,16 @@ namespace Aufguss.Services.Demo
 
             return Task.CompletedTask;
         }
+        public Task RemoveUserAsync(string id)
+        {
+            var booking = _users.SingleOrDefault(b => b.Id == id);
+            if (booking != null)
+            {
+                _users.Remove(booking);
+            }
+
+            return Task.CompletedTask;
+        }
 
         private static string NormalizeSwedishPhone(string phone)
         {

@@ -175,7 +175,7 @@
         </table>
     }
 
-    <a href="/CreateAdmin" class="btn btn-primary">Lägg till administratör</a>
+    @* <a href="/CreateAdmin" class="btn btn-primary">Lägg till administratör</a> *@
 </div>
 
 @inject HttpClient Http
@@ -203,8 +203,10 @@
 
     private async Task DeleteUser(string id)
     {
-        await Http.DeleteAsync("api/Users/" + id);
-        Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
+        // await Http.DeleteAsync("api/Users/" + id);
+        // Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
+        await UserService.RemoveUserAsync(id);
+        Users = await UserService.GetUsersAsync();
         AdminUsers = Users?.Where(u => u.Roles.Contains("Admin")).ToList();
         Users = Users?.Where(u => u.Roles.Contains("User")).ToList();
     }

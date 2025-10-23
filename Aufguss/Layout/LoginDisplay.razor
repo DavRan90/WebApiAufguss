@@ -7,7 +7,7 @@
     <Authorized>
         @* Hej, @context.User.Identity?.Name! *@
         Hej @context.User.FindFirst("firstName")?.Value
-        <button class="nav-link btn btn-link" @onclick="BeginLogOut">Logga ut</button>
+        @* <button class="nav-link btn btn-link" @onclick="BeginLogOut">Logga ut</button> *@
     </Authorized>
     <NotAuthorized>
         @* <a href="login">Logga in</a> *@

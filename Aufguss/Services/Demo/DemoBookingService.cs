@@ -214,6 +214,9 @@ namespace Aufguss.Services.Demo
             if (booking != null)
             {
                 booking.Unbooked = true;
+                booking.UnbookedAt = DateTime.Now;
+
+                CheckReserveList(booking);
             }
 
             return Task.CompletedTask;
@@ -225,6 +228,7 @@ namespace Aufguss.Services.Demo
             if (booking != null)
             {
                 _bookings.Remove(booking);
+                CheckReserveList(booking);
             }
 
             return Task.CompletedTask;
@@ -234,6 +238,44 @@ namespace Aufguss.Services.Demo
         {
             var booking = _bookings.SingleOrDefault(b => b.Id == id);
             return Task.FromResult(booking);
+        }
+        private void CheckReserveList(Booking booking)
+        {
+            if (_events == null || !_events.Any())
+            {
+                Console.WriteLine("[DEMO] No events loaded — skipping reserve check.");
+                return;
+            }
+
+            var evt = _events.FirstOrDefault(e => e.Id == booking.EventId);
+            if (evt == null)
+            {
+                Console.WriteLine($"[DEMO] Event with ID {booking.EventId} not found — skipping reserve check.");
+                return;
+            }
+
+            int activeCount = _bookings.Count(b =>
+                b.EventId == evt.Id &&
+                !b.Unbooked &&
+                !b.Reserve);
+
+            if (activeCount < evt.MaxSlots)
+            {
+                var reserveList = _bookings
+                    .Where(b => b.EventId == evt.Id && b.Reserve && !b.Unbooked)
+                    .OrderBy(b => b.ReserveAt)
+                    .ToList();
+
+                if (reserveList.Any())
+                {
+                    var promote = reserveList.First();
+                    promote.Reserve = false;
+                    promote.BookedAt = DateTime.Now;
+                    promote.ReserveAt = null;
+
+                    Console.WriteLine($"[DEMO] Promoted {promote.Name} from reserve list for event {evt.Title}");
+                }
+            }
         }
 
     }

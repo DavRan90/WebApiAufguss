@@ -22,5 +22,10 @@ namespace Aufguss.Services.API
             var response = await _http.PutAsJsonAsync($"api/Users/{id}", userDto);
             response.EnsureSuccessStatusCode();
         }
+        public async Task RemoveUserAsync(string id)
+        {
+            var response = await _http.DeleteAsync("api/users/" + id);
+            response.EnsureSuccessStatusCode();
+        }
     }
 }

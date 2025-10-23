@@ -8,7 +8,8 @@
     <div class="card-body bg-info-subtle">
         @if (!string.IsNullOrEmpty(fileLocation))
         {
-            <img src="@($"{fileLocation}aufguss 2.jpg")"
+            @* <img src="@($"{fileLocation}aufguss 2.jpg")" *@
+            <img src="images/aufguss.jpg" alt="Aufguss"
                  class="img-fluid float-start me-3 mb-2 p-4 rounded rounded-5"
                  style="max-width: 50vw;" />
         }
@@ -91,7 +92,6 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // faqs = await Http.GetFromJsonAsync<List<Faq>>("api/Faqs");
         faqs = await FaqService.GetFaqsAsync();
         fileLocation = new Uri(Http.BaseAddress, "api/upload/").ToString();
     }

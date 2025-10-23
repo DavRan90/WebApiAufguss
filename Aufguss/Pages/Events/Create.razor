@@ -97,8 +97,8 @@
         <div class="row mb-3">
             <div class="col-md-8 offset-md-4">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="gridCheck1" @bind="EventDtoData.Recurring">
-                    <label class="form-check-label" for="gridCheck1">
+                    <input class="form-check-input" type="checkbox" id="recurring" @bind="EventDtoData.Recurring">
+                    <label class="form-check-label" for="recurring">
                         Återkommande
                         <span class="ms-1" data-bs-toggle="tooltip" data-bs-trigger="click" title="Om återkommande pass önskas">
                             <i class="bi bi-info-circle text-secondary"></i>
@@ -134,8 +134,8 @@
         <div class="row mb-3">
             <div class="col-md-8 offset-md-4">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="gridCheck2" @bind="EventDtoData.AllowFriendBooking">
-                    <label class="form-check-label" for="gridCheck2">
+                    <input class="form-check-input" type="checkbox" id="friend" @bind="EventDtoData.AllowFriendBooking">
+                    <label class="form-check-label" for="friend">
                         Tillåt vänbokning
                         <span class="ms-1" data-bs-toggle="tooltip" title="TIllåt inbokning av en registrerad aufgussvän">
                             <i class="bi bi-info-circle text-secondary"></i>
@@ -147,8 +147,8 @@
         <div class="row mb-3">
             <div class="col-md-8 offset-md-4">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="gridCheck1" @bind="EventDtoData.IncludeSurvey" disabled>
-                    <label class="form-check-label" for="gridCheck1">
+                    <input class="form-check-input" type="checkbox" id="survey" @bind="EventDtoData.IncludeSurvey" disabled>
+                    <label class="form-check-label" for="survey">
                         Enkät
                         <span class="ms-1" data-bs-toggle="tooltip" title="Om enkät ska göras i samband med passet">
                             <i class="bi bi-info-circle text-secondary"></i>
@@ -160,8 +160,8 @@
         <div class="row mb-3">
             <div class="col-md-8 offset-md-4">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="gridCheck2" @bind="EventDtoData.Hidden">
-                    <label class="form-check-label" for="gridCheck2">
+                    <input class="form-check-input" type="checkbox" id="hidden" @bind="EventDtoData.Hidden">
+                    <label class="form-check-label" for="hidden">
                         Dold
                         <span class="ms-1" data-bs-toggle="tooltip" title="Detta pass, om dolt, syns inte bland gästernas pass">
                             <i class="bi bi-info-circle text-secondary"></i>
@@ -174,8 +174,8 @@
         <div class="row mb-3">
             <div class="col-md-8 offset-md-4">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="gridCheck3" @bind="createNews">
-                    <label class="form-check-label" for="gridCheck3">
+                    <input class="form-check-input" type="checkbox" id="createnews" @bind="createNews" disabled>
+                    <label class="form-check-label" for="createnews">
                         Skapa nyhet
                         <span class="ms-1" data-bs-toggle="tooltip" title="Skapar en nyhet om detta pass på startsidan">
                             <i class="bi bi-info-circle text-secondary"></i>
@@ -187,8 +187,8 @@
         <div class="row mb-3">
             <div class="col-md-8 offset-md-4">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="gridCheck4" @bind="createTemplate">
-                    <label class="form-check-label" for="gridCheck4">
+                    <input class="form-check-input" type="checkbox" id="template" @bind="createTemplate" disabled>
+                    <label class="form-check-label" for="template">
                         Skapa mall
                         <span class="ms-1" data-bs-toggle="tooltip" title="Skapar en mall baserad på denna bokning">
                             <i class="bi bi-info-circle text-secondary"></i>
@@ -345,7 +345,7 @@
             return;
         }
 
-        if(EventDtoData.Recurring)
+        if (EventDtoData.Recurring)
         {
             if ((EndDate - EventDtoData.Start).TotalDays < 7)
             {
@@ -392,74 +392,82 @@
         }
         else
         {
-            var evts = await EventService.AddEventAsync(EventDtoData);
-            navManager.NavigateTo("/Events");
-            // var response = await Http.PostAsJsonAsync("api/Events", EventDtoData);
+            try
+            {
+                var evts = await EventService.AddEventAsync(EventDtoData);
+                navManager.NavigateTo("/Events");
+            }
+            catch
+            {
 
-            // if (response.IsSuccessStatusCode)
-            // {
-            //     if (createTemplate)
+            }
+
+            //     var response = await Http.PostAsJsonAsync("api/Events", EventDtoData);
+
+            //     if (response.IsSuccessStatusCode)
             //     {
-            //         var template = await Http.PostAsJsonAsync("api/EventTemplates", EventDtoData);
-            //     }
-
-
-            //     var createdEvent = await response.Content.ReadFromJsonAsync<Event>();
-            //     if (createdEvent.Hidden == false && createNews == true)
-            //     {
-            //         var entry = new EntryDto
-            //             {
-            //                 Title = createdEvent.Title + " | " + createdEvent.Start.ToString("dd-MM-yyyy | HH:mm"),
-            //                 Description = createdEvent.Description,
-            //                 Url = createdEvent.Id.ToString(),
-            //                 Image = "https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net/upload/aufguss 2.jpg"
-            //             };
-            //         var response2 = await Http.PostAsJsonAsync("api/Entries", entry);
-
-            //         if (response2.IsSuccessStatusCode)
+            //         if (createTemplate)
             //         {
-
-            //             navManager.NavigateTo("/");
+            //             var template = await Http.PostAsJsonAsync("api/EventTemplates", EventDtoData);
             //         }
 
-            //         else
-            //         {
-            //             var strResponse = await response2.Content.ReadAsStringAsync();
-            //             Console.WriteLine("Json Response: \n" + strResponse);
 
-            //             try
+            //         var createdEvent = await response.Content.ReadFromJsonAsync<Event>();
+            //         if (createdEvent.Hidden == false && createNews == true)
+            //         {
+            //             var entry = new EntryDto
+            //                 {
+            //                     Title = createdEvent.Title + " | " + createdEvent.Start.ToString("dd-MM-yyyy | HH:mm"),
+            //                     Description = createdEvent.Description,
+            //                     Url = createdEvent.Id.ToString(),
+            //                     Image = "https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net/upload/aufguss 2.jpg"
+            //                 };
+            //             var response2 = await Http.PostAsJsonAsync("api/Entries", entry);
+
+            //             if (response2.IsSuccessStatusCode)
             //             {
-            //                 var jsonResponse = JsonNode.Parse(strResponse);
-            //                 Errors = jsonResponse?["errors"] ?? new JsonObject();
+
+            //                 navManager.NavigateTo("/");
             //             }
-            //             catch (Exception ex)
+
+            //             else
             //             {
-            //                 Console.WriteLine("Exception: " + ex.Message);
+            //                 var strResponse = await response2.Content.ReadAsStringAsync();
+            //                 Console.WriteLine("Json Response: \n" + strResponse);
+
+            //                 try
+            //                 {
+            //                     var jsonResponse = JsonNode.Parse(strResponse);
+            //                     Errors = jsonResponse?["errors"] ?? new JsonObject();
+            //                 }
+            //                 catch (Exception ex)
+            //                 {
+            //                     Console.WriteLine("Exception: " + ex.Message);
+            //                 }
             //             }
             //         }
+
+
+
+            //         navManager.NavigateTo("/Events");
             //     }
 
-
-
-            //     navManager.NavigateTo("/Events");
-            // }
-
-            // else
-            // {
-            //     var strResponse = await response.Content.ReadAsStringAsync();
-            //     Console.WriteLine("Json Response: \n" + strResponse);
-
-            //     try
+            //     else
             //     {
-            //         var jsonResponse = JsonNode.Parse(strResponse);
-            //         Errors = jsonResponse?["errors"] ?? new JsonObject();
-            //     }
-            //     catch (Exception ex)
-            //     {
-            //         Console.WriteLine("Exception: " + ex.Message);
+            //         var strResponse = await response.Content.ReadAsStringAsync();
+            //         Console.WriteLine("Json Response: \n" + strResponse);
+
+            //         try
+            //         {
+            //             var jsonResponse = JsonNode.Parse(strResponse);
+            //             Errors = jsonResponse?["errors"] ?? new JsonObject();
+            //         }
+            //         catch (Exception ex)
+            //         {
+            //             Console.WriteLine("Exception: " + ex.Message);
+            //         }
             //     }
             // }
         }
-        
     }
 }
