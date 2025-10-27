@@ -30,6 +30,10 @@ namespace Aufguss.Services.API
             var response = await _http.PutAsJsonAsync($"api/bookings/{id}", bookingDto);
             response.EnsureSuccessStatusCode();
         }
+        public async Task ConfirmAttendanceAsync(int bookingId, double userLat, double userLng)
+        {
+            
+        }
         public async Task UnbookAsync(int id)
         {
             var response = await _http.PutAsync("api/Bookings/Unbook/" + id, null);

@@ -31,8 +31,8 @@ namespace Aufguss.Services.Demo
             new Event {
                 Title = "Aufguss herrar",
                 Id = 3,
-                Start = DateTime.Today.AddDays(3).AddHours(19).AddMinutes(30),
-                End = DateTime.Today.AddDays(3).AddHours(20).AddMinutes(15),
+                Start = DateTime.Now.AddHours(1).AddMinutes(30),
+                End = DateTime.Now.AddHours(2).AddMinutes(15),
                 MaxSlots = 5,
                 Hidden = false,
                 Gender = Gender.Male,

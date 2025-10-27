@@ -208,6 +208,58 @@ namespace Aufguss.Services.Demo
 
             return Task.CompletedTask;
         }
+
+        public async Task ConfirmAttendanceAsync(int bookingId, double userLat, double userLng)
+        {
+            await EnsureEventsLoadedAsync();
+            await EnsureSettingsLoadedAsync();
+
+            var booking = _bookings.SingleOrDefault(b => b.Id == bookingId);
+            if (booking == null)
+                throw new Exception($"Bokning med ID {bookingId} hittades inte.");
+
+            var evt = _events.FirstOrDefault(e => e.Id == booking.EventId);
+            if (evt == null)
+                throw new Exception($"Event med ID {booking.EventId} hittades inte.");
+
+            // 🕒 1. Check time constraint (within 2 hours of start)
+            var now = DateTime.Now;
+            var timeUntilStart = evt.Start - now;
+            if (timeUntilStart > TimeSpan.FromHours(2))
+                throw new Exception("För tidigt att bekräfta närvaro (mer än 2 timmar kvar till start).");
+
+            // 📍 2. Check geolocation constraint (within 500 m)
+            double eventLat = 59.04406605697291;   // Freja bad & gym
+            double eventLng = 17.3156782887916;
+            
+            var distanceMeters = CalculateDistanceMeters(userLat, userLng, eventLat, eventLng);
+            if (distanceMeters > 500)
+                throw new Exception($"Du är för långt bort ({Math.Round(distanceMeters)} m). Max 500 m tillåtet.");
+
+            // ✅ 3. Mark as confirmed
+            booking.AttendanceConfirmed = true;
+            booking.AttendanceConfirmedAt = DateTime.Now;
+
+            Console.WriteLine($"[DEMO] {booking.Name} bekräftade närvaro för event '{evt.Title}' ({Math.Round(distanceMeters)} m bort).");
+
+            await Task.CompletedTask; // Demo only; no DB persistence
+        }
+
+        // 🔢 Helper to calculate the distance between two coordinates in meters
+        private static double CalculateDistanceMeters(double lat1, double lon1, double lat2, double lon2)
+        {
+            const double R = 6371000; // Earth radius in meters
+            double dLat = ToRadians(lat2 - lat1);
+            double dLon = ToRadians(lon2 - lon1);
+
+            double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                       Math.Cos(ToRadians(lat1)) * Math.Cos(ToRadians(lat2)) *
+                       Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+            double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            return R * c;
+        }
+
+        private static double ToRadians(double deg) => deg * (Math.PI / 180);
         public Task UnbookAsync(int id)
         {
             var booking = _bookings.SingleOrDefault(b => b.Id == id);

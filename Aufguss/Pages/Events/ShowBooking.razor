@@ -3,7 +3,14 @@
 
 <div class="row mb-5">
     <div class="col-lg-8">
-        <h1 class=mb-5>Bokning @Id</h1>
+        @* <h1 class=mb-3>Bokning @Id</h1> *@
+
+        <div class="col-md-4 d-grid mb-3">
+            <a class="btn btn-outline-primary rounded-circle" href="/Dina_bokningar"
+               style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa fa-arrow-left"></i>
+            </a>
+        </div>
 
         @if (booking == null)
         {
@@ -86,6 +93,19 @@
                     <p class="form-control">@booking.BookedAt.ToString("dd/MM-yyyy HH:mm")</p>
                 </div>
             </div>
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Närvaro bekräftad</label>
+                <div class="col-md-8 d-flex align-items-center">
+                    @if (booking.AttendanceConfirmed)
+                    {
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 1.5rem;"></i>
+                    }
+                    else
+                    {
+                        <i class="bi bi-x-circle-fill text-danger" style="font-size: 1.5rem;"></i>
+                    }
+                </div>
+            </div>
             @if(booking.Unbooked)
             {
                 <div class="row mb-3">
@@ -98,21 +118,24 @@
 
 
             <div class="row">
+                <div class="offset-md-4 col-md-4 d-grid">
+                    <a class="btn btn-primary" @onclick="async () => await ConfirmAttendance(booking.Id)">Bekräfta närvaro</a>
+                </div>
                 @if(booking.Unbooked)
                 {
-                    <div class="offset-md-4 col-md-4 d-grid">
+                    <div class="col-md-4 d-grid">
                         <button class="btn btn-primary">Omboka</button>
                     </div>
                 }
                 else
                 {
-                    <div class="offset-md-4 col-md-4 d-grid">
+                    <div class="col-md-4 d-grid">
                         <button class="btn btn-danger" @onclick="async () => await Unbook(booking.Id)">Avboka</button>
                     </div>
                 }
-                <div class="col-md-4 d-grid">
+                @* <div class="col-md-4 d-grid">
                     <a class="btn btn-outline-primary" href="/Dina_bokningar">Avbryt</a>
-                </div>
+                </div> *@
             </div>
         }
 
@@ -139,6 +162,37 @@
 
     public JsonNode Errors { get; set; } = new JsonObject();
 
+    private GeolocationPosition? _cachedPosition;
+
+
+    private bool _geoLoaded = false;
+    private double? _latitude;
+    private double? _longitude;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_geoLoaded)
+        {
+            try
+            {
+                _cachedPosition = await JS.InvokeAsync<GeolocationPosition>("getUserLocation");
+                // _latitude = _cachedPosition.Latitude;
+                // _longitude = _cachedPosition.Longitude;
+
+                _geoLoaded = true;
+
+                Console.WriteLine($"Geolocation loaded: {_latitude}, {_longitude}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to get location: {ex.Message}");
+            }
+
+            // Trigger re-render if needed
+            StateHasChanged();
+        }
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         try
@@ -161,6 +215,35 @@
         booking = allBookings?.Where(b => b.Id == Id).SingleOrDefault();
         evnt = allEvents?.Where(e => e.Id == booking?.EventId).SingleOrDefault();
     }
+
+    private async Task ConfirmAttendance(int bookingId)
+    {
+        try
+        {
+            // 🧭 1. Get current geolocation from browser
+            var coords = _cachedPosition ?? await JS.InvokeAsync<GeolocationPosition>("getUserLocation");
+
+            // 🧭 2. Send to booking service
+            await BookingService.ConfirmAttendanceAsync(bookingId, coords.Latitude, coords.Longitude);
+
+            await JS.InvokeVoidAsync("Swal.fire", "Närvaro bekräftad", $"Du är nu bekräftad som närvarande", "success");
+
+            await LoadEventAndBookings();
+
+            // ✅ 3. Refresh booking list (if you display it)
+            
+
+            // 🗨️ 4. Optionally show success message
+            Console.WriteLine("Närvaro bekräftad!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fel vid bekräftelse: {ex.Message}");
+            await JS.InvokeVoidAsync("Swal.fire", "Fel", $"{ex.Message}", "error");
+        }
+    }
+
+    public record GeolocationPosition(double Latitude, double Longitude);
 
     private async Task Unbook(int id)
     {
