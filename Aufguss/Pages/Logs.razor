@@ -1,0 +1,131 @@
+﻿@page "/logs"
+@inject HttpClient Http
+
+<h3>Loggar</h3>
+
+<div class="tabs mb-3">
+    <button class="@($"btn btn-sm me-2 {(activeTab == "bookings" ? "btn-primary" : "btn-outline-primary")}")"
+            @onclick="@(() => activeTab = "bookings")">
+        Bokningar
+    </button>
+    <button class="@($"btn btn-sm {(activeTab == "events" ? "btn-primary" : "btn-outline-primary")}")"
+            @onclick="@(() => activeTab = "events")">
+        Pass
+    </button>
+</div>
+
+
+
+@if (loading)
+{
+    <p>Loading logs...</p>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p class="text-danger">@errorMessage</p>
+}
+else
+{
+    @if (activeTab == "bookings")
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Datum</th>
+                    <th>Händelse</th>
+                    <th>Användare</th>
+                    <th>Detaljer</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in bookingLogs)
+                {
+                    <tr>
+                        <td>@log.Timestamp</td>
+                        <td>@log.Action</td>
+                        <td>@log.UserEmail</td>
+                        <td>@log.Details</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else if (activeTab == "events")
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Datum</th>
+                    <th>Händelse</th>
+                    <th>Användare</th>
+                    <th>Detaljer</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in eventLogs)
+                {
+                    <tr>
+                        <td>@log.Timestamp</td>
+                        <td>@log.Action</td>
+                        <td>@log.UserEmail</td>
+                        <td>@log.Details</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private string activeTab = "bookings";
+    private bool loading = true;
+    private string? errorMessage;
+
+    // Lists for logs
+    private List<AuditLogDto> bookingLogs = new();
+    private List<AuditLogDto> eventLogs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        loading = true;
+        errorMessage = null;
+
+        try
+        {
+            // Option 1: single API call returning both logs
+            var allLogs = await Http.GetFromJsonAsync<CombinedAuditLogsDto>("api/admin/audit-logs");
+            if (allLogs != null)
+            {
+                bookingLogs = allLogs.Bookings;
+                eventLogs = allLogs.Events;
+            }
+
+            // Option 2: separate API calls for each type
+            //bookingLogs = await Http.GetFromJsonAsync<List<AuditLogDto>>("api/admin/booking-logs") ?? new();
+            //eventLogs = await Http.GetFromJsonAsync<List<AuditLogDto>>("api/admin/event-logs") ?? new();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load logs: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    // DTOs
+    public class AuditLogDto
+    {
+        public DateTime Timestamp { get; set; }
+        public string Action { get; set; } = "";
+        public string UserEmail { get; set; } = "";
+        public string Details { get; set; } = "";
+    }
+
+    public class CombinedAuditLogsDto
+    {
+        public List<AuditLogDto> Bookings { get; set; } = new();
+        public List<AuditLogDto> Events { get; set; } = new();
+    }
+}

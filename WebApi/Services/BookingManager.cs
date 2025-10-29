@@ -8,13 +8,18 @@ namespace WebApi.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly ResendEmailService _emailService;
+        private readonly IAuditService _audit;
 
-        public BookingManager(ApplicationDbContext context, ResendEmailService emailService)
+        public BookingManager(ApplicationDbContext context, ResendEmailService emailService, IAuditService audit)
         {
             _context = context;
             _emailService = emailService;
+            _audit = audit;
         }
 
+        /// <summary>
+        /// Creates a new booking or adds the user to the reserve list if the event is full.
+        /// </summary>
         public async Task<(bool Success, string Message)> CreateBookingAsync(BookingDto bookingDto)
         {
             var settings = await _context.SiteSettings.FirstOrDefaultAsync();
@@ -23,34 +28,35 @@ namespace WebApi.Services
             if (currEvent == null)
                 return (false, "Eventet hittades inte.");
 
-            // Check if user already booked
-            var alreadyBooked = await _context.Bookings.AnyAsync(b =>
+            // Check if already booked
+            bool alreadyBooked = await _context.Bookings.AnyAsync(b =>
                 b.EventId == bookingDto.EventId &&
                 b.Email == bookingDto.Email &&
                 !b.Unbooked &&
                 !b.Reserve);
 
             if (alreadyBooked)
-                return (false, "Du är redan bokad till det här passet");
+                return (false, "Du är redan bokad till det här passet.");
 
-            // Check total active bookings
-            var countActive = await (from b in _context.Bookings
-                                     join e in _context.Events on b.EventId equals e.Id
-                                     where b.Email == bookingDto.Email &&
-                                           !b.Unbooked &&
-                                           !b.Reserve &&
-                                           e.Start > DateTime.Now
-                                     select b).CountAsync();
+            // Check max active bookings per user
+            int activeBookings = await (from b in _context.Bookings
+                                        join e in _context.Events on b.EventId equals e.Id
+                                        where b.Email == bookingDto.Email &&
+                                              !b.Unbooked &&
+                                              !b.Reserve &&
+                                              e.Start > DateTime.Now
+                                        select b).CountAsync();
 
-            if (countActive >= settings.MaxBookingsAufguss)
-                return (false, $"För många aktiva bokningar, max {settings.MaxBookingsAufguss}");
+            if (activeBookings >= settings.MaxBookingsAufguss)
+                return (false, $"För många aktiva bokningar, max {settings.MaxBookingsAufguss} tillåtna.");
 
             // Determine if reserve
-            var existingCount = await _context.Bookings
+            int currentCount = await _context.Bookings
                 .CountAsync(b => b.EventId == bookingDto.EventId && !b.Unbooked && !b.Reserve);
 
-            bool isReserve = existingCount >= currEvent.MaxSlots;
+            bool isReserve = currentCount >= currEvent.MaxSlots;
 
+            // Create booking entity
             var booking = new Booking
             {
                 Name = bookingDto.Name,
@@ -66,19 +72,25 @@ namespace WebApi.Services
 
             _context.Bookings.Add(booking);
             await _context.SaveChangesAsync();
-            await LogBookingActionAsync(booking.Id, "Booked", booking.Email,
-                isReserve ? "Placed on reserve list" : "Confirmed booking");
 
-            // Send email confirmation
+            // Log audit
+            var logAction = isReserve ? "Reservlista" : "Inbokad";
+            var logDetails = isReserve
+                ? $"Användaren {booking.Email} placerades på reservlistan till eventet '{currEvent.Title}'."
+                : $"Användaren {booking.Email} bokade en plats till eventet '{currEvent.Title}'.";
+
+            await _audit.LogBookingAsync(booking.Id, logAction, booking.Email, logDetails);
+
+            // Send confirmation email
             var cancelUrl = $"https://yourdomain.com/api/bookings/cancel-booking?token={booking.CancellationToken}";
-            var status = isReserve ? "Du är placerad på reservlistan till" : "Du är inbokad till";
+            var statusText = isReserve ? "Du är placerad på reservlistan till" : "Du är inbokad till";
 
             var html = $@"
-            <div style='font-family: Arial, sans-serif; font-size: 16px; color: #333;'>
-                <p><strong>Tack för din bokning {booking.Name}!</strong></p>
-                <p>{status} <strong>{currEvent.Title}</strong> den {currEvent.Start:yyyy-MM-dd HH:mm}.</p>
-                <p><a href='{cancelUrl}'>Avboka din plats</a></p>
-            </div>";
+                <div style='font-family: Arial, sans-serif; font-size: 16px; color: #333;'>
+                    <p><strong>Tack för din bokning {booking.Name}!</strong></p>
+                    <p>{statusText} <strong>{currEvent.Title}</strong> den {currEvent.Start:yyyy-MM-dd HH:mm}.</p>
+                    <p><a href='{cancelUrl}'>Avboka din plats</a></p>
+                </div>";
 
             try
             {
@@ -86,48 +98,55 @@ namespace WebApi.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Email failed: " + ex.Message);
+                Console.WriteLine($"Email failed to {booking.Email}: {ex.Message}");
             }
 
-            return (true, $"{status} det här passet");
+            return (true, $"{statusText} det här passet.");
         }
 
+        /// <summary>
+        /// Edits a booking (used for admin or user-driven updates).
+        /// </summary>
         public async Task<(bool Success, string Message, Booking? Booking)> EditBookingAsync(int id, BookingDto bookingDto)
         {
             var booking = await _context.Bookings.FindAsync(id);
             if (booking == null)
-                return (false, "Booking not found", null);
+                return (false, "Bokningen hittades inte.", null);
 
             if (bookingDto.Unbooked)
             {
-                // Unbooking
+                // Unbook
                 booking.Unbooked = true;
                 booking.UnbookedAt = DateTime.UtcNow;
 
-                // Promote from reserve if needed
+                var evt = await _context.Events.FindAsync(booking.EventId);
+                await _audit.LogBookingAsync(booking.Id, "Avbokad", booking.Email,
+                    $"Användaren {booking.Email} avbokade sin plats till eventet '{evt?.Title}'.");
+
                 await CheckReserveListAsync(booking);
             }
             else
             {
-                // Re-booking
-                if (booking.Unbooked && !bookingDto.Unbooked)
+                // Rebook (if previously unbooked)
+                if (booking.Unbooked)
                 {
                     var evt = await _context.Events.FindAsync(bookingDto.EventId);
                     if (evt == null)
-                        return (false, "Event not found", null);
+                        return (false, "Eventet hittades inte.", null);
 
-                    var currentBookings = await _context.Bookings
-                        .Where(b => b.EventId == bookingDto.EventId && !b.Unbooked && !b.Reserve)
-                        .CountAsync();
+                    int activeCount = await _context.Bookings
+                        .CountAsync(b => b.EventId == bookingDto.EventId && !b.Unbooked && !b.Reserve);
 
-                    if (currentBookings >= evt.MaxSlots)
-                        return (false, "No spots available", null);
+                    if (activeCount >= evt.MaxSlots)
+                        return (false, "Inga lediga platser finns kvar.", null);
 
                     booking.Unbooked = false;
                     booking.UnbookedAt = null;
+
+                    await _audit.LogBookingAsync(booking.Id, "Återinbokad", booking.Email,
+                        $"Användaren {booking.Email} återinbokades till eventet '{evt.Title}'.");
                 }
 
-                // Update other fields
                 booking.Name = bookingDto.Name;
                 booking.Email = bookingDto.Email;
                 booking.Tel = bookingDto.Tel;
@@ -136,58 +155,67 @@ namespace WebApi.Services
             }
 
             await _context.SaveChangesAsync();
-            return (true, "Booking updated", booking);
+            return (true, "Bokningen har uppdaterats.", booking);
         }
 
-
+        /// <summary>
+        /// Cancels a booking (used when user cancels via link or UI).
+        /// </summary>
         public async Task<(bool Success, string Message)> UnbookAsync(int id)
         {
-            var booking = await _context.Bookings.FindAsync(id);
+            var booking = await _context.Bookings.Include(b => b.Event).FirstOrDefaultAsync(b => b.Id == id);
             if (booking == null)
                 return (false, "Bokningen hittades inte.");
 
             booking.Unbooked = true;
             booking.UnbookedAt = DateTime.Now;
-
             await _context.SaveChangesAsync();
+
             await CheckReserveListAsync(booking);
-            await LogBookingActionAsync(booking.Id, "Unbooked", booking.Email);
+
+            await _audit.LogBookingAsync(booking.Id, "Avbokad", booking.Email,
+                $"Användaren {booking.Email} avbokade sin plats till eventet '{booking.Event?.Title}'.");
 
             return (true, "Bokningen har avbokats.");
         }
 
+        /// <summary>
+        /// Deletes a booking (used by admin).
+        /// </summary>
         public async Task<(bool Success, string Message)> DeleteBookingAsync(int id)
         {
-            var booking = await _context.Bookings.FindAsync(id);
+            var booking = await _context.Bookings.Include(b => b.Event).FirstOrDefaultAsync(b => b.Id == id);
             if (booking == null)
                 return (false, "Bokningen hittades inte.");
 
             _context.Bookings.Remove(booking);
             await _context.SaveChangesAsync();
+
             await CheckReserveListAsync(booking);
-            await LogBookingActionAsync(booking.Id, "Deleted", booking.Email);
+
+            await _audit.LogBookingAsync(booking.Id, "Borttagen", booking.Email,
+                $"Bokningen för {booking.Email} togs bort från eventet '{booking.Event?.Title}'.");
 
             return (true, "Bokningen har tagits bort.");
         }
 
+        /// <summary>
+        /// Promotes a user from the reserve list if a slot becomes available.
+        /// </summary>
         public async Task CheckReserveListAsync(Booking booking)
         {
             var evt = await _context.Events.FirstOrDefaultAsync(e => e.Id == booking.EventId);
             if (evt == null) return;
 
-            // Use a transaction to prevent race conditions
             await using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                // Count current active bookings
-                var bookingsCount = await _context.Bookings
-                    .Where(b => b.EventId == booking.EventId && !b.Reserve && !b.Unbooked)
-                    .CountAsync();
+                int activeCount = await _context.Bookings
+                    .CountAsync(b => b.EventId == booking.EventId && !b.Reserve && !b.Unbooked);
 
-                if (evt.MaxSlots > bookingsCount)
+                if (evt.MaxSlots > activeCount)
                 {
-                    // Find the first person on the reserve list
                     var reserveList = await _context.Bookings
                         .Where(b => b.EventId == booking.EventId && b.Reserve && !b.Unbooked)
                         .OrderBy(b => b.ReserveAt)
@@ -200,27 +228,26 @@ namespace WebApi.Services
                         promoted.BookedAt = DateTime.Now;
 
                         await _context.SaveChangesAsync();
-
-                        // Commit transaction so no one else can promote at the same time
                         await transaction.CommitAsync();
 
-                        // Send promotion email outside the transaction (to avoid holding DB lock)
+                        // Send promotion email (outside transaction)
                         try
                         {
                             var cancelUrl = $"https://yourdomain.com/api/bookings/cancel-booking?token={promoted.CancellationToken}";
                             var html = $@"
-                            <div style='font-family: Arial, sans-serif; font-size: 16px; color: #333;'>
-                                <p><strong>Grattis {promoted.Name}!</strong></p>
-                                <p>En plats har blivit ledig och du har nu fått en ordinarie plats till <strong>{evt.Title}</strong> den {evt.Start:yyyy-MM-dd HH:mm}.</p>
-                                <p><a href='{cancelUrl}'>Avboka din plats</a></p>
-                            </div>";
+                                <div style='font-family: Arial, sans-serif; font-size: 16px; color: #333;'>
+                                    <p><strong>Grattis {promoted.Name}!</strong></p>
+                                    <p>En plats har blivit ledig och du har nu fått en ordinarie plats till <strong>{evt.Title}</strong> den {evt.Start:yyyy-MM-dd HH:mm}.</p>
+                                    <p><a href='{cancelUrl}'>Avboka din plats</a></p>
+                                </div>";
 
                             await _emailService.SendEmailAsync(promoted.Email, "Du har fått en plats!", html);
-                            await LogBookingActionAsync(promoted.Id, "Promoted", promoted.Email, $"Promoted from reserve list for event {evt.Title}");
+                            await _audit.LogBookingAsync(promoted.Id, "Inbokad", promoted.Email,
+                                $"Deltagaren {promoted.Email} flyttades från reservlistan till ordinarie plats för eventet '{evt.Title}'.");
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine("Failed to send promotion email: " + ex.Message);
+                            Console.WriteLine($"Misslyckades med att skicka e-post till {promoted.Email}: {ex.Message}");
                         }
                     }
                 }
@@ -235,20 +262,5 @@ namespace WebApi.Services
                 throw;
             }
         }
-        private async Task LogBookingActionAsync(int bookingId, string action, string userEmail, string? details = null)
-        {
-            var audit = new BookingAudit
-            {
-                BookingId = bookingId,
-                Action = action,
-                UserEmail = userEmail,
-                Timestamp = DateTime.UtcNow,
-                Details = details
-            };
-
-            _context.BookingAudits.Add(audit);
-            await _context.SaveChangesAsync();
-        }
-
     }
 }

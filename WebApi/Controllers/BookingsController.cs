@@ -67,6 +67,17 @@ namespace WebApi.Controllers
             return Ok("Bokningen har avbokats.");
         }
 
+        [HttpPost("{id}/unbook")]
+        public async Task<IActionResult> UnbookBooking(int id)
+        {
+            var result = await _bookingManager.UnbookAsync(id);
+
+            if (!result.Success)
+                return NotFound(result.Message);
+
+            return Ok(result.Message);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateBooking(BookingDto dto)
         {

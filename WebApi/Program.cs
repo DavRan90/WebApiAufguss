@@ -34,6 +34,11 @@ namespace WebApi
 
             builder.Services.AddScoped<FriendService>();
 
+            builder.Services.AddScoped<IBookingManager, BookingManager>();
+
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<IAuditService, AuditService>();
+
             //builder.Services.AddScoped<EmailService>();
 
             builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));

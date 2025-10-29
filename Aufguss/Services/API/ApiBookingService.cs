@@ -36,7 +36,7 @@ namespace Aufguss.Services.API
         }
         public async Task UnbookAsync(int id)
         {
-            var response = await _http.PutAsync("api/Bookings/Unbook/" + id, null);
+            var response = await _http.PostAsync($"api/bookings/{id}/unbook", null);
             response.EnsureSuccessStatusCode();
         }
         public async Task RemoveBookingAsync(int id)
