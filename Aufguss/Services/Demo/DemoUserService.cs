@@ -10,10 +10,10 @@ namespace Aufguss.Services.Demo
         new UserWithRolesDto
             {
                 Id = "demo-user-id",
-                UserName = "demo@demo.com",
+                UserName = "david.rantanen@telia.com",
                 FirstName = "Demo",
                 SurName = "User",
-                Email = "demo@demo.com",
+                Email = "david.rantanen@telia.com",
                 PhoneNumber = "+46701234567",
                 Gender = Gender.Male,
                 Roles = new List<string> { "Admin" }

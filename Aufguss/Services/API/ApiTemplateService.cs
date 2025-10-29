@@ -10,10 +10,10 @@ namespace Aufguss.Services.API
         public ApiTemplateService(HttpClient http) => _http = http;
 
         public Task<List<EventTemplate>> GetTemplatesAsync() =>
-            _http.GetFromJsonAsync<List<EventTemplate>>("api/templates");
+            _http.GetFromJsonAsync<List<EventTemplate>>("api/EventTemplates");
         public async Task<EventTemplate?> GetTemplateByIdAsync(int id)
         {
-            return await _http.GetFromJsonAsync<EventTemplate>($"api/Templates/{id}");
+            return await _http.GetFromJsonAsync<EventTemplate>($"api/EventTemplates/{id}");
         }
 
     }

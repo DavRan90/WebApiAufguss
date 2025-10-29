@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using WebApi.Services;
 
 namespace WebApi.Controllers
@@ -8,26 +7,31 @@ namespace WebApi.Controllers
     [ApiController]
     public class EmailController : ControllerBase
     {
-        private readonly MailgunEmailService _emailService;
+        private readonly ResendEmailService _resendEmailService;
 
-        public EmailController(MailgunEmailService emailService)
+        public EmailController(ResendEmailService resendEmailService)
         {
-            _emailService = emailService;
+            _resendEmailService = resendEmailService;
         }
 
-        [HttpPost("send-test")]
-        public async Task<IActionResult> SendTestEmail()
+        [HttpPost("test-email")]
+        public async Task<IActionResult> TestEmail()
         {
-            var success = await _emailService.SendEmailAsync(
-                "david.rantanen@telia.com",
-                "Hello from Mailgun",
-                "Congratulations David Rantanen, you just sent an email with Mailgun!"
-            );
+            try
+            {
+                var to = "david.rantanen@telia.com";
+                var subject = "Test email from API";
+                var htmlContent = "<p>Hello from Resend test!</p>";
 
-            if (!success)
-                return StatusCode(500, "Failed to send email");
+                var response = await _resendEmailService.SendTestEmailAsync(to, subject, htmlContent);
 
-            return Ok("Email sent!");
+                // Return the full response from Resend for debugging
+                return Ok(new { message = $"Email request sent via Resend to {to}!", resendResponse = response });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error sending email", error = ex.Message });
+            }
         }
     }
 }

@@ -6,7 +6,7 @@ namespace Aufguss.Services.Interface
     {
         Task<List<Booking>> GetBookingsAsync();
         Task<Booking?> GetBookingByIdAsync(int id);
-        Task<List<Booking>> AddBookingAsync(BookingDto bookingDto);
+        Task<Booking> AddBookingAsync(BookingDto bookingDto);
         Task EditBookingAsync(int id, BookingDto bookingDto);
         Task ConfirmAttendanceAsync(int bookingId, double userLat, double userLng);
         Task UnbookAsync(int id);

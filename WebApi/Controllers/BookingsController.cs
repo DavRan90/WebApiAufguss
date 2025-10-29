@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Models;
 using WebApi.Services;
+using WebApi.Services.Email;
 
 namespace WebApi.Controllers
 {
@@ -14,12 +16,15 @@ namespace WebApi.Controllers
 
         private readonly NotificationService _notificationService;
 
-        private readonly ResendEmailService _resendEmail;
+        private readonly ResendEmailService _resendEmailService;
 
-        public BookingsController(ApplicationDbContext context, ResendEmailService resendEmail)
+        private readonly IBackgroundEmailQueue _emailQueue;
+
+        public BookingsController(ApplicationDbContext context, ResendEmailService resendEmailService)
         {
             this.context = context;
-            _resendEmail = resendEmail;
+            _resendEmailService = resendEmailService;
+
         }
 
         [HttpGet]
@@ -66,6 +71,7 @@ namespace WebApi.Controllers
             var settings = context.SiteSettings.FirstOrDefault();
             Console.WriteLine("CreateBooking called.");
 
+            // 1. Check if user already booked
             var alreadyBooked = context.Bookings.Any(b =>
                                 b.EventId == bookingDto.EventId &&
                                 b.Email == bookingDto.Email &&
@@ -73,11 +79,9 @@ namespace WebApi.Controllers
                                 !b.Reserve);
 
             if (alreadyBooked)
-            {
                 return BadRequest(new { message = "Du är redan bokad till det här passet" });
-            }
 
-
+            // 2. Check total active bookings
             var countActiveBookings = (from b in context.Bookings
                                        join e in context.Events on b.EventId equals e.Id
                                        where b.Email == bookingDto.Email &&
@@ -86,86 +90,72 @@ namespace WebApi.Controllers
                                              e.Start > DateTime.Now
                                        select b).Count();
 
-            if (countActiveBookings < settings.MaxBookingsAufguss)
-            {
-                var currEvent = context.Events.FirstOrDefault(e => e.Id == bookingDto.EventId);
-                if (currEvent == null)
-                    return NotFound(new { message = "Eventet hittades inte." });
-
-                var existingBookings = context.Bookings.Count(b =>
-                    b.EventId == bookingDto.EventId &&
-                    !b.Unbooked &&
-                    !b.Reserve); // Only count real bookings
-
-                bool isReserve = existingBookings >= currEvent.MaxSlots;
-
-                var booking = new Booking
-                {
-                    Name = bookingDto.Name,
-                    Email = bookingDto.Email,
-                    Tel = bookingDto.Tel,
-                    UserId = bookingDto.UserId,
-                    BookedAt = DateTime.Now,
-                    EventId = bookingDto.EventId,
-                    CancellationToken = Guid.NewGuid().ToString("N"),
-                    Reserve = isReserve,
-                    ReserveAt = isReserve ? DateTime.Now : null
-                };
-
-                context.Bookings.Add(booking);
-                await context.SaveChangesAsync();
-
-                Console.WriteLine("Booking saved. Attempting to send email...");
-
-                try
-                {
-                    var currentEvent = context.Events
-                        .Where(e => e.Id == booking.EventId)
-                        .FirstOrDefault();
-
-                    var cancelUrl = $"https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net/api/bookings/cancel-booking?token={booking.CancellationToken}";
-
-                    string statusMessage = isReserve
-                    ? "Du är placerad på reservlistan till"
-                    : "Du är inbokad till";
-
-                    var htmlMessage = $@"
-                    <div style='font-family: Arial, sans-serif; font-size: 16px; color: #333;'>
-                        <p><strong>Tack för din bokning {booking.Name}!</strong></p>
-
-                        <p>{statusMessage} <strong>{currentEvent.Title}</strong> den {currentEvent.Start:yyyy-MM-dd HH:mm}.</p>
-
-                        <p>Om du vill avboka din plats, klicka på länken nedan:</p>
-
-                        <p>
-                            <a href='{cancelUrl}' style='color: #007bff; text-decoration: none;'>Avboka din plats</a>
-                        </p>
-
-                        <br>
-
-                        <p>Vi ses på <strong>Freja Bad & Gym</strong>!</p>
-                    </div>";
-                    await _resendEmail.SendEmailAsync(
-                            to: $"david.rantanen@telia.com",
-                            subject: "Bokningsbekräftelse Aufguss",
-                            htmlContent: htmlMessage
-                        //htmlContent: "<strong>Tack för din bokning!</strong><br>" +
-                        //$"Du är inbokad till {eventTitle} <br>" +
-                        //$"Vi ses på Freja Bad & Gym!"
-                        );
-                    return Ok(new { message = $"{statusMessage} till det här passet" });
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Email sending failed: " + ex.Message);
-                    return StatusCode(500, new { error = ex.Message });
-                }
-            }
-            else
-            {
+            if (countActiveBookings >= settings.MaxBookingsAufguss)
                 return BadRequest(new { message = $"För många aktiva bokningar, max {settings.MaxBookingsAufguss}" });
+
+            // 3. Create new booking
+            var currEvent = context.Events.FirstOrDefault(e => e.Id == bookingDto.EventId);
+            if (currEvent == null)
+                return NotFound(new { message = "Eventet hittades inte." });
+
+            var existingBookings = context.Bookings.Count(b =>
+                b.EventId == bookingDto.EventId &&
+                !b.Unbooked &&
+                !b.Reserve);
+
+            bool isReserve = existingBookings >= currEvent.MaxSlots;
+
+            var booking = new Booking
+            {
+                Name = bookingDto.Name,
+                Email = bookingDto.Email,
+                Tel = bookingDto.Tel,
+                UserId = bookingDto.UserId,
+                BookedAt = DateTime.Now,
+                EventId = bookingDto.EventId,
+                CancellationToken = Guid.NewGuid().ToString("N"),
+                Reserve = isReserve,
+                ReserveAt = isReserve ? DateTime.Now : null
+            };
+
+            context.Bookings.Add(booking);
+            await context.SaveChangesAsync();
+
+            Console.WriteLine("Booking saved. Sending email...");
+
+            // 4. Prepare email content
+            var cancelUrl = $"https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net/api/bookings/cancel-booking?token={booking.CancellationToken}";
+            string statusMessage = isReserve ? "Du är placerad på reservlistan till" : "Du är inbokad till";
+
+            var htmlMessage = $@"
+<div style='font-family: Arial, sans-serif; font-size: 16px; color: #333;'>
+    <p><strong>Tack för din bokning {booking.Name}!</strong></p>
+    <p>{statusMessage} <strong>{currEvent.Title}</strong> den {currEvent.Start:yyyy-MM-dd HH:mm}.</p>
+    <p>Om du vill avboka din plats, klicka på länken nedan:</p>
+    <p><a href='{cancelUrl}' style='color: #007bff; text-decoration: none;'>Avboka din plats</a></p>
+    <br>
+    <p>Vi ses på <strong>Freja Bad & Gym</strong>!</p>
+</div>";
+
+            try
+            {
+                // Call the ResendEmailService directly
+                await _resendEmailService.SendEmailAsync(
+                    booking.Email,
+                    "Bokningsbekräftelse Aufguss",
+                    htmlMessage
+                );
+                Console.WriteLine($"Email sent to: {booking.Email}");
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Failed to send email: " + ex.Message);
+                // Don't fail the booking if email sending fails
+            }
+
+            return Ok(new { message = $"{statusMessage} till det här passet" });
         }
+
 
         [HttpPut("Unbook/{id}")]
         public IActionResult Unbook(int id)

@@ -27,7 +27,7 @@ namespace Aufguss.Services.Demo
                 Id = 0,
                 Name = "Demo",
                 UserId = "demo-user-id",
-                Email = "demo@demo.com",
+                Email = "david.rantanen@telia.com",
                 Tel = "0701234567",
                 BookedAt = DateTime.Now,
                 Unbooked = true,
@@ -37,7 +37,7 @@ namespace Aufguss.Services.Demo
             new Booking {
                 Id = 1,
                 Name = "Demo",
-                Email = "demo@demo.com",
+                Email = "david.rantanen@telia.com",
                 UserId = "demo-user-id",
                 Tel = "0701234567",
                 BookedAt = DateTime.Now,
@@ -141,7 +141,7 @@ namespace Aufguss.Services.Demo
             return Task.FromResult(_bookings);
         }
 
-        public async Task<List<Booking>> AddBookingAsync(BookingDto bookingDto)
+        public async Task<Booking> AddBookingAsync(BookingDto bookingDto)
         {
             _settings = await _settingsService.GetSettingsAsync();
             await EnsureEventsLoadedAsync();
@@ -189,7 +189,7 @@ namespace Aufguss.Services.Demo
 
             _bookings.Add(newBooking);
 
-            return _bookings.OrderByDescending(b => b.Id).ToList();
+            return newBooking;
         }
 
         public Task EditBookingAsync(int id, BookingDto bookingDto)

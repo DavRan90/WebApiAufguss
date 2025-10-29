@@ -46,7 +46,7 @@ namespace Aufguss.Services.Demo
             return Task.FromResult(_events);
         }
 
-        public Task<List<Event>> AddEventAsync(EventDto eventDto)
+        public Task<Event> AddEventAsync(EventDto eventDto)
         {
             var newEvent = new Event
             {
@@ -64,7 +64,8 @@ namespace Aufguss.Services.Demo
             };
 
             _events.Add(newEvent);
-            return Task.FromResult(_events.OrderByDescending(f => f.Id).ToList());
+
+            return Task.FromResult(newEvent); // 👈 makes it awaitable
         }
 
         public Task EditEventAsync(int id, EventDto eventDto)

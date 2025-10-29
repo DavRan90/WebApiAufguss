@@ -16,14 +16,12 @@ namespace Aufguss.Services.API
             return await _http.GetFromJsonAsync<Event>($"api/Events/{id}");
         }
 
-        public async Task<List<Event>> AddEventAsync(EventDto EventDtoData)
+        public async Task<Event> AddEventAsync(EventDto eventDto)
         {
-            var response = await _http.PostAsJsonAsync("api/Events", EventDtoData);
-
+            var response = await _http.PostAsJsonAsync("api/Events", eventDto);
             response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadFromJsonAsync<List<Event>>()
-                   ?? new List<Event>(); // fallback in case of null
+            return await response.Content.ReadFromJsonAsync<Event>();
         }
         public async Task EditEventAsync(int id, EventDto eventDto)
         {

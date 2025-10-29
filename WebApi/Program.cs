@@ -5,6 +5,9 @@ using Microsoft.IdentityModel.Tokens;
 using WebApi.Services;
 using System.Text;
 using WebApi.Models;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using WebApi.Services.Email;
+using SendGrid.Helpers.Mail;
 
 namespace WebApi
 {
@@ -24,15 +27,19 @@ namespace WebApi
             //        builder.Services.Configure<SendGridSettings>(
             //builder.Configuration.GetSection("SendGridSettings"));
             //        Console.WriteLine("SendGrid API key: " + builder.Configuration["SendGridSettings:ApiKey"]);
+
             builder.Services.AddHttpClient<ResendEmailService>();
 
             builder.Services.AddScoped<NotificationService>();
 
             builder.Services.AddScoped<FriendService>();
 
-            builder.Services.AddScoped<EmailService>();
+            //builder.Services.AddScoped<EmailService>();
 
-            builder.Services.AddScoped<MailgunEmailService>();
+            builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+            builder.Services.AddSingleton<IBackgroundEmailQueue, BackgroundEmailQueue>();
+            builder.Services.AddHostedService<EmailBackgroundService>();
+            builder.Services.AddScoped<IEmailSender, EmailSender>();
 
             // 1. Add EF Core
             builder.Services.AddDbContext<ApplicationDbContext>(options =>

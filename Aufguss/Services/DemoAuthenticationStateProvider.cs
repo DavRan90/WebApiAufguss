@@ -13,7 +13,7 @@ namespace Aufguss.Services
             var identity = new ClaimsIdentity(new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, "demo-user-id"),
-            new Claim(JwtRegisteredClaimNames.Email, "demo@demo.com"),
+            new Claim(JwtRegisteredClaimNames.Email, "david.rantanen@telia.com"),
             new Claim(JwtRegisteredClaimNames.PhoneNumber, "+46701234567"),
             new Claim("fullName", "Demo User"),
             new Claim("firstName", "Demo"),

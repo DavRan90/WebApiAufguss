@@ -58,6 +58,7 @@ public class Program
             builder.Services.AddScoped<ISettingsService, ApiSettingsService>();
             builder.Services.AddScoped<ITemplateService, ApiTemplateService>();
             builder.Services.AddScoped<IImageService, ApiImageService>();
+            builder.Services.AddScoped<IEmailSender, ApiEmailSender>(); // only Api right now
         }
 
         builder.Services.AddScoped<Services.AuthorizationMessageHandler>();

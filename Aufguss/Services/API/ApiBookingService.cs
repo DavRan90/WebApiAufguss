@@ -16,14 +16,14 @@ namespace Aufguss.Services.API
             return await _http.GetFromJsonAsync<Booking>($"api/Bookings/{id}");
         }
 
-        public async Task<List<Booking>> AddBookingAsync(BookingDto BookingDtoData)
+        public async Task<Booking> AddBookingAsync(BookingDto BookingDtoData)
         {
             var response = await _http.PostAsJsonAsync("api/Bookings", BookingDtoData);
 
             response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadFromJsonAsync<List<Booking>>()
-                   ?? new List<Booking>(); // fallback in case of null
+            return await response.Content.ReadFromJsonAsync<Booking>()
+                   ?? throw new Exception("Failed to deserialize booking");
         }
         public async Task EditBookingAsync(int id, BookingDto bookingDto)
         {

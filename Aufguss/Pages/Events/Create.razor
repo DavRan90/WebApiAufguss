@@ -209,8 +209,10 @@
     </div>
 </div>
 
+@inject IJSRuntime JS
 @inject HttpClient Http
 @inject NavigationManager navManager
+@inject SweetAlertService Swal
 @inject ITemplateService TemplateService
 @inject IEventService EventService
 
@@ -386,6 +388,7 @@
                     //     break;
                     // }
                 }
+                await JS.InvokeVoidAsync("Swal.fire", "Lyckades", "Serie av pass skapade!", "success");
                 navManager.NavigateTo("/Events");
             }
 
@@ -395,11 +398,13 @@
             try
             {
                 var evts = await EventService.AddEventAsync(EventDtoData);
+                await JS.InvokeVoidAsync("Swal.fire", "Lyckades", "Pass skapat!", "success");
                 navManager.NavigateTo("/Events");
             }
-            catch
+            catch (Exception ex)
             {
-
+                Console.WriteLine($"⚠️ SaveEvent failed: {ex.Message}");
+                await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
             }
 
             //     var response = await Http.PostAsJsonAsync("api/Events", EventDtoData);
