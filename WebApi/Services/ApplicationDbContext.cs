@@ -32,6 +32,7 @@ namespace WebApi.Services
         public required DbSet<SurveyQuestion> SurveyQuestions { get; set; }
         public required DbSet<SurveyAnswer> SurveyAnswers { get; set; }
         public required DbSet<SurveyAnswerDetail> SurveyAnswerDetails { get; set; }
+        public DbSet<BookingAudit> BookingAudits { get; set; }
 
     }
 }
