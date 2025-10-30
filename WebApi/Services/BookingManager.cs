@@ -23,6 +23,12 @@ namespace WebApi.Services
         public async Task<(bool Success, string Message)> CreateBookingAsync(BookingDto bookingDto)
         {
             var settings = await _context.SiteSettings.FirstOrDefaultAsync();
+            if (settings == null)
+            {
+                settings = new SiteSettings { MaxBookingsAufguss = 3 };
+                Console.WriteLine("⚠️ SiteSettings is null in CreateBookingAsync!");
+                return (false, "Inställningar för bokning saknas.");
+            }
             var currEvent = await _context.Events.FindAsync(bookingDto.EventId);
 
             if (currEvent == null)
@@ -82,14 +88,16 @@ namespace WebApi.Services
             await _audit.LogBookingAsync(booking.Id, logAction, booking.Email, logDetails);
 
             // Send confirmation email
-            var cancelUrl = $"https://yourdomain.com/api/bookings/cancel-booking?token={booking.CancellationToken}";
+            var cancelUrl = $"https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net/api/bookings/cancel-booking?token={booking.CancellationToken}";
             var statusText = isReserve ? "Du är placerad på reservlistan till" : "Du är inbokad till";
 
             var html = $@"
                 <div style='font-family: Arial, sans-serif; font-size: 16px; color: #333;'>
                     <p><strong>Tack för din bokning {booking.Name}!</strong></p>
                     <p>{statusText} <strong>{currEvent.Title}</strong> den {currEvent.Start:yyyy-MM-dd HH:mm}.</p>
+                    <p>Om du vill avboka din plats, klicka på länken nedan:</p>
                     <p><a href='{cancelUrl}'>Avboka din plats</a></p>
+                    <p><strong>Vi ses på Freja Bad & Gym!</strong></p>
                 </div>";
 
             try
@@ -161,7 +169,7 @@ namespace WebApi.Services
         /// <summary>
         /// Cancels a booking (used when user cancels via link or UI).
         /// </summary>
-        public async Task<(bool Success, string Message)> UnbookAsync(int id)
+        public async Task<(bool Success, string Message)> UnbookAsync(int id, string performedBy, bool isAdmin = false)
         {
             var booking = await _context.Bookings.Include(b => b.Event).FirstOrDefaultAsync(b => b.Id == id);
             if (booking == null)
@@ -173,11 +181,15 @@ namespace WebApi.Services
 
             await CheckReserveListAsync(booking);
 
-            await _audit.LogBookingAsync(booking.Id, "Avbokad", booking.Email,
-                $"Användaren {booking.Email} avbokade sin plats till eventet '{booking.Event?.Title}'.");
+            var actorText = isAdmin
+                ? $"Admin {performedBy} avbokade användaren {booking.Email} från eventet '{booking.Event?.Title}'."
+                : $"Användaren {booking.Email} avbokade sin plats till eventet '{booking.Event?.Title}'.";
+
+            await _audit.LogBookingAsync(booking.Id, "Avbokad", booking.Email, actorText);
 
             return (true, "Bokningen har avbokats.");
         }
+
 
         /// <summary>
         /// Deletes a booking (used by admin).
@@ -233,12 +245,14 @@ namespace WebApi.Services
                         // Send promotion email (outside transaction)
                         try
                         {
-                            var cancelUrl = $"https://yourdomain.com/api/bookings/cancel-booking?token={promoted.CancellationToken}";
+                            var cancelUrl = $"https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net/api/bookings/cancel-booking?token={promoted.CancellationToken}";
                             var html = $@"
                                 <div style='font-family: Arial, sans-serif; font-size: 16px; color: #333;'>
                                     <p><strong>Grattis {promoted.Name}!</strong></p>
                                     <p>En plats har blivit ledig och du har nu fått en ordinarie plats till <strong>{evt.Title}</strong> den {evt.Start:yyyy-MM-dd HH:mm}.</p>
+                                    <p>Om du vill avboka din plats, klicka på länken nedan:</p>
                                     <p><a href='{cancelUrl}'>Avboka din plats</a></p>
+                                    <p><strong>Vi ses på Freja Bad & Gym!</strong></p>
                                 </div>";
 
                             await _emailService.SendEmailAsync(promoted.Email, "Du har fått en plats!", html);

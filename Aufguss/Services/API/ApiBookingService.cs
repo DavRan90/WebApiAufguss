@@ -1,5 +1,7 @@
-﻿using Aufguss.Services.Interface;
+﻿using Aufguss.Models;
+using Aufguss.Services.Interface;
 using System.Net.Http.Json;
+using static Aufguss.Pages.BookAufguss;
 using static System.Net.WebRequestMethods;
 
 namespace Aufguss.Services.API
@@ -7,7 +9,17 @@ namespace Aufguss.Services.API
     public class ApiBookingService : IBookingService
     {
         private readonly HttpClient _http;
-        public ApiBookingService(HttpClient http) => _http = http;
+
+        public ApiBookingService(IHttpClientFactory factory)
+        {
+            _http = factory.CreateClient("AuthenticatedClient");
+        }
+
+        public async Task<List<BookingStatsDto>> GetPublicBookingStatsAsync()
+        {
+            var result = await _http.GetFromJsonAsync<List<BookingStatsDto>>("api/Bookings/public-stats");
+            return result ?? new List<BookingStatsDto>();
+        }
 
         public Task<List<Booking>> GetBookingsAsync() =>
             _http.GetFromJsonAsync<List<Booking>>("api/bookings");
@@ -20,7 +32,15 @@ namespace Aufguss.Services.API
         {
             var response = await _http.PostAsJsonAsync("api/Bookings", BookingDtoData);
 
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                var message = error != null && error.ContainsKey("message")
+                    ? error["message"]
+                    : "Ett okänt fel uppstod vid bokning.";
+
+                throw new Exception(message);
+            }
 
             return await response.Content.ReadFromJsonAsync<Booking>()
                    ?? throw new Exception("Failed to deserialize booking");

@@ -1,6 +1,7 @@
 ﻿@page "/BokaAufguss/Book/{id:int}"
 @using System.Text.Json.Nodes
 @using Aufguss.Models
+@using System.Text.Json
 
 <div class="row mb-5">
     <div class="col-lg-8">
@@ -214,7 +215,7 @@
                     </div>
                 }
 
-                @if (EventDtoData.AllowFriendBooking && CurrentUser.AufgussFriendId != null)
+                @if (CurrentUser != null && EventDtoData.AllowFriendBooking && CurrentUser.AufgussFriendId != null)
                 {
                     <div class="row mb-3">
                         <div class="col-md-8 offset-md-4 bg-danger-subtle rounded">
@@ -230,6 +231,7 @@
                         </div>
                     </div>
                 }
+
 
 
 
@@ -281,6 +283,7 @@
 @inject IUserService UserService
 
 @code {
+    private BookingStatsDto? EventStats;
     private bool BookFriend = false;
     private List<UserWithRolesDto>? Users;
     private UserWithRolesDto? CurrentUser;
@@ -334,7 +337,7 @@
 
     private async Task LoadEventAndBookings()
     {
-        // eventData = await Http.GetFromJsonAsync<Event>($"api/Events/{Id}");
+        // Load event
         eventData = await EventService.GetEventByIdAsync(Id);
 
         EventDtoData = new EventDto
@@ -343,27 +346,36 @@
                 Description = eventData?.Description ?? "",
                 Start = eventData?.Start ?? DateTime.Now,
                 End = eventData?.End,
-                AllDay = eventData?.AllDay ?? false,
                 MaxSlots = eventData?.MaxSlots ?? 0,
-                Recurring = eventData?.Recurring ?? false,
                 Gender = eventData?.Gender ?? Gender.Male,
-                AllowFriendBooking = eventData?.AllowFriendBooking ?? true,
+                AllowFriendBooking = eventData?.AllowFriendBooking ?? true
             };
 
-        // var allBookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings/");
-        var allBookings = await BookingService.GetBookingsAsync();
-        Bookings = allBookings?.Where(b => b.EventId == Id).ToList() ?? new();
+        // Load public booking stats
+        var allStats = await BookingService.GetPublicBookingStatsAsync();
+        EventStats = allStats.FirstOrDefault(s => s.Id == Id);
 
-        SpotsRemaining = EventDtoData.MaxSlots - Bookings
-            .Count(b => !b.Unbooked && !b.Reserve);
+        // Compute SpotsRemaining using public stats
+        SpotsRemaining = EventStats != null
+            ? EventStats.MaxSlots - EventStats.BookedCount
+            : EventDtoData.MaxSlots;
 
-        var userId = BookingDtoData.UserId;
-        if (!string.IsNullOrEmpty(userId))
+        // Load authenticated user's bookings if logged in
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var loggedInUser = authState.User;
+        if (loggedInUser.Identity?.IsAuthenticated == true)
         {
-            CurrentUserIsBooked = Bookings
-                .Any(b => b.UserId == userId && !b.Unbooked);
+            var allBookings = await BookingService.GetBookingsAsync();
+            Bookings = allBookings?.Where(b => b.EventId == Id).ToList() ?? new();
+
+            var userId = loggedInUser.FindFirst("sub")?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                CurrentUserIsBooked = Bookings.Any(b => b.UserId == userId && !b.Unbooked);
+            }
         }
     }
+
 
     private async Task LoadAuthAndCurrentUser()
     {
@@ -396,38 +408,69 @@
 
     private async Task SaveBooking()
     {
+        // Ensure EventId is set
         BookingDtoData.EventId = Id;
-        if(BookFriend)
+        BookingDtoData.BookedAt = DateTime.UtcNow; // <-- Important!
+
+        if (CurrentUser != null)
         {
-            FriendBookingDtoData.EventId = Id;
-            try
+            BookingDtoData.Name = $"{CurrentUser.FirstName} {CurrentUser.SurName}";
+            BookingDtoData.Email = CurrentUser.Email ?? "";
+            BookingDtoData.Tel = CurrentUser.PhoneNumber ?? "";
+            BookingDtoData.UserId = CurrentUser.Id;
+        }
+
+        // Optional: ensure CancelationToken is null or ignored
+        BookingDtoData.CancellationToken = null;
+
+
+        // Validate required fields
+        if (string.IsNullOrWhiteSpace(BookingDtoData.Name) ||
+            string.IsNullOrWhiteSpace(BookingDtoData.Email))
+        {
+            await JS.InvokeVoidAsync("Swal.fire", "Fel", "Namn och e-post är obligatoriska.", "error");
+            return;
+        }
+
+        // Log payload for debugging
+        Console.WriteLine("Booking payload: " + JsonSerializer.Serialize(BookingDtoData));
+
+        try
+        {
+            // Add main booking
+            await BookingService.AddBookingAsync(BookingDtoData);
+
+            // If friend booking is requested and friend exists
+            if (BookFriend && AufgussFriend != null)
             {
-                await BookingService.AddBookingAsync(BookingDtoData);
+                FriendBookingDtoData.EventId = Id;
+                FriendBookingDtoData.BookedAt = DateTime.UtcNow;
+                FriendBookingDtoData.Name = $"{AufgussFriend.FirstName} {AufgussFriend.SurName}";
+                FriendBookingDtoData.Email = AufgussFriend.Email ?? "";
+                FriendBookingDtoData.Tel = AufgussFriend.PhoneNumber ?? "";
+                FriendBookingDtoData.UserId = AufgussFriend.Id;
+
+                // Log friend payload
+                Console.WriteLine("Friend booking payload: " + JsonSerializer.Serialize(FriendBookingDtoData));
+
                 await BookingService.AddBookingAsync(FriendBookingDtoData);
                 await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", $"Du och {FriendBookingDtoData.Name} är nu inbokade till passet!", "success");
-                navManager.NavigateTo("/Dina_bokningar");
             }
-        catch(Exception ex)
-        {
-                Console.WriteLine($"Error booking: {ex.Message}");
-                await JS.InvokeVoidAsync("Swal.fire", "Fel", ex.Message, "error");
+            else
+            {
+                await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", "Du är nu inbokad till passet!", "success");
             }
+
+            // Navigate to bookings page
+            navManager.NavigateTo("/Dina_bokningar");
         }
-        else
+        catch (Exception ex)
         {
-            try
-            {
-                await BookingService.AddBookingAsync(BookingDtoData);
-                await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", $"Du är nu inbokad till passet!", "success");
-                navManager.NavigateTo("/Dina_bokningar");
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine($"Error booking: {ex.Message}");
-                await JS.InvokeVoidAsync("Swal.fire", "Fel", ex.Message, "error");
-            }
+            Console.WriteLine($"Error booking: {ex.Message}");
+            await JS.InvokeVoidAsync("Swal.fire", "Fel", ex.Message, "error");
         }
     }
+
 
     private async Task ReserveBooking(bool reserve)
     {

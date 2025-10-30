@@ -125,6 +125,7 @@ else
 @inject IUserService UserService
 
 @code {
+    private List<BookingStatsDto>? bookingStats;
     private BlazorCalendar.Models.Tasks[]? ModelTasks;
     private DateTime FirstDate = DateTime.Today;
     [Parameter]
@@ -192,19 +193,15 @@ else
 
     public int SpotsRemaining(int evtId)
     {
-        if (events == null || bookings == null)
-            return 0;
-
-        var evt = events.SingleOrDefault(e => e.Id == evtId);
+        var evt = events?.SingleOrDefault(e => e.Id == evtId);
         if (evt == null)
             return 0;
 
-        var count = bookings.Count(b =>
-            b.EventId == evt.Id &&
-            b.Unbooked == false &&
-            b.Reserve == false);
+        var stat = bookingStats?.SingleOrDefault(s => s.Id == evtId);
+        if (stat == null)
+            return evt.MaxSlots; // assume empty if no data yet
 
-        return evt.MaxSlots - count;
+        return evt.MaxSlots - stat.BookedCount;
     }
 
     private async Task LoadEventsAsync()
@@ -217,7 +214,16 @@ else
         // events = await Http.GetFromJsonAsync<List<Event>>("api/Events");
         events = await EventService.GetEventsAsync();
         // bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
-        bookings = await BookingService.GetBookingsAsync();
+        bookingStats = await BookingService.GetPublicBookingStatsAsync();
+        if (loggedInUser.Identity != null && loggedInUser.Identity.IsAuthenticated)
+        {
+            bookings = await BookingService.GetBookingsAsync();
+        }
+        else
+        {
+            // Fallback: no booking data for anonymous users
+            bookings = new List<Booking>();
+        }
 
         events = events?.Where(e => e.Start > DateTime.Now).ToList();
         if (userGender == Gender.Male.ToString())

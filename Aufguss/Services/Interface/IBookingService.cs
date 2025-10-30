@@ -1,4 +1,6 @@
-﻿using static System.Net.WebRequestMethods;
+﻿using Aufguss.Models;
+using static Aufguss.Pages.BookAufguss;
+using static System.Net.WebRequestMethods;
 
 namespace Aufguss.Services.Interface
 {
@@ -11,5 +13,6 @@ namespace Aufguss.Services.Interface
         Task ConfirmAttendanceAsync(int bookingId, double userLat, double userLng);
         Task UnbookAsync(int id);
         Task RemoveBookingAsync(int id);
+        Task<List<BookingStatsDto>> GetPublicBookingStatsAsync();
     }
 }

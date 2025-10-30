@@ -2,6 +2,8 @@
 using Aufguss.Pages;
 using Aufguss.Services.Interface;
 using System.Xml.Linq;
+using static Aufguss.Pages.BookAufguss;
+using static System.Net.WebRequestMethods;
 
 namespace Aufguss.Services.Demo
 {
@@ -134,6 +136,10 @@ namespace Aufguss.Services.Demo
             {
                 _settings = await _settingsService.GetSettingsAsync();
             }
+        }
+        public async Task<List<BookingStatsDto>> GetPublicBookingStatsAsync()
+        {
+            return new List<BookingStatsDto>();
         }
 
         public Task<List<Booking>> GetBookingsAsync()
