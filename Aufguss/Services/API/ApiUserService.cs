@@ -17,6 +17,14 @@ namespace Aufguss.Services.API
         {
             return await _http.GetFromJsonAsync<UserWithRolesDto>($"api/user/{id}");
         }
+        public async Task<UserWithRolesDto?> GetCurrentUserAsync()
+        {
+            return await _http.GetFromJsonAsync<UserWithRolesDto>("api/users/me");
+        }
+        public async Task<List<UserWithRolesDto>> GetMyFriendsAsync()
+        {
+            return await _http.GetFromJsonAsync<List<UserWithRolesDto>>("api/users/me/friends");
+        }
         public async Task EditUserAsync(string id, UserWithRolesDto userDto)
         {
             var response = await _http.PutAsJsonAsync($"api/Users/{id}", userDto);

@@ -17,6 +17,8 @@ namespace Aufguss.Models
         public string PhoneNumber { get; set; }
         public List<string> Roles { get; set; } = new();
         public Gender? Gender { get; set; }
+
         public string? AufgussFriendId { get; set; }
+        public string? AufgussFriendName { get; set; }
     }
 }

@@ -139,8 +139,22 @@ namespace Aufguss.Services.Demo
         }
         public async Task<List<BookingStatsDto>> GetPublicBookingStatsAsync()
         {
-            return new List<BookingStatsDto>();
+            await EnsureEventsLoadedAsync();
+
+            var stats = _events.Select(evt => new BookingStatsDto
+            {
+                Id = evt.Id,
+                BookedCount = _bookings.Count(b =>
+                    b.EventId == evt.Id &&
+                    !b.Reserve &&
+                    !b.Unbooked),
+                MaxSlots = evt.MaxSlots // ✅ Include it here
+            }).ToList();
+
+            return stats;
         }
+
+
 
         public Task<List<Booking>> GetBookingsAsync()
         {

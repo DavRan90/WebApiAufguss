@@ -7,12 +7,13 @@ using System.Threading.Tasks;
 using System.Linq;
 using WebApi.Models;
 using WebApi.Services;
+using System.Security.Claims;
 
 namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public class UsersController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -45,12 +46,45 @@ namespace WebApi.Controllers
 
             return Ok(users);
         }
+        // GET: api/users/me
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var userId = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var user = await _userManager.Users
+    .Include(u => u.AufgussFriend)
+    .SingleOrDefaultAsync(u => u.Id == userId);
+
+            var dto = new UserWithRolesDto
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                SurName = user.SurName,
+                PhoneNumber = user.PhoneNumber,
+                Roles = (await _userManager.GetRolesAsync(user)).ToList(),
+                AufgussFriendId = user.AufgussFriendId,
+                AufgussFriendName = user.AufgussFriend?.FirstName
+            };
+
+
+            return Ok(dto);
+        }
+
 
         // PUT: api/users/{id}
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserDto model)
         {
-            
+            var currentUserId = User.FindFirst("sub")?.Value;
+            var isAdmin = User.IsInRole("Admin");
+
+            if (currentUserId != id && !isAdmin)
+                return Forbid();
+
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 

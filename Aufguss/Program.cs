@@ -43,6 +43,7 @@ public class Program
             builder.Services.AddScoped<ISettingsService, DemoSettingsService>();
             builder.Services.AddScoped<ITemplateService, DemoTemplateService>();
             builder.Services.AddScoped<IImageService, DemoImageService>();
+            builder.Services.AddScoped<ILogService, DemoLogService>();
         }
         else
         {
@@ -59,6 +60,7 @@ public class Program
             builder.Services.AddScoped<ITemplateService, ApiTemplateService>();
             builder.Services.AddScoped<IImageService, ApiImageService>();
             builder.Services.AddScoped<IEmailSender, ApiEmailSender>(); // only Api right now
+            builder.Services.AddScoped<ILogService, ApiLogService>();
         }
 
         builder.Services.AddScoped<Services.AuthorizationMessageHandler>();

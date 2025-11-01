@@ -10,5 +10,7 @@ namespace WebApi.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public Gender? Gender { get; set; }
         public string? AufgussFriendId { get; set; }
+
+        public ApplicationUser? AufgussFriend { get; set; }
     }
 }

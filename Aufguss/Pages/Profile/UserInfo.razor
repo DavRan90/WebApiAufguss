@@ -199,20 +199,20 @@ else
     protected override async Task OnInitializedAsync()
     {
         // Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
-        Users = await UserService.GetUsersAsync();
+        CurrentUser = await UserService.GetCurrentUserAsync();
 
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var loggedInUser = authState.User;
-        var userIdString = loggedInUser.FindFirst("sub")?.Value;
+        // var loggedInUser = authState.User;
+        // var userIdString = loggedInUser.FindFirst("sub")?.Value;
 
-        var urlInvitee = $"api/invites/invitees?inviteeId={userIdString}";
-        var urlInviter = $"api/invites/inviters?inviterId={userIdString}";
+        var urlInvitee = $"api/invites/invitees?inviteeId={CurrentUser.Id}";
+        var urlInviter = $"api/invites/inviters?inviterId={CurrentUser.Id}";
 
-        CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
+        // CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
         if (CurrentUser.AufgussFriendId != null)
         {
-            var friend = Users?.Where(u => u.Id == CurrentUser.AufgussFriendId).SingleOrDefault();
-            AufgussFriend = friend.FirstName + " " + friend.SurName;
+            // var friend = Users?.Where(u => u.Id == CurrentUser.AufgussFriendId).SingleOrDefault();
+            AufgussFriend = CurrentUser.AufgussFriendName;
         }
 
         await LoadInvites();
@@ -286,10 +286,11 @@ else
     }
     private async Task LoadInvites()
     {
+        CurrentUser = await UserService.GetCurrentUserAsync();
         if (CurrentUser.AufgussFriendId != null)
         {
-            var friend = Users?.Where(u => u.Id == CurrentUser.AufgussFriendId).SingleOrDefault();
-            AufgussFriend = friend.FirstName + " " + friend.SurName;
+            // var friend = Users?.Where(u => u.Id == CurrentUser.AufgussFriendId).SingleOrDefault();
+            AufgussFriend = CurrentUser.AufgussFriendName;
         }
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var loggedInUser = authState.User;

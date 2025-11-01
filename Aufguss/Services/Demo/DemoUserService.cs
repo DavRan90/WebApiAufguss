@@ -70,6 +70,14 @@ namespace Aufguss.Services.Demo
             return Task.FromResult(_users);
         }
 
+        public Task<UserWithRolesDto?> GetCurrentUserAsync()
+        {
+            // In demo mode, just return the first or a known “demo user”
+            var currentUser = _users.FirstOrDefault(u => u.Id == "demo-user-id");
+
+            return Task.FromResult(currentUser);
+        }
+
         public Task<UserWithRolesDto?> GetUserAsync(string? id, string? phoneNumber)
         {
             UserWithRolesDto? user = null;

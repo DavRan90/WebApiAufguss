@@ -1,15 +1,16 @@
 ﻿@page "/logs"
+@using Aufguss.Models
 @inject HttpClient Http
 
 <h3>Loggar</h3>
 
 <div class="tabs mb-3">
     <button class="@($"btn btn-sm me-2 {(activeTab == "bookings" ? "btn-primary" : "btn-outline-primary")}")"
-            @onclick="@(() => activeTab = "bookings")">
+    @onclick="@(() => activeTab = "bookings")">
         Bokningar
     </button>
     <button class="@($"btn btn-sm {(activeTab == "events" ? "btn-primary" : "btn-outline-primary")}")"
-            @onclick="@(() => activeTab = "events")">
+    @onclick="@(() => activeTab = "events")">
         Pass
     </button>
 </div>
@@ -76,14 +77,16 @@ else
     }
 }
 
+@inject ILogService LogService
+
 @code {
     private string activeTab = "bookings";
     private bool loading = true;
     private string? errorMessage;
 
     // Lists for logs
-    private List<AuditLogDto> bookingLogs = new();
-    private List<AuditLogDto> eventLogs = new();
+    private List<BookingAudit> bookingLogs = new();
+    private List<EventAudit> eventLogs = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -93,12 +96,14 @@ else
         try
         {
             // Option 1: single API call returning both logs
-            var allLogs = await Http.GetFromJsonAsync<CombinedAuditLogsDto>("api/admin/audit-logs");
-            if (allLogs != null)
-            {
-                bookingLogs = allLogs.Bookings;
-                eventLogs = allLogs.Events;
-            }
+            // var allLogs = await Http.GetFromJsonAsync<CombinedAuditLogsDto>("api/admin/audit-logs");
+            bookingLogs = await LogService.GetBookingAuditsAsync();
+            eventLogs = await LogService.GetEventAuditsAsync();
+            // if (allLogs != null)
+            // {
+            //     bookingLogs = allLogs.Bookings;
+            //     eventLogs = allLogs.Events;
+            // }
 
             // Option 2: separate API calls for each type
             //bookingLogs = await Http.GetFromJsonAsync<List<AuditLogDto>>("api/admin/booking-logs") ?? new();

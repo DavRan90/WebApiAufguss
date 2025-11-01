@@ -95,57 +95,60 @@ namespace Aufguss.Services.Demo
 
         public async Task<string> AcceptInviteAsync(int id, InviteDto dto)
         {
-            var invite = _invites.FirstOrDefault(i => i.Id == id);
-            if (invite == null)
-                throw new InvalidOperationException("Invite not found.");
+            var invite = _invites.FirstOrDefault(i => i.Id == id)
+                         ?? throw new InvalidOperationException("Invite not found.");
 
             var allUsers = await _userService.GetUsersAsync();
 
-            var inviter = allUsers.FirstOrDefault(u => u.Id == invite.InviterId);
-            var invitee = allUsers.FirstOrDefault(u => u.Id == invite.InviteeId);
+            var inviter = allUsers.FirstOrDefault(u => u.Id == invite.InviterId)
+                          ?? throw new InvalidOperationException("Inviter not found.");
 
-            if (inviter == null || invitee == null)
-                throw new InvalidOperationException("One or both users not found.");
+            var invitee = allUsers.FirstOrDefault(u => u.Id == invite.InviteeId)
+                           ?? throw new InvalidOperationException("Invitee not found.");
 
-            if (!string.IsNullOrEmpty(invitee.AufgussFriendId))
-            {
-                var oldFriend = allUsers.FirstOrDefault(u => u.Id == invitee.AufgussFriendId);
-                if (oldFriend != null)
-                    oldFriend.AufgussFriendId = null;
+            ClearFriendship(invitee, allUsers);
+            ClearFriendship(inviter, allUsers);
 
-                invitee.AufgussFriendId = null;
-
-                _invites.RemoveAll(i =>
-                    (i.InviterId == invitee.Id && i.InviteeId == oldFriend?.Id) ||
-                    (i.InviterId == oldFriend?.Id && i.InviteeId == invitee.Id));
-            }
-
-            if (!string.IsNullOrEmpty(inviter.AufgussFriendId))
-            {
-                var inviterOldFriend = allUsers.FirstOrDefault(u => u.Id == inviter.AufgussFriendId);
-                if (inviterOldFriend != null)
-                    inviterOldFriend.AufgussFriendId = null;
-
-                inviter.AufgussFriendId = null;
-
-                _invites.RemoveAll(i =>
-                    (i.InviterId == inviter.Id && i.InviteeId == inviterOldFriend?.Id) ||
-                    (i.InviterId == inviterOldFriend?.Id && i.InviteeId == inviter.Id));
-            }
-
+            // Accept the invite
             invite.Accepted = true;
             invite.Invited = false;
             invite.AcceptedAt = DateTime.UtcNow;
 
-            inviter.AufgussFriendId = invite.InviteeId;
-            invitee.AufgussFriendId = invite.InviterId;
+            // Set new friendship
+            inviter.AufgussFriendId = invitee.Id;
+            invitee.AufgussFriendId = inviter.Id;
 
-            _invites.RemoveAll(i =>
-                i.Id != invite.Id &&
-                (i.InviteeId == invite.InviteeId || i.InviterId == invite.InviteeId ||
-                 i.InviteeId == invite.InviterId || i.InviterId == invite.InviterId));
+            inviter.AufgussFriendName = $"{invitee.FirstName} {invitee.SurName}";
+            invitee.AufgussFriendName = $"{inviter.FirstName} {inviter.SurName}";
+
+            // Persist changes
+            await Task.WhenAll(
+                _userService.EditUserAsync(inviter.Id, inviter),
+                _userService.EditUserAsync(invitee.Id, invitee)
+            );
+
+            // Remove other invites involving either user
+            var relatedUserIds = new[] { invite.InviterId, invite.InviteeId };
+            _invites.RemoveAll(i => i.Id != invite.Id &&
+                                    (relatedUserIds.Contains(i.InviterId) || relatedUserIds.Contains(i.InviteeId)));
 
             return "Friendship accepted and updated (demo).";
+        }
+
+        private void ClearFriendship(UserWithRolesDto user, List<UserWithRolesDto> allUsers)
+        {
+            if (string.IsNullOrEmpty(user.AufgussFriendId))
+                return;
+
+            var oldFriend = allUsers.FirstOrDefault(u => u.Id == user.AufgussFriendId);
+            if (oldFriend != null)
+                oldFriend.AufgussFriendId = null;
+
+            user.AufgussFriendId = null;
+
+            _invites.RemoveAll(i =>
+                (i.InviterId == user.Id && i.InviteeId == oldFriend?.Id) ||
+                (i.InviterId == oldFriend?.Id && i.InviteeId == user.Id));
         }
     }
 }
