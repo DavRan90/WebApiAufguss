@@ -10,6 +10,7 @@
         public List<string> Roles { get; set; } = new();
 
         public string? AufgussFriendId { get; set; }
+        public string? AufgussFriendName { get; set; }
 
         public ApplicationUser? AufgussFriend { get; set; }
     }

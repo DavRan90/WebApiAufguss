@@ -225,6 +225,10 @@ namespace WebApi.Controllers
             inviter.AufgussFriendId = invite.InviteeId;
             invitee.AufgussFriendId = invite.InviterId;
 
+            inviter.AufgussFriendName = $"{invitee.FirstName} {invitee.SurName}";
+            invitee.AufgussFriendName = $"{inviter.FirstName} {inviter.SurName}";
+
+
             // 🔥 Remove all other invites involving either user
             var otherInvites = await _context.Invites
                 .Where(i => i.Id != invite.Id &&
