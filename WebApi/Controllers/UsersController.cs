@@ -66,10 +66,10 @@ namespace WebApi.Controllers
                 PhoneNumber = user.PhoneNumber,
                 Roles = (await _userManager.GetRolesAsync(user)).ToList(),
                 AufgussFriendId = user.AufgussFriendId,
-                AufgussFriendName = user.AufgussFriend?.FirstName
+                AufgussFriendName = user.AufgussFriend != null
+        ? $"{user.AufgussFriend.FirstName} {user.AufgussFriend.SurName}"
+        : null
             };
-
-
             return Ok(dto);
         }
 
