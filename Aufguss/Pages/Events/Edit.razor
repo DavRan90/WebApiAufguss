@@ -96,8 +96,19 @@
             <div class="row mb-3">
                 <div class="col-md-8 offset-md-4">
                     <div>
-                        <input type="checkbox" id="gridCheck3" @bind="EventDtoData.AllowFriendBooking">
+                        <input type="checkbox" id="gridCheck3" @bind="EventDtoData.IncludeSurvey">
                         <label style="vertical-align: top;" class="form-check-label m-1" for="gridCheck3">
+                            Inkludera enkät
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-8 offset-md-4">
+                    <div>
+                        <input type="checkbox" id="gridCheck4" @bind="EventDtoData.AllowFriendBooking">
+                        <label style="vertical-align: top;" class="form-check-label m-1" for="gridCheck4">
                             Tillåt vänbokning
                         </label>
                     </div>
@@ -286,6 +297,7 @@
             EventDtoData.Recurring = eventData?.Recurring ?? false;
             EventDtoData.Gender = eventData?.Gender ?? Gender.Male;
             EventDtoData.Hidden = eventData?.Hidden ?? false;
+            EventDtoData.IncludeSurvey = eventData?.IncludeSurvey ?? false;
             EventDtoData.AllowFriendBooking = eventData?.AllowFriendBooking ?? false;
 
             var allBookings = await BookingService.GetBookingsAsync();

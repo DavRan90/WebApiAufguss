@@ -1,11 +1,20 @@
 ﻿@page "/survey/{EventId}"
 @using Aufguss.Models.Survey
 @inject ISurveyService SurveyService
+@inject IEventService EventService
 
 <h3 class="m-3">Enkät för event: @EventId</h3>
-
-@if (stats is not null)
+@if (!includeSurvey)
 {
+    <div class="alert alert-warning">Denna sittning har ingen enkät.</div>
+}
+else if (hasResponded)
+{
+    <div class="alert alert-success">Du har redan svarat på enkäten. Tack!</div>
+}
+else
+{
+
     <div class="alert alert-info">
         <strong>Antal svar:</strong> @stats.Count<br />
         🌡️ Temperatur: @($"{stats.AvgTemperature:F1}")<br />
@@ -13,56 +22,59 @@
         ⏱️ Längd: @($"{stats.AvgDuration:F1}")<br />
 
     </div>
+
+
+    <EditForm Model="form" OnValidSubmit="SubmitSurvey">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="card mt-3">
+            <div class="card-header">Hur upplevde du temperaturen?</div>
+            <div class="card-body">
+                <input type="range" min="1" max="5" class="form-range"
+                @bind="form.Temperature" />
+                <div class="slider-labels d-flex justify-content-between">
+                    <span>❄️</span>
+                    <span>🤗</span>
+                    <span>🔥</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">Hur upplevde du doften?</div>
+            <div class="card-body">
+                <input type="range" min="1" max="5" class="form-range"
+                @bind="form.Scent" />
+                <div class="slider-labels d-flex justify-content-between">
+                    <span>🤢</span>
+                    <span>🌺</span>
+                    <span>🤯</span>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">Var sittningen för kort eller lång?</div>
+            <div class="card-body">
+                <input type="range" min="1" max="5" class="form-range"
+                @bind="form.Duration" />
+                <div class="slider-labels d-flex justify-content-between">
+                    <span>🥶</span>
+                    <span>🤗</span>
+                    <span>🥵</span>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Skicka svar</button>
+    </EditForm>
 }
-
-<EditForm Model="form" OnValidSubmit="SubmitSurvey">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
-    <div class="card mt-3">
-        <div class="card-header">Hur upplevde du temperaturen?</div>
-        <div class="card-body">
-            <input type="range" min="1" max="5" class="form-range"
-                   @bind="form.Temperature" />
-            <div class="slider-labels d-flex justify-content-between">
-                <span>❄️</span>
-                <span>🤗</span>
-                <span>🔥</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="card mt-3">
-        <div class="card-header">Hur upplevde du doften?</div>
-        <div class="card-body">
-            <input type="range" min="1" max="5" class="form-range"
-                   @bind="form.Scent" />
-            <div class="slider-labels d-flex justify-content-between">
-                <span>🤢</span>
-                <span>🌺</span>
-                <span>🤯</span>
-
-            </div>
-        </div>
-    </div>
-
-    <div class="card mt-3">
-        <div class="card-header">Var sittningen för kort eller lång?</div>
-        <div class="card-body">
-            <input type="range" min="1" max="5" class="form-range"
-                   @bind="form.Duration" />
-            <div class="slider-labels d-flex justify-content-between">
-                <span>🥶</span>
-                <span>🤗</span>
-                <span>🥵</span>
-            </div>
-        </div>
-    </div>
-
-    <button type="submit" class="btn btn-primary mt-3">Skicka svar</button>
-</EditForm>
-
 @code {
+
+    private bool includeSurvey = true;
+    private bool hasResponded = false;
     [Parameter] public string EventId { get; set; } = string.Empty;
 
     private SurveyResponseDto form = new();
@@ -71,7 +83,10 @@
     protected override async Task OnParametersSetAsync()
     {
         form.EventId = EventId;
+
         stats = await SurveyService.GetAverageAsync(EventId);
+        var evt = await EventService.GetEventByIdAsync(int.Parse(EventId));
+        includeSurvey = evt.IncludeSurvey;
     }
 
     private async Task SubmitSurvey()

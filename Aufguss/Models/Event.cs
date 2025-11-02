@@ -18,5 +18,7 @@ namespace Aufguss
         public Gender Gender { get; set; }
         public bool AllowFriendBooking { get; set; }
         public bool IncludeSurvey { get; set; }
+
+        public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace Aufguss
+﻿using Aufguss.Models;
+
+namespace Aufguss
 {
     public class Booking
     {
@@ -13,8 +15,13 @@
         public bool Unbooked { get; set; } = false;
         public string? UserId { get; set; }
         public int EventId { get; set; }
+        public Event Event { get; set; } = null!;
         public string? CancellationToken { get; set; }
         public bool AttendanceConfirmed { get; set; }
         public DateTime? AttendanceConfirmedAt { get; set; }
+
+        public ApplicationUser User { get; set; } = null!;
+
+        public bool HasRespondedToSurvey { get; set; } = false;
     }
 }
