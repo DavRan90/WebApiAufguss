@@ -180,13 +180,15 @@ else
     protected override async Task OnInitializedAsync()
     {
         // Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
-        Users = await UserService.GetUsersAsync();
-        var authState = await AuthService.GetAuthenticationStateAsync();
-        var loggedInUser = authState.User;
-        var userIdString = loggedInUser.FindFirst("sub")?.Value;
-        var userGender = loggedInUser.FindFirst("gender")?.Value;
+        // Users = await UserService.GetUsersAsync();
+        // var authState = await AuthService.GetAuthenticationStateAsync();
+        // var loggedInUser = authState.User;
+        // var userIdString = loggedInUser.FindFirst("sub")?.Value;
+        // var userGender = loggedInUser.FindFirst("gender")?.Value;
 
-        CurrentUser = Users?.Where(u => u.Id == userIdString).SingleOrDefault();
+        CurrentUser = await UserService.GetCurrentUserAsync();
+        var userIdString = CurrentUser.Id;
+        var userGender = CurrentUser.Gender;
 
         LoadEventsAsync();        
     }

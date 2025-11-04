@@ -30,6 +30,12 @@ namespace Aufguss.Services
             return new AuthenticationState(user);
         }
 
+        public async Task<string?> GetTokenAsync()
+        {
+            var token = await _js.InvokeAsync<string>("localStorage.getItem", TokenKey);
+            return string.IsNullOrWhiteSpace(token) ? null : token;
+        }
+
         public void NotifyUserAuthentication(string token)
         {
             var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt");

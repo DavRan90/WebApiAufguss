@@ -1,6 +1,7 @@
 ﻿using Aufguss.Models;
 using Aufguss.Pages;
 using Aufguss.Services.Interface;
+using System.Reflection.Metadata.Ecma335;
 using System.Xml.Linq;
 using static Aufguss.Pages.BookAufguss;
 using static System.Net.WebRequestMethods;
@@ -159,6 +160,18 @@ namespace Aufguss.Services.Demo
         public Task<List<Booking>> GetBookingsAsync()
         {
             return Task.FromResult(_bookings);
+        }
+
+        public Task<List<Booking>> GetMyBookingsAsync()
+        {
+            // Simulate "logged-in" demo user
+            var currentUserId = "demo-user-id";
+
+            var userBookings = _bookings
+                .Where(b => b.UserId == currentUserId && !b.Unbooked)
+                .ToList();
+
+            return Task.FromResult(userBookings);
         }
 
         public async Task<Booking> AddBookingAsync(BookingDto bookingDto)

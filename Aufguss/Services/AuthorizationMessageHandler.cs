@@ -1,23 +1,22 @@
-﻿using System.Net.Http;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.JSInterop;
+using Aufguss.Services.Interface;
 
 namespace Aufguss.Services
 {
     public class AuthorizationMessageHandler : DelegatingHandler
     {
-        private readonly IJSRuntime _jsRuntime;
+        private readonly IAuthService _authService;
 
-        public AuthorizationMessageHandler(IJSRuntime jsRuntime)
+        public AuthorizationMessageHandler(IAuthService authService)
         {
-            _jsRuntime = jsRuntime;
+            _authService = authService;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+            var token = await _authService.GetTokenAsync();
 
             if (!string.IsNullOrWhiteSpace(token))
             {

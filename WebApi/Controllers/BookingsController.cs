@@ -53,6 +53,24 @@ namespace WebApi.Controllers
             return Ok(bookings);
         }
         [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMyBookings()
+        {
+            // Extract user identifier from claims
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User identifier not found.");
+
+            var myBookings = await _context.Bookings
+                .Include(b => b.Event)
+                .Where(b => b.UserId == userId && !b.Unbooked)
+                .OrderByDescending(b => b.Id)
+                .ToListAsync();
+
+            return Ok(myBookings);
+        }
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBooking(int id)
         {

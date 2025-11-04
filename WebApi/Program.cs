@@ -78,7 +78,8 @@ namespace WebApi
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
         // New
-        RoleClaimType = "role"
+        RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+
     };
 });
 

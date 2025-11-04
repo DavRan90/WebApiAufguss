@@ -233,6 +233,7 @@ namespace WebApi.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
         public static string NormalizeSwedishPhone(string phone)
         {
             if (string.IsNullOrWhiteSpace(phone))

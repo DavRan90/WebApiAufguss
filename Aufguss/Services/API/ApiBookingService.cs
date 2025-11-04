@@ -23,10 +23,14 @@ namespace Aufguss.Services.API
 
         public Task<List<Booking>> GetBookingsAsync() =>
             _http.GetFromJsonAsync<List<Booking>>("api/bookings");
+
         public async Task<Booking?> GetBookingByIdAsync(int id)
         {
             return await _http.GetFromJsonAsync<Booking>($"api/Bookings/{id}");
         }
+
+        public Task<List<Booking>> GetMyBookingsAsync() =>
+            _http.GetFromJsonAsync<List<Booking>>("api/bookings/me");
 
         public async Task<Booking> AddBookingAsync(BookingDto BookingDtoData)
         {

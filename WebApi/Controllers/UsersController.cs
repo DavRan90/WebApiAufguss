@@ -13,7 +13,6 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
     public class UsersController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -28,30 +27,40 @@ namespace WebApi.Controllers
         }
 
         // GET: api/users
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
-            var users = await _context.Users
-                .Select(u => new UserDto
-                {
-                    Id = u.Id,
-                    Email = u.Email,
-                    FirstName = u.FirstName,
-                    SurName = u.SurName,
-                    PhoneNumber = u.PhoneNumber,
-                    Gender = u.Gender,
-                    AufgussFriendId = u.AufgussFriendId
-                })
-                .ToListAsync();
+            var users = _userManager.Users.ToList();
 
-            return Ok(users);
+            var usersWithRoles = new List<UserWithRolesDto>();
+
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                usersWithRoles.Add(new UserWithRolesDto
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    UserName = user.UserName,
+                    FirstName = user.FirstName,
+                    SurName = user.SurName,
+                    PhoneNumber = user.PhoneNumber,
+                    AufgussFriendId = user.AufgussFriendId,
+                    Roles = roles.ToList(),
+                    Gender = user.Gender
+                });
+            }
+
+            return Ok(usersWithRoles);
         }
         // GET: api/users/me
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUser()
         {
-            var userId = User.FindFirst("sub")?.Value;
+            //var userId = User.FindFirst("sub")?.Value;
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
             var user = await _userManager.Users
@@ -64,6 +73,7 @@ namespace WebApi.Controllers
                 FirstName = user.FirstName,
                 SurName = user.SurName,
                 PhoneNumber = user.PhoneNumber,
+                Email = user.Email,
                 Roles = (await _userManager.GetRolesAsync(user)).ToList(),
                 AufgussFriendId = user.AufgussFriendId,
                 AufgussFriendName = user.AufgussFriend != null
@@ -101,6 +111,7 @@ namespace WebApi.Controllers
         }
 
         // DELETE: api/users/{id}
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(string id)
         {

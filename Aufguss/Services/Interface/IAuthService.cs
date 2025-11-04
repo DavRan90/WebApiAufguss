@@ -6,5 +6,6 @@ namespace Aufguss.Services.Interface
     public interface IAuthService
     {
         Task<AuthenticationState?> GetAuthenticationStateAsync();
+        Task<string?> GetTokenAsync();
     }
 }
