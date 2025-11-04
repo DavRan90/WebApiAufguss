@@ -164,6 +164,9 @@ namespace WebApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("AufgussFriendId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("AufgussFriendName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
@@ -229,6 +232,8 @@ namespace WebApi.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AufgussFriendId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -739,6 +744,15 @@ namespace WebApi.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("WebApi.Models.ApplicationUser", b =>
+                {
+                    b.HasOne("WebApi.Models.ApplicationUser", "AufgussFriend")
+                        .WithMany()
+                        .HasForeignKey("AufgussFriendId");
+
+                    b.Navigation("AufgussFriend");
                 });
 
             modelBuilder.Entity("WebApi.Models.Booking", b =>

@@ -8,10 +8,15 @@ namespace Aufguss.Services.API
     public class ApiUserService : IUserService
     {
         private readonly HttpClient _http;
-        public ApiUserService(HttpClient http) => _http = http;
+
+        public ApiUserService(IHttpClientFactory factory)
+        {
+            _http = factory.CreateClient("AuthenticatedClient");
+        }
+        //public ApiUserService(HttpClient http) => _http = http;
 
         public Task<List<UserWithRolesDto>> GetUsersAsync() =>
-            _http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
+            _http.GetFromJsonAsync<List<UserWithRolesDto>>("api/users");
 
         public async Task<UserWithRolesDto?> GetUserAsync(string? id, string? phoneNumber)
         {
