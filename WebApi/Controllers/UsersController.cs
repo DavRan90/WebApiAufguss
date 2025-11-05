@@ -73,6 +73,7 @@ namespace WebApi.Controllers
                 FirstName = user.FirstName,
                 SurName = user.SurName,
                 PhoneNumber = user.PhoneNumber,
+                Gender = user.Gender,
                 Email = user.Email,
                 Roles = (await _userManager.GetRolesAsync(user)).ToList(),
                 AufgussFriendId = user.AufgussFriendId,
