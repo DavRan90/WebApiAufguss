@@ -1,5 +1,6 @@
 ﻿using Aufguss.Models;
 using Aufguss.Services.Interface;
+using System.Net;
 using System.Net.Http.Json;
 using static System.Net.WebRequestMethods;
 
@@ -16,8 +17,8 @@ namespace Aufguss.Services.API
             _http = factory.CreateClient("AuthenticatedClient");
         }
 
-        
-            
+
+
         public async Task<List<UserWithRolesDto>> GetUsersAsync()
         {
             return await _http.GetFromJsonAsync<List<UserWithRolesDto>>("api/users");
@@ -29,7 +30,15 @@ namespace Aufguss.Services.API
         }
         public async Task<UserWithRolesDto?> GetCurrentUserAsync()
         {
-            return await _http.GetFromJsonAsync<UserWithRolesDto>("api/users/me");
+            try
+            {
+                return await _http.GetFromJsonAsync<UserWithRolesDto>("api/users/me");
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                // Return null instead of throwing
+                return null;
+            }
         }
         public async Task<List<UserWithRolesDto>> GetMyFriendsAsync()
         {

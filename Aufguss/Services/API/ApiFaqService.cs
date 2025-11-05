@@ -7,8 +7,15 @@ namespace Aufguss.Services.API
 {
     public class ApiFaqService : IFaqService
     {
+        //private readonly HttpClient _http;
+        //public ApiFaqService(HttpClient http) => _http = http;
+
         private readonly HttpClient _http;
-        public ApiFaqService(HttpClient http) => _http = http;
+
+        public ApiFaqService(IHttpClientFactory factory)
+        {
+            _http = factory.CreateClient("AuthenticatedClient");
+        }
 
         public Task<List<Faq>> GetFaqsAsync() =>
             _http.GetFromJsonAsync<List<Faq>>("api/Faqs");
@@ -40,7 +47,7 @@ namespace Aufguss.Services.API
         {
             // Only send Id + Position to minimize payload
             var payload = reorderedFaqs.Select(f => new { f.Id, f.Position }).ToList();
-            var response = await _http.PostAsJsonAsync("api/faqs/update-order", payload);
+            var response = await _http.PutAsJsonAsync("api/faqs/update-order", payload);
 
             if (!response.IsSuccessStatusCode)
             {

@@ -179,19 +179,23 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // Users = await Http.GetFromJsonAsync<List<UserWithRolesDto>>("api/auth/users");
-        // Users = await UserService.GetUsersAsync();
-        // var authState = await AuthService.GetAuthenticationStateAsync();
-        // var loggedInUser = authState.User;
-        // var userIdString = loggedInUser.FindFirst("sub")?.Value;
-        // var userGender = loggedInUser.FindFirst("gender")?.Value;
+        var authState = await AuthService.GetAuthenticationStateAsync();
+        var user = authState.User;
 
-        CurrentUser = await UserService.GetCurrentUserAsync();
-        var userIdString = CurrentUser.Id;
-        var userGender = CurrentUser.Gender;
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            // Logged in
+            CurrentUser = await UserService.GetCurrentUserAsync();
+        }
+        else
+        {
+            // Anonymous visitor
+            CurrentUser = null;
+        }
 
-        LoadEventsAsync();        
+        await LoadEventsAsync();
     }
+
 
     public int SpotsRemaining(int evtId)
     {

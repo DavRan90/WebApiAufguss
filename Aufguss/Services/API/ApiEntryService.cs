@@ -6,20 +6,25 @@ namespace Aufguss.Services.API
 {
     public class ApiEntryService : IEntryService
     {
+        //private readonly HttpClient _http;
+        //public ApiEntryService(HttpClient http) => _http = http;
         private readonly HttpClient _http;
-        public ApiEntryService(HttpClient http) => _http = http;
+
+        public ApiEntryService(IHttpClientFactory factory)
+        {
+            _http = factory.CreateClient("AuthenticatedClient");
+        }
 
         public Task<List<Entry>> GetEntriesAsync() =>
             _http.GetFromJsonAsync<List<Entry>>("api/entries");
 
-        public async Task<List<Entry>> AddEntryAsync(EntryDto EntryDtoData)
+        public async Task<Entry?> AddEntryAsync(EntryDto entryDtoData)
         {
-            var response = await _http.PostAsJsonAsync("api/Entries", EntryDtoData);
+            var response = await _http.PostAsJsonAsync("api/Entries", entryDtoData);
 
             response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadFromJsonAsync<List<Entry>>()
-                   ?? new List<Entry>(); // fallback in case of null
+            return await response.Content.ReadFromJsonAsync<Entry>();
         }
 
         public async Task RemoveEntryAsync(int id)

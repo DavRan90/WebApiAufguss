@@ -2,7 +2,7 @@
 {
     public interface IEntryService
     {
-        Task<List<Entry>> AddEntryAsync(EntryDto entryDto);
+        Task<Entry?> AddEntryAsync(EntryDto entryDtoData);
         Task RemoveEntryAsync(int id);
         Task<List<Entry>> GetEntriesAsync();
     }

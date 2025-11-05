@@ -27,19 +27,19 @@ namespace Aufguss.Services.Demo
             return Task.FromResult(_entries.OrderByDescending(f => f.Id).ToList());
         }
 
-        public Task<List<Entry>> AddEntryAsync(EntryDto entryDto)
+        public Task<Entry?> AddEntryAsync(EntryDto entryDtoData)
         {
             var newEntry = new Entry
             {
                 Id = _entries.Any() ? _entries.Max(f => f.Id) + 1 : 1,
-                Title = entryDto.Title,
-                Description = entryDto.Description,
+                Title = entryDtoData.Title,
+                Description = entryDtoData.Description,
                 CreatedAt = DateTime.Now,
-                Image = entryDto.Image
+                Image = entryDtoData.Image
             };
 
             _entries.Add(newEntry);
-            return Task.FromResult(_entries.OrderByDescending(f => f.Id).ToList());
+            return Task.FromResult(newEntry);
         }
         public Task RemoveEntryAsync(int id)
         {

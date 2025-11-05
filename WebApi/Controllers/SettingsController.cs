@@ -33,6 +33,7 @@ namespace WebApi.Controllers
         }
 
         // PUT: api/settings
+        [Authorize(Roles = "Admin")]
         [HttpPut]
         public async Task<IActionResult> UpdateSettings([FromBody] SiteSettings updatedSettings)
         {

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Models;
 using WebApi.Services;
@@ -34,7 +35,7 @@ namespace WebApi.Controllers
 
             return Ok(entry);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public IActionResult CreateEntry(EntryDto entryDto)
         {
@@ -52,7 +53,7 @@ namespace WebApi.Controllers
 
             return Ok(entry);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public IActionResult EditEntry(int id, EntryDto entryDto)
         {
@@ -71,7 +72,7 @@ namespace WebApi.Controllers
 
             return Ok(entry);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public IActionResult DeleteEntry(int id)
         {

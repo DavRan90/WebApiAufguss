@@ -7,7 +7,11 @@ namespace Aufguss.Services.API
     public class ApiSettingsService : ISettingsService
     {
         private readonly HttpClient _http;
-        public ApiSettingsService(HttpClient http) => _http = http;
+
+        public ApiSettingsService(IHttpClientFactory factory)
+        {
+            _http = factory.CreateClient("AuthenticatedClient");
+        }
 
         public Task<SiteSettings> GetSettingsAsync() =>
             _http.GetFromJsonAsync<SiteSettings>("api/settings");

@@ -169,7 +169,8 @@ else
             EntryDtoData.Image = "aufguss 2.jpg";
         }
 
-        entries = await EntryService.AddEntryAsync(EntryDtoData);
+        await EntryService.AddEntryAsync(EntryDtoData);
+        entries = await EntryService.GetEntriesAsync();
     }
 
     private async Task DeleteEntry(int id)

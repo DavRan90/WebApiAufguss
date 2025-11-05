@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Models;
@@ -35,7 +36,7 @@ namespace WebApi.Controllers
 
             return Ok(faq);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public IActionResult CreateFaq(FaqDto faqDto)
         {
@@ -54,7 +55,7 @@ namespace WebApi.Controllers
 
             return Ok(faq);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPut("update-order")]
         public async Task<IActionResult> UpdateFaqOrder([FromBody] List<Faq> faqs)
         {
@@ -70,7 +71,7 @@ namespace WebApi.Controllers
             await _context.SaveChangesAsync();
             return Ok();
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public IActionResult EditFaq(int id, FaqDto faqDto)
         {
@@ -89,7 +90,7 @@ namespace WebApi.Controllers
 
             return Ok(faq);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public IActionResult DeleteFaq(int id)
         {
