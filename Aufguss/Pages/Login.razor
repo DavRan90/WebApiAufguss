@@ -45,17 +45,15 @@
         if (response.IsSuccessStatusCode)
         {
             var result = await response.Content.ReadFromJsonAsync<AuthResponse>();
-            var token = result?.Token;
+            var token = result?.AccessToken;
 
             if (!string.IsNullOrEmpty(token))
             {
-                // Save token
                 await JS.InvokeVoidAsync("localStorage.setItem", "authToken", token);
+                await JS.InvokeVoidAsync("localStorage.setItem", "refreshToken", result.RefreshToken);
 
-                // 2. Notify the app of login
-                ((Services.CustomAuthStateProvider)AuthProvider).NotifyUserAuthentication(result.Token);
+                ((Services.CustomAuthStateProvider)AuthProvider).NotifyUserAuthentication(token);
 
-                // Optionally redirect
                 Navigation.NavigateTo("/");
             }
         }
@@ -73,6 +71,9 @@
 
     public class AuthResponse
     {
-        public string Token { get; set; }
+        public string AccessToken { get; set; }
+        public string RefreshToken { get; set; }
+        public DateTime AccessTokenExpires { get; set; }
+        public DateTime RefreshTokenExpires { get; set; }
     }
 }

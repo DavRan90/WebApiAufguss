@@ -9,6 +9,11 @@ using WebApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
+//using Microsoft.AspNetCore.Identity.Data;
+using SendGrid.Helpers.Mail;
+using WebApi.Services;
+using static WebApi.Models.AuthDto;
+using System.Security.Cryptography;
 
 namespace WebApi.Controllers
 {
@@ -19,79 +24,16 @@ namespace WebApi.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _config;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ApplicationDbContext _context;
 
         public AuthController(UserManager<ApplicationUser> userManager,
                       RoleManager<IdentityRole> roleManager,
-                      IConfiguration config)
+                      IConfiguration config, ApplicationDbContext context)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _config = config;
-        }
-
-        [HttpGet("users")]
-        //[Authorize(Roles = "Admin,SuperAdmin")]
-        public async Task<IActionResult> GetUsers()
-        {
-            var users = _userManager.Users.ToList();
-
-            var usersWithRoles = new List<UserWithRolesDto>();
-
-            foreach (var user in users)
-            {
-                var roles = await _userManager.GetRolesAsync(user);
-                usersWithRoles.Add(new UserWithRolesDto
-                {
-                    Id = user.Id,
-                    Email = user.Email,
-                    UserName = user.UserName,
-                    FirstName = user.FirstName,
-                    SurName = user.SurName,
-                    PhoneNumber = user.PhoneNumber,
-                    AufgussFriendId = user.AufgussFriendId,
-                    Roles = roles.ToList(),
-                    Gender = user.Gender
-                });
-            }
-
-            return Ok(usersWithRoles);
-        }
-
-        [HttpGet("user")]
-        public async Task<IActionResult> GetUser([FromQuery] string? id, [FromQuery] string? phoneNumber)
-        {
-            ApplicationUser user = null;
-
-            if (!string.IsNullOrEmpty(id))
-            {
-                user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
-            }
-            else if (!string.IsNullOrEmpty(phoneNumber))
-            {
-                var normalizedPhone = NormalizeSwedishPhone(phoneNumber);
-                user = await _userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == normalizedPhone);
-            }
-
-            if (user == null)
-            {
-                return NotFound("No user found");
-            }
-
-            var roles = await _userManager.GetRolesAsync(user);
-            var userWithRoles = new UserWithRolesDto()
-            {
-                Id = user.Id,
-                Email = user.Email,
-                UserName = user.UserName,
-                FirstName = user.FirstName,
-                SurName = user.SurName,
-                PhoneNumber = user.PhoneNumber,
-                AufgussFriendId = user.AufgussFriendId,
-                Roles = roles.ToList(),
-                Gender = user.Gender,
-            };
-
-            return Ok(userWithRoles);
+            _context = context;
         }
 
         [HttpPost("register")]
@@ -186,45 +128,106 @@ namespace WebApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
+            Console.WriteLine("LOGIN START");
+            try
             {
-                var token = await GenerateJwtToken(user);
-                return Ok(new { token });
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                Console.WriteLine("FIND USER: " + (user != null));
+
+                if (user == null)
+                {
+                    Console.WriteLine("USER NOT FOUND");
+                    return Unauthorized("Invalid credentials.");
+                }
+
+                var passwordOk = await _userManager.CheckPasswordAsync(user, model.Password);
+                Console.WriteLine("PASSWORD OK: " + passwordOk);
+
+                if (!passwordOk)
+                    return Unauthorized("Invalid credentials.");
+
+                Console.WriteLine("GENERATING JWT...");
+                string accessToken;
+                try
+                {
+                    accessToken = await GenerateJwtToken(user);
+                    Console.WriteLine("JWT GENERATED");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("ERROR during GenerateJwtToken: " + ex);
+                    return StatusCode(500, new { message = "Token generation failed", details = ex.Message });
+                }
+
+                Console.WriteLine("CREATING REFRESH TOKEN...");
+                var refreshToken = GenerateRefreshToken(user.Id, daysValid: 14);
+
+                try
+                {
+                    _context.RefreshTokens.Add(refreshToken);
+                    await _context.SaveChangesAsync();
+                    Console.WriteLine("REFRESH TOKEN SAVED, ID: " + refreshToken.Id);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("ERROR saving refresh token: " + ex);
+                    return StatusCode(500, new { message = "Failed to save refresh token", details = ex.Message });
+                }
+
+                var response = new LoginResponseDto
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken.Token,
+                    AccessTokenExpires = DateTime.UtcNow.AddHours(1),
+                    RefreshTokenExpires = refreshToken.Expires
+                };
+
+                Console.WriteLine("LOGIN COMPLETE - returning response");
+                return Ok(response);
             }
-            return Unauthorized("Invalid credentials.");
+            catch (Exception ex)
+            {
+                Console.WriteLine("UNEXPECTED ERROR in Login: " + ex);
+                return StatusCode(500, new { message = "Unexpected error", details = ex.Message });
+            }
         }
+
+
 
         private async Task<string> GenerateJwtToken(ApplicationUser user)
         {
-            var userRoles = await _userManager.GetRolesAsync(user); // returns List<string>
+            // validate config
+            var jwtKey = _config["Jwt:Key"];
+            var jwtIssuer = _config["Jwt:Issuer"];
+            if (string.IsNullOrEmpty(jwtKey))
+                throw new InvalidOperationException("JWT key is missing from configuration (Jwt:Key)");
+            if (string.IsNullOrEmpty(jwtIssuer))
+                throw new InvalidOperationException("JWT issuer is missing from configuration (Jwt:Issuer)");
+
+            var userRoles = await _userManager.GetRolesAsync(user);
 
             var claims = new List<Claim>
     {
         new Claim(JwtRegisteredClaimNames.Sub, user.Id),
         new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
         new Claim(JwtRegisteredClaimNames.PhoneNumber, user.PhoneNumber ?? ""),
-        new Claim("fullName", (user.FirstName + " " + user.SurName) ?? ""),
+        new Claim("fullName", $"{user.FirstName} {user.SurName}".Trim()),
         new Claim("firstName", user.FirstName ?? ""),
-        new Claim("gender", user.Gender.ToString() ?? ""),
+        new Claim("gender", user.Gender?.ToString() ?? ""),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
     };
 
             if (!string.IsNullOrEmpty(user.AufgussFriendId))
-            {
                 claims.Add(new Claim("friendId", user.AufgussFriendId));
-            }
 
             foreach (var role in userRoles)
-            {
                 claims.Add(new Claim(ClaimTypes.Role, role));
-            }
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
+                issuer: jwtIssuer,
                 audience: null,
                 claims: claims,
                 expires: DateTime.UtcNow.AddHours(1),
@@ -232,6 +235,65 @@ namespace WebApi.Controllers
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
+        {
+            if (string.IsNullOrEmpty(request?.RefreshToken))
+                return BadRequest("Refresh token required.");
+
+            var refreshToken = await _context.RefreshTokens
+                .FirstOrDefaultAsync(r => r.Token == request.RefreshToken);
+
+            if (refreshToken == null)
+                return NotFound("Refresh token not found.");
+
+            refreshToken.Revoked = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok("Logged out successfully.");
+        }
+
+
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshRequest request)
+        {
+            if (string.IsNullOrEmpty(request.RefreshToken))
+                return BadRequest("No refresh token provided.");
+
+            var existing = await _context.RefreshTokens
+                .FirstOrDefaultAsync(r => r.Token == request.RefreshToken);
+
+            if (existing == null || existing.IsRevoked || existing.IsExpired)
+                return Unauthorized("Invalid or expired refresh token.");
+
+            var user = await _userManager.FindByIdAsync(existing.UserId);
+            if (user == null)
+                return Unauthorized("Invalid token user.");
+
+            // Revoke old token
+            existing.Revoked = DateTime.UtcNow;
+
+            // Create new refresh token (rotation)
+            var newRefreshToken = GenerateRefreshToken(user.Id, daysValid: 14);
+            _context.RefreshTokens.Add(newRefreshToken);
+
+            await _context.SaveChangesAsync();
+
+            var newJwt = await GenerateJwtToken(user);
+
+            var response = new LoginResponseDto
+            {
+                AccessToken = newJwt,
+                RefreshToken = newRefreshToken.Token,
+                AccessTokenExpires = DateTime.UtcNow.AddHours(1),
+                RefreshTokenExpires = newRefreshToken.Expires
+            };
+
+            return Ok(response);
         }
 
         public static string NormalizeSwedishPhone(string phone)
@@ -252,6 +314,18 @@ namespace WebApi.Controllers
 
             // Ensure it's now in +46... format
             return phone;
+        }
+        private RefreshToken GenerateRefreshToken(string userId, int daysValid = 7)
+        {
+            var refreshToken = new RefreshToken
+            {
+                Token = Guid.NewGuid().ToString("N") + Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
+                UserId = userId,
+                Created = DateTime.UtcNow,
+                Expires = DateTime.UtcNow.AddDays(daysValid)
+            };
+
+            return refreshToken;
         }
 
     }

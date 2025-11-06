@@ -19,6 +19,16 @@ namespace WebApi.Services
             builder.Entity<ApplicationUser>()
                 .HasIndex(u => u.PhoneNumber)
                 .IsUnique();
+            builder.Entity<ApplicationUser>()
+        .HasOne(u => u.AufgussFriend)
+        .WithMany() // no collection on the other side
+        .HasForeignKey(u => u.AufgussFriendId)
+        .OnDelete(DeleteBehavior.Restrict); // prevents cascade loop
+
+            // Make sure EF knows AufgussFriendName is *not* part of the relationship
+            builder.Entity<ApplicationUser>()
+                .Property(u => u.AufgussFriendName)
+                .HasColumnName("AufgussFriendName");
         }
 
         public required DbSet<Event> Events { get; set; }
@@ -34,6 +44,7 @@ namespace WebApi.Services
         public required DbSet<SurveyAnswerDetail> SurveyAnswerDetails { get; set; }
         public DbSet<BookingAudit> BookingAudits { get; set; }
         public DbSet<EventAudit> EventAudits { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     }
 }

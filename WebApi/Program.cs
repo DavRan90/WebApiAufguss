@@ -8,6 +8,7 @@ using WebApi.Models;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using WebApi.Services.Email;
 using SendGrid.Helpers.Mail;
+using System.Security.Claims;
 
 namespace WebApi
 {
@@ -66,7 +67,7 @@ namespace WebApi
             })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = true;
+    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment(); // only require HTTPS in prod
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -77,11 +78,33 @@ namespace WebApi
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
-        // New
-        RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-
+        RoleClaimType = ClaimTypes.Role
     };
 });
+
+            //            builder.Services.AddAuthentication(options =>
+            //            {
+            //                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            //                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            //            })
+            //.AddJwtBearer(options =>
+            //{
+            //    options.RequireHttpsMetadata = true;
+            //    options.SaveToken = true;
+            //    options.TokenValidationParameters = new TokenValidationParameters
+            //    {
+            //        ValidateIssuer = true,
+            //        ValidateAudience = false,
+            //        ValidateLifetime = true,
+            //        ValidateIssuerSigningKey = true,
+            //        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            //        IssuerSigningKey = new SymmetricSecurityKey(
+            //            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+            //        // New
+            //        RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+
+            //    };
+            //});
 
             // When i want more requirements on password
 
@@ -96,14 +119,33 @@ namespace WebApi
 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowFrontend",
-                    policy =>
-                    {
-                        policy.WithOrigins("https://aufgussdemo.azurewebsites.net", "https://localhost:7003") // Add all frontend origins here
-                              .AllowAnyHeader()
-                              .AllowAnyMethod();
-                    });
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    policy
+                        .WithOrigins(
+                            "https://aufgussdemo.azurewebsites.net",
+                            "https://localhost:7003",
+                            "http://localhost:7003",
+                            "https://localhost:5173", // <-- add your dev port if using Vite/React
+                            "http://localhost:5173"
+                        )
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                });
             });
+
+
+            //builder.Services.AddCors(options =>
+            //{
+            //    options.AddPolicy("AllowFrontend",
+            //        policy =>
+            //        {
+            //            policy.WithOrigins("https://aufgussdemo.azurewebsites.net", "https://localhost:7003") // Add all frontend origins here
+            //                  .AllowAnyHeader()
+            //                  .AllowAnyMethod();
+            //        });
+            //});
 
             builder.Services.AddEndpointsApiExplorer();
             

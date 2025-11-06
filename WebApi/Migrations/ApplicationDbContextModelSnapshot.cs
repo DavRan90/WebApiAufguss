@@ -164,7 +164,11 @@ namespace WebApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("AufgussFriendId")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("AufgussFriendName")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("AufgussFriendName");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -229,6 +233,8 @@ namespace WebApi.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AufgussFriendId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -556,6 +562,36 @@ namespace WebApi.Migrations
                     b.ToTable("Invites");
                 });
 
+            modelBuilder.Entity("WebApi.Models.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Expires")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("Revoked")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("WebApi.Models.SiteSettings", b =>
                 {
                     b.Property<int>("Id")
@@ -739,6 +775,16 @@ namespace WebApi.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("WebApi.Models.ApplicationUser", b =>
+                {
+                    b.HasOne("WebApi.Models.ApplicationUser", "AufgussFriend")
+                        .WithMany()
+                        .HasForeignKey("AufgussFriendId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("AufgussFriend");
                 });
 
             modelBuilder.Entity("WebApi.Models.Booking", b =>
