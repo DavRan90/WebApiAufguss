@@ -25,15 +25,6 @@ namespace WebApi.Services
 
             var client = new SendGridClient(options);
 
-            //var from = new EmailAddress("david.rantanen@telia.com", "Aufguss"); // replace with your actual from address
-            //var to = new EmailAddress(toEmail);
-            //var subject = "Test Email from Aufguss";
-            //var plainTextContent = "This is a test email from your Razor component.";
-            //var htmlContent = "<strong>This is a test email from your Razor component.</strong>";
-            //var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
-
-            //var response = await client.SendEmailAsync(msg);
-
             var from = new EmailAddress("david.rantanen@telia.com", "David");
             var subject = "Sending with SendGrid is Fun";
             var to = new EmailAddress("david.rantanen@telia.com", "David");

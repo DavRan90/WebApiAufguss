@@ -14,6 +14,7 @@ using SendGrid.Helpers.Mail;
 using WebApi.Services;
 using static WebApi.Models.AuthDto;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace WebApi.Controllers
 {
@@ -25,15 +26,20 @@ namespace WebApi.Controllers
         private readonly IConfiguration _config;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ApplicationDbContext _context;
+        private readonly ResendEmailService _resendEmailService;
 
-        public AuthController(UserManager<ApplicationUser> userManager,
-                      RoleManager<IdentityRole> roleManager,
-                      IConfiguration config, ApplicationDbContext context)
+        public AuthController(
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager,
+            IConfiguration config,
+            ApplicationDbContext context,
+            ResendEmailService resendEmailService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _config = config;
             _context = context;
+            _resendEmailService = resendEmailService;
         }
 
         [HttpPost("register")]
@@ -295,6 +301,81 @@ namespace WebApi.Controllers
 
             return Ok(response);
         }
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
+        {
+            if (string.IsNullOrWhiteSpace(model.Email))
+                return BadRequest("Email is required.");
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                // Avoid exposing that the email doesn't exist
+                return Ok("If the email exists, a password reset link has been sent.");
+            }
+
+            // Generate token and encode it for safe URL use
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+            // Construct frontend link
+            var frontendUrl = _config["AppSettings:FrontendUrl"] ?? "https://frejabadogym.se";
+            var resetUrl = $"{frontendUrl}/reset-password?email={Uri.EscapeDataString(user.Email)}&token={encodedToken}";
+
+            // Email content
+            var subject = "Återställ ditt lösenord";
+            var htmlMessage = $@"
+                            <p>Hej {user.FirstName ?? "vän"},</p>
+                            <p>Vi har fått en begäran om att återställa ditt lösenord. Klicka på länken nedan för att välja ett nytt lösenord:</p>
+                            <p><a href='{resetUrl}' target='_blank'>Återställ lösenord</a></p>
+                            <p>Om du inte begärt detta kan du ignorera detta meddelande.</p>
+                            <br/>
+                            <p>Med vänliga hälsningar,<br/>Freja Bad & Gym</p>
+    ";
+
+            try
+            {
+                await _resendEmailService.SendEmailAsync(model.Email, subject, htmlMessage);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Email sending failed: " + ex.Message);
+                return StatusCode(500, new { message = "Failed to send email", details = ex.Message });
+            }
+
+            return Ok("If the email exists, a password reset link has been sent.");
+        }
+
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
+        {
+            if (string.IsNullOrEmpty(model.Email) ||
+                string.IsNullOrEmpty(model.Token) ||
+                string.IsNullOrEmpty(model.NewPassword))
+            {
+                return BadRequest("Email, token, and new password are required.");
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+                return BadRequest("Invalid request.");
+
+            // Decode the token (from URL)
+            var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Token));
+
+
+            var result = await _userManager.ResetPasswordAsync(user, decodedToken, model.NewPassword);
+
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+            return Ok("Password has been reset successfully.");
+        }
+
+
 
         public static string NormalizeSwedishPhone(string phone)
         {
