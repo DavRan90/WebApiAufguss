@@ -62,6 +62,7 @@
 @code {
     private RegisterDto registerModel = new();
     private string errorMessage;
+    private LoginModel loginModel = new();
 
     private bool ConsentGiven;
 
@@ -73,36 +74,57 @@
 
         if (response.IsSuccessStatusCode)
         {
-            Navigation.NavigateTo("/Login");
-            // var loginPath = new Uri(Http.BaseAddress, "api/auth/login").ToString();
-            // var loginResponse = await Http.PostAsJsonAsync(loginPath, new
-            // {
-            //     Email = registerModel.Email,
-            //     Password = registerModel.Password
-            // });
-
-            // if (loginResponse.IsSuccessStatusCode)
-            // {
-            //     var token = await loginResponse.Content.ReadAsStringAsync();
-
-            //     // Store token in localStorage (or sessionStorage)
-            //     await JS.InvokeVoidAsync("localStorage.setItem", "authToken", token);
-
-            //     // Notify auth system (if using custom AuthStateProvider)
-            //     ((CustomAuthStateProvider)AuthProvider).NotifyUserAuthentication(token);
-
-            //     Navigation.NavigateTo("/");
-            // }
-            // else
-            // {
-            //     errorMessage = "Registration successful, but auto-login failed.";
-            // }
+            // Navigation.NavigateTo("/Login");
+            loginModel.Email = registerModel.Email;
+            loginModel.Password = registerModel.Password;
+            HandleLogin();
         }
         else
         {
             var error = await response.Content.ReadAsStringAsync();
             errorMessage = $"Registration failed: {error}";
         }
+    }    
+
+    private async Task HandleLogin()
+    {
+        var path = new Uri(Http.BaseAddress, "api/auth/login").ToString();
+        // var response = await Http.PostAsJsonAsync("https://localhost:7162/api/auth/login", loginModel);
+        var response = await Http.PostAsJsonAsync(path, loginModel);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<AuthResponse>();
+            var token = result?.AccessToken;
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                await JS.InvokeVoidAsync("localStorage.setItem", "authToken", token);
+                await JS.InvokeVoidAsync("localStorage.setItem", "refreshToken", result.RefreshToken);
+
+                ((Services.CustomAuthStateProvider)AuthProvider).NotifyUserAuthentication(token);
+
+                Navigation.NavigateTo("/");
+            }
+        }
+        else
+        {
+            errorMessage = "Login failed. Please check your credentials.";
+        }
+    }
+
+    public class LoginModel
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+
+    public class AuthResponse
+    {
+        public string AccessToken { get; set; }
+        public string RefreshToken { get; set; }
+        public DateTime AccessTokenExpires { get; set; }
+        public DateTime RefreshTokenExpires { get; set; }
     }
 
     public class RegisterDto

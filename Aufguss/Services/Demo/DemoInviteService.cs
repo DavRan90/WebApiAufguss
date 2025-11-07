@@ -52,6 +52,62 @@ namespace Aufguss.Services.Demo
             var invitees = _invites.Where(i => i.InviteeId == id).ToList();
             return Task.FromResult(invitees);
         }
+        public async Task SendInviteByPhoneAsync(string phoneNumber)
+        {
+            // Normalize Swedish phone numbers (reuse the same logic as frontend)
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+                throw new HttpRequestException("Phone number is required.", null, System.Net.HttpStatusCode.BadRequest);
+
+            // Simulate fetching current user (in your real app, this is the logged-in user)
+            var currentUser = await _userService.GetCurrentUserAsync();
+            if (currentUser == null)
+                throw new HttpRequestException("Current user not found.", null, System.Net.HttpStatusCode.Unauthorized);
+
+            // Find invitee by phone number
+            var allUsers = await _userService.GetUsersAsync();
+            var invitee = allUsers.FirstOrDefault(u => u.PhoneNumber == phoneNumber);
+
+            if (invitee == null)
+                throw new HttpRequestException("Ingen användare hittades med detta telefonnummer.",
+                    null, System.Net.HttpStatusCode.NotFound);
+
+            if (invitee.Id == currentUser.Id)
+                throw new HttpRequestException("Du kan inte bjuda in dig själv.",
+                    null, System.Net.HttpStatusCode.BadRequest);
+
+            // Gender validation (if used)
+            if (currentUser.Gender != null && invitee.Gender != null && currentUser.Gender != invitee.Gender)
+                throw new HttpRequestException("Du kan bara bjuda in användare av samma kön.",
+                    null, System.Net.HttpStatusCode.BadRequest);
+
+            // Prevent duplicate invite
+            var existingInvite = _invites.FirstOrDefault(i =>
+                i.InviterId == currentUser.Id &&
+                i.InviteeId == invitee.Id &&
+                !i.Accepted);
+
+            if (existingInvite != null)
+                throw new HttpRequestException("En inbjudan har redan skickats till denna användare.",
+                    null, System.Net.HttpStatusCode.BadRequest);
+
+            // Create the invite
+            var newInvite = new InviteDto
+            {
+                Id = _invites.Any() ? _invites.Max(i => i.Id) + 1 : 1,
+                InviterId = currentUser.Id,
+                InviterName = $"{currentUser.FirstName} {currentUser.SurName}",
+                InviteeId = invitee.Id,
+                InviteeName = $"{invitee.FirstName} {invitee.SurName}",
+                InvitedAt = DateTime.UtcNow,
+                Invited = true,
+                Accepted = false
+            };
+
+            _invites.Add(newInvite);
+
+            await Task.CompletedTask;
+        }
+
         public Task<List<InviteDto>> AddInviteAsync(InviteDto inviteDto)
         {
             var newInvite = new InviteDto

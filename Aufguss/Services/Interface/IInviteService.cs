@@ -8,6 +8,7 @@ namespace Aufguss.Services.Interface
         Task<List<InviteDto>> GetInviterAsync(string id);
         Task<List<InviteDto>> GetInviteeAsync(string id);
         Task<List<InviteDto>> AddInviteAsync(InviteDto inviteDto);
+        Task SendInviteByPhoneAsync(string phoneNumber);
         Task RemoveInviteAsync(int id);
         Task<string> AcceptInviteAsync(int id, InviteDto dto);
     }

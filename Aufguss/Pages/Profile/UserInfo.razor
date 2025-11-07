@@ -417,38 +417,68 @@ else
             return;
         }
     }
-
     private async Task AddFriend()
     {
-        var phoneNumber = AufgussFriend;
-        UserWithRolesDto getUser = null;
+        var phoneNumber = NormalizeSwedishPhone(AufgussFriend);
+
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+        {
+            await JSRuntime.InvokeVoidAsync("Swal.fire", "Fel", "Ange ett giltigt telefonnummer.", "warning");
+            return;
+        }
 
         try
         {
-            getUser = await UserService.GetUserAsync(null, phoneNumber);
-            if (getUser != null)
-            {
-                var inviteDto = new InviteDto
-                    {
-                        InviteeId = getUser.Id,
-                        InviterId = CurrentUser.Id,
-                        InviteeName = $"{getUser.FirstName} {getUser.SurName}",
-                        InviterName = $"{CurrentUser.FirstName} {CurrentUser.SurName}"
-                    };
+            await InviteService.SendInviteByPhoneAsync(phoneNumber);
 
-                var response = await InviteService.AddInviteAsync(inviteDto);
-                await JSRuntime.InvokeVoidAsync("Swal.fire", "Inbjudan skickad", "Din vän behöver tacka ja innan du kan boka åt denne.", "success");
-                await LoadInvites();
-            }
+            await JSRuntime.InvokeVoidAsync("Swal.fire",
+                "Inbjudan skickad",
+                "Din vän har bjudits in. De behöver acceptera inbjudan innan du kan boka åt dem.",
+                "success");
+
+            await LoadInvites();
         }
         catch (HttpRequestException ex)
         {
-            // This happens when the user is not found (404)
-            Console.WriteLine($"User not found: {ex.Message}");
-            await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", "Det finns ingen registrerad användare med detta telefonnummer.", "error");
-            return;
+            Console.WriteLine($"Error sending invite: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades",
+                "Det gick inte att skicka inbjudan. Kontrollera numret och försök igen.",
+                "error");
         }
+        AufgussFriend = "";
     }
+
+    // private async Task AddFriend()
+    // {
+    //     var phoneNumber = AufgussFriend;
+    //     UserWithRolesDto getUser = null;
+
+    //     try
+    //     {
+    //         getUser = await UserService.GetUserAsync(null, phoneNumber);
+    //         if (getUser != null)
+    //         {
+    //             var inviteDto = new InviteDto
+    //                 {
+    //                     InviteeId = getUser.Id,
+    //                     InviterId = CurrentUser.Id,
+    //                     InviteeName = $"{getUser.FirstName} {getUser.SurName}",
+    //                     InviterName = $"{CurrentUser.FirstName} {CurrentUser.SurName}"
+    //                 };
+
+    //             var response = await InviteService.AddInviteAsync(inviteDto);
+    //             await JSRuntime.InvokeVoidAsync("Swal.fire", "Inbjudan skickad", "Din vän behöver tacka ja innan du kan boka åt denne.", "success");
+    //             await LoadInvites();
+    //         }
+    //     }
+    //     catch (HttpRequestException ex)
+    //     {
+    //         // This happens when the user is not found (404)
+    //         Console.WriteLine($"User not found: {ex.Message}");
+    //         await JSRuntime.InvokeVoidAsync("Swal.fire", "Misslyckades", "Det finns ingen registrerad användare med detta telefonnummer.", "error");
+    //         return;
+    //     }
+    // }
 
     public string GetEnumDisplayName(Enum value)
     {

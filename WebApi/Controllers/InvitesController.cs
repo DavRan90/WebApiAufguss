@@ -159,6 +159,66 @@ namespace WebApi.Controllers
             return Ok(invite);
         }
 
+        [HttpPost("send-by-phone")]
+        public async Task<IActionResult> SendInviteByPhone([FromBody] SendInviteByPhoneRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.PhoneNumber))
+                return BadRequest(new { message = "Phone number is required." });
+
+            // Normalize Swedish phone numbers (could also use your existing normalization helper)
+            var phone = request.PhoneNumber.Trim().Replace(" ", "");
+            if (phone.StartsWith("0"))
+                phone = "+46" + phone.Substring(1);
+            if (phone.StartsWith("00"))
+                phone = "+" + phone.Substring(2);
+
+            // Get current logged in user
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+                return Unauthorized();
+
+            // Find invitee by phone number
+            var invitee = await _userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phone);
+            if (invitee == null)
+            {
+                return NotFound(new { message = "Ingen användare hittades med detta telefonnummer." });
+            }
+
+            if (currentUser.Gender != invitee.Gender)
+                return BadRequest(new { message = "Du kan bara bjuda in användare av samma kön." });
+
+            // Prevent duplicate pending invites
+            var existingInvite = await _context.Invites
+                .FirstOrDefaultAsync(i =>
+                    i.InviterId == currentUser.Id &&
+                    i.InviteeId == invitee.Id &&
+                    !i.Accepted);
+
+            if (existingInvite != null)
+                return BadRequest(new { message = "En inbjudan har redan skickats till denna användare." });
+
+            // Create invite
+            var invite = new Invite
+            {
+                InviterId = currentUser.Id,
+                InviteeId = invitee.Id,
+                InvitedAt = DateTime.UtcNow,
+                Accepted = false,
+                Invited = true
+            };
+
+            _context.Invites.Add(invite);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Invite sent successfully." });
+        }
+
+        public class SendInviteByPhoneRequest
+        {
+            public string PhoneNumber { get; set; }
+        }
+
+
         [HttpPut("{id}")]
         public async Task<IActionResult> AcceptInvite(int id, [FromBody] InviteDto dto)
         {

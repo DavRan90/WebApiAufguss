@@ -8,8 +8,14 @@ namespace Aufguss.Services.API
 {
     public class ApiInviteService : IInviteService
     {
+        //private readonly HttpClient _http;
+        //public ApiInviteService(HttpClient http) => _http = http;
         private readonly HttpClient _http;
-        public ApiInviteService(HttpClient http) => _http = http;
+
+        public ApiInviteService(IHttpClientFactory factory)
+        {
+            _http = factory.CreateClient("AuthenticatedClient");
+        }
 
         public Task<List<InviteDto>> GetInvitesAsync() =>
             _http.GetFromJsonAsync<List<InviteDto>>("api/invites/");
@@ -22,6 +28,17 @@ namespace Aufguss.Services.API
         public async Task<List<InviteDto>> GetInviteeAsync(string id)
         {
             return await _http.GetFromJsonAsync<List<InviteDto>>($"api/invites/invitees?inviteeId={id}");
+        }
+        public async Task SendInviteByPhoneAsync(string phoneNumber)
+        {
+            var request = new { PhoneNumber = phoneNumber };
+            var response = await _http.PostAsJsonAsync("api/invites/send-by-phone", request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Error sending invite: {content}");
+            }
         }
         public async Task<List<InviteDto>> AddInviteAsync(InviteDto inviteDtoData)
         {
