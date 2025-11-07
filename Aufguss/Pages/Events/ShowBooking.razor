@@ -224,7 +224,16 @@
             var coords = _cachedPosition ?? await JS.InvokeAsync<GeolocationPosition>("getUserLocation");
 
             // 🧭 2. Send to booking service
-            await BookingService.ConfirmAttendanceAsync(bookingId, coords.Latitude, coords.Longitude);
+            try
+            {
+                await BookingService.ConfirmAttendanceAsync(bookingId, coords.Latitude, coords.Longitude);
+            }
+            catch (HttpRequestException ex)
+            {
+                var response = ex.Message;
+                Console.WriteLine("HTTP ERROR: " + response);
+                await JS.InvokeVoidAsync("Swal.fire", "Fel vid bekräftelse", response, "error");
+            }
 
             await JS.InvokeVoidAsync("Swal.fire", "Närvaro bekräftad", $"Du är nu bekräftad som närvarande", "success");
 

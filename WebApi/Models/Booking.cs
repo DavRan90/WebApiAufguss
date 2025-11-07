@@ -14,6 +14,8 @@
         public string? UserId { get; set; }
         public int EventId { get; set; }
         public string? CancellationToken { get; set; }
+        public bool AttendanceConfirmed { get; set; }
+        public DateTime? AttendanceConfirmedAt { get; set; }
         public Event? Event { get; set; }
     }
 }

@@ -259,6 +259,12 @@ namespace WebApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("AttendanceConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("AttendanceConfirmedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("BookedAt")
                         .HasColumnType("datetime2");
 

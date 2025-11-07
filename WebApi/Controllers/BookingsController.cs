@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Aufguss.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -148,5 +149,67 @@ namespace WebApi.Controllers
             if (!result.Success) return NotFound(result.Message);
             return Ok(result.Message);
         }
+
+        [Authorize]
+        [HttpPost("{bookingId}/confirm-attendance")]
+        public async Task<IActionResult> ConfirmAttendance(int bookingId, [FromBody] ConfirmAttendanceDto dto)
+        {
+            // 1️⃣ Find the booking
+            var booking = await _context.Bookings
+                .Include(b => b.Event)
+                .FirstOrDefaultAsync(b => b.Id == bookingId);
+
+            if (booking == null)
+                return NotFound($"Bokning med ID {bookingId} hittades inte.");
+
+            var evt = booking.Event;
+            if (evt == null)
+                return NotFound($"Event för bokningen hittades inte.");
+
+            // 2️⃣ Time constraint — within 2 hours of start
+            var now = DateTime.Now;
+            var timeUntilStart = evt.Start - now;
+            if (timeUntilStart > TimeSpan.FromHours(2))
+                return BadRequest("För tidigt att bekräfta närvaro (mer än 2 timmar kvar till start).");
+
+            // 3️⃣ Geolocation constraint — within 500 m of the venue
+            double eventLat = 59.04406605697291;   // Freja Bad & Gym
+            double eventLng = 17.3156782887916;
+
+            var distanceMeters = CalculateDistanceMeters(dto.UserLat, dto.UserLng, eventLat, eventLng);
+            if (distanceMeters > 500)
+                return BadRequest($"Du är för långt bort ({Math.Round(distanceMeters)} m). Max 500 m tillåtet.");
+
+            // 4️⃣ Mark attendance as confirmed
+            booking.AttendanceConfirmed = true;
+            booking.AttendanceConfirmedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+
+            Console.WriteLine($"✅ {booking.Name} bekräftade närvaro för event '{evt.Title}' ({Math.Round(distanceMeters)} m bort).");
+
+            return Ok(new
+            {
+                message = "Närvaro bekräftad",
+                distance = Math.Round(distanceMeters)
+            });
+        }
+        private static double CalculateDistanceMeters(double lat1, double lon1, double lat2, double lon2)
+        {
+            const double R = 6371000; // meters
+            var latRad1 = Math.PI * lat1 / 180;
+            var latRad2 = Math.PI * lat2 / 180;
+            var deltaLat = Math.PI * (lat2 - lat1) / 180;
+            var deltaLon = Math.PI * (lon2 - lon1) / 180;
+
+            var a = Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2) +
+                    Math.Cos(latRad1) * Math.Cos(latRad2) *
+                    Math.Sin(deltaLon / 2) * Math.Sin(deltaLon / 2);
+
+            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            return R * c;
+        }
+
+
     }
 }

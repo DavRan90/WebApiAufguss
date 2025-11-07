@@ -1,5 +1,6 @@
 ﻿using Aufguss.Models;
 using Aufguss.Services.Interface;
+using BlazorCalendar.Styles;
 using System.Net.Http.Json;
 using static Aufguss.Pages.BookAufguss;
 using static System.Net.WebRequestMethods;
@@ -56,7 +57,30 @@ namespace Aufguss.Services.API
         }
         public async Task ConfirmAttendanceAsync(int bookingId, double userLat, double userLng)
         {
-            
+            var response = await _http.PostAsJsonAsync(
+        $"api/bookings/{bookingId}/confirm-attendance",
+        new { userLat, userLng }
+    );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // Try to read the message returned by the API
+                var errorMessage = await response.Content.ReadAsStringAsync();
+
+                // If it's JSON, unwrap it
+                try
+                {
+                    var apiError = System.Text.Json.JsonSerializer.Deserialize<ApiError>(errorMessage);
+                    if (!string.IsNullOrEmpty(apiError?.Message))
+                        throw new Exception(apiError.Message);
+                }
+                catch
+                {
+                    // fallback to raw message
+                    throw new Exception(errorMessage);
+                }
+            }
+
         }
         public async Task UnbookAsync(int id)
         {
@@ -67,6 +91,10 @@ namespace Aufguss.Services.API
         {
             var response = await _http.DeleteAsync("api/bookings/" + id);
             response.EnsureSuccessStatusCode();
+        }
+        private class ApiError
+        {
+            public string? Message { get; set; }
         }
     }
 }
