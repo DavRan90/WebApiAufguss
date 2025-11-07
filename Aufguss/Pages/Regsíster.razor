@@ -42,7 +42,7 @@
                     </InputSelect>
                 </div>
                 <div class="form-check mt-3">
-                    <InputCheckbox @bind-Value="ConsentGiven" class="form-check-input" id="consentCheck" />
+                    <InputCheckbox @bind-Value="registerModel.ConsentGiven" class="form-check-input" id="consentCheck" />
                     <label class="form-check-label" for="consentCheck">
                         Jag godkänner lagring av mina personuppgifter
                     </label>
@@ -64,7 +64,7 @@
     private string errorMessage;
     private LoginModel loginModel = new();
 
-    private bool ConsentGiven;
+    
 
     private async Task HandleRegister()
     {
@@ -153,6 +153,10 @@
 
         [Required(ErrorMessage = "Kön är obligatoriskt")]
         public Gender? Gender { get; set; }
+
+        [Required(ErrorMessage = "Du måste godkänna lagringen av dina personuppgifter.")]
+        [Range(typeof(bool), "true", "true", ErrorMessage = "Du måste godkänna lagringen av dina personuppgifter.")]
+        public bool ConsentGiven { get; set; }
     }
 
     public enum Gender
