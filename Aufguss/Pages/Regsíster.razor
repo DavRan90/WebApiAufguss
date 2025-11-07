@@ -2,6 +2,7 @@
 @using System.Reflection
 @using System.ComponentModel.DataAnnotations
 @using Aufguss.Services
+@using Microsoft.AspNetCore.Components.Forms
 @inject HttpClient Http
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
@@ -11,7 +12,7 @@
     <div class="card p-4 bg-info-subtle">
         <div class="card-body p-5">
             <h3 class="mb-4">Registrera dig</h3>
-            <EditForm Model="registerModel" OnValidSubmit="HandleRegister">
+            <EditForm Model="registerModel" OnValidSubmit="HandleRegister" @ref="registerForm">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
                 <div class="mt-3">
@@ -64,10 +65,18 @@
     private string errorMessage;
     private LoginModel loginModel = new();
 
-    
+    private EditForm registerForm;
 
     private async Task HandleRegister()
     {
+        // 👇 Delay lets browser autofill settle before validation
+        await Task.Delay(100);
+
+        // 👇 Force re-validation of the whole form
+        var isValid = registerForm.EditContext.Validate();
+        if (!isValid)
+            return;
+
         var path = new Uri(Http.BaseAddress, "api/auth/register").ToString();
 
         var response = await Http.PostAsJsonAsync(path, registerModel);

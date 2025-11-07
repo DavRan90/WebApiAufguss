@@ -178,7 +178,7 @@ else
     {
         // evts = await Http.GetFromJsonAsync<List<Event>>("api/Events/admin");
         // bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
-        evts = await EventService.GetEventsAsync();
+        evts = await EventService.GetAllEventsAsync();
         bookings = await BookingService.GetBookingsAsync();
 
         ModelTasks = evts.Select(evt =>

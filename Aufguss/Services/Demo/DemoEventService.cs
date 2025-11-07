@@ -43,6 +43,11 @@ namespace Aufguss.Services.Demo
 
         public Task<List<Event>> GetEventsAsync()
         {
+            var visibleEvents = _events.Where(e => e.Hidden == false).ToList();
+            return Task.FromResult(visibleEvents);
+        }
+        public Task<List<Event>> GetAllEventsAsync()
+        {
             return Task.FromResult(_events);
         }
 
