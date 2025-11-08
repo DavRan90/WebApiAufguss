@@ -487,8 +487,14 @@
                 await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", "Du är nu inbokad till passet!", "success");
             }
 
-            // Navigate to bookings page
-            navManager.NavigateTo("/Dina_bokningar");
+            if (CurrentUser != null)
+            {
+                navManager.NavigateTo("/Dina_bokningar");
+            }
+            else
+            {
+                navManager.NavigateTo("/");
+            }
         }
         catch (Exception ex)
         {

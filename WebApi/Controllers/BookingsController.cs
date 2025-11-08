@@ -119,7 +119,7 @@ namespace WebApi.Controllers
 
             return Ok(result.Message);
         }
-        [Authorize]
+        
         [HttpPost]
         public async Task<IActionResult> CreateBooking(BookingDto dto)
         {
