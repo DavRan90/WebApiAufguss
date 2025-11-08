@@ -210,12 +210,12 @@
 
                     </div>
                 </div>
-                if(CurrentUser == null)
+                @if (CurrentUser == null)
                 {
                     <div class="row mb-3">
                         <div class="col-md-8 offset-md-4 bg-danger-subtle rounded">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="gridCheck5">
+                                <InputCheckbox @bind-Value="GuestConsentGiven" class="form-check-input" id="gridCheck5" />
                                 <label class="form-check-label" for="gridCheck5">
                                     Jag godkänner lagring av personuppgifter
                                 </label>
@@ -226,6 +226,7 @@
                         </div>
                     </div>
                 }
+
 
                 @if (CurrentUser != null && EventDtoData.AllowFriendBooking && CurrentUser.AufgussFriendId != null)
                 {
@@ -304,6 +305,7 @@
     private bool CurrentUserIsBooked = false;
 
     private bool eventNotFound = false;
+    private bool GuestConsentGiven { get; set; } = false;
 
     public int SpotsRemaining { get; set; }
     [Parameter]
@@ -443,9 +445,16 @@
 
         // Validate required fields
         if (string.IsNullOrWhiteSpace(BookingDtoData.Name) ||
-            string.IsNullOrWhiteSpace(BookingDtoData.Email))
+            string.IsNullOrWhiteSpace(BookingDtoData.Email) ||
+            string.IsNullOrWhiteSpace(BookingDtoData.Tel))
         {
-            await JS.InvokeVoidAsync("Swal.fire", "Fel", "Namn och e-post är obligatoriska.", "error");
+            await JS.InvokeVoidAsync("Swal.fire", "Fel", "Namn, e-post och telefonnumer är obligatoriska.", "error");
+            return;
+        }
+        if (CurrentUser == null && !GuestConsentGiven)
+        {
+            await JS.InvokeVoidAsync("Swal.fire", "Samtycke krävs",
+                "Du måste godkänna lagringen av dina personuppgifter för att kunna boka.", "warning");
             return;
         }
 
