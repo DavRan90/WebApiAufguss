@@ -2,6 +2,7 @@
 @using System.Reflection
 @using System.ComponentModel.DataAnnotations
 @using Aufguss.Services
+@using Aufguss.Models.Validation
 @using Microsoft.AspNetCore.Components.Forms
 @inject HttpClient Http
 @inject NavigationManager Navigation
@@ -91,7 +92,7 @@
         else
         {
             var error = await response.Content.ReadAsStringAsync();
-            errorMessage = $"Registration failed: {error}";
+            errorMessage = $"Registrering misslyckades: {error}";
         }
     }    
 
@@ -118,7 +119,7 @@
         }
         else
         {
-            errorMessage = "Login failed. Please check your credentials.";
+            errorMessage = "Inloggning misslyckades, kontrollera uppgifterna.";
         }
     }
 
@@ -143,7 +144,7 @@
         public string Email { get; set; }
 
         [Required(ErrorMessage = "Lösenord är obligatoriskt")]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "Lösenordet måste vara minst 6 tecken långt")]
+        [PasswordComplexity(ErrorMessage = "Lösenordet uppfyller inte kraven")]
         public string Password { get; set; }
 
         [Required(ErrorMessage = "Bekräfta lösenord är obligatoriskt")]
@@ -163,10 +164,10 @@
         [Required(ErrorMessage = "Kön är obligatoriskt")]
         public Gender? Gender { get; set; }
 
-        [Required(ErrorMessage = "Du måste godkänna lagringen av dina personuppgifter.")]
         [Range(typeof(bool), "true", "true", ErrorMessage = "Du måste godkänna lagringen av dina personuppgifter.")]
         public bool ConsentGiven { get; set; }
     }
+
 
     public enum Gender
     {

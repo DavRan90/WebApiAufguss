@@ -48,12 +48,12 @@ namespace WebApi.Controllers
             // 1. Check if user already exists
             var existingEmail = await _userManager.FindByEmailAsync(model.Email);
             if (existingEmail != null)
-                return BadRequest("User with this email already exists.");
+                return BadRequest("Email är redan registrerat till en användare");
 
             var existingPhoneNumber = await _userManager.Users
                 .FirstOrDefaultAsync(u => u.PhoneNumber == NormalizeSwedishPhone(model.PhoneNumber));
             if (existingPhoneNumber != null)
-                return BadRequest("User with this phone number already exists.");
+                return BadRequest("Telefonnumret är redan registrerat till en användare");
 
             // 2. Create new user object
             var user = new ApplicationUser
@@ -70,7 +70,8 @@ namespace WebApi.Controllers
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded)
-                return BadRequest(result.Errors);
+                return BadRequest("Lösenordet uppfyller inte kraven");
+
 
             // 4. Ensure "User" role exists (optional but recommended)
             var roleExists = await _roleManager.RoleExistsAsync("User");
@@ -86,7 +87,7 @@ namespace WebApi.Controllers
             if (!assignRoles.Succeeded)
                 return BadRequest(assignRoles.Errors);
 
-            return Ok("User registered successfully");
+            return Ok("Användare skapad");
         }
 
         [HttpPost("create")]
@@ -95,7 +96,7 @@ namespace WebApi.Controllers
             // 1. Check if user already exists
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
             if (existingUser != null)
-                return BadRequest("User with this email already exists.");
+                return BadRequest("Det finns redan en användare registrerad med samma email.");
 
             // 2. Create new user object
             var user = new ApplicationUser
@@ -128,7 +129,7 @@ namespace WebApi.Controllers
             if (!assignRoles.Succeeded)
                 return BadRequest(assignRoles.Errors);
 
-            return Ok("User registered successfully");
+            return Ok("Användare skapad");
         }
 
         [HttpPost("login")]
