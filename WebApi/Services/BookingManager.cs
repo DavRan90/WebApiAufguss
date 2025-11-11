@@ -210,6 +210,33 @@ namespace WebApi.Services
 
             return (true, "Bokningen har tagits bort.");
         }
+        public async Task<(bool Success, string Message)> CancelBookingByTokenAsync(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+                return (false, "Token saknas");
+
+            var booking = await _context.Bookings
+                .Include(b => b.Event)
+                .FirstOrDefaultAsync(b => b.CancellationToken == token);
+
+            if (booking == null || booking.Unbooked)
+                return (false, "Ogiltig eller redan avbokad bokning");
+
+            booking.Unbooked = true;
+            booking.UnbookedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            // Check if anyone can be promoted from reserve list
+            await CheckReserveListAsync(booking);
+
+            // Log audit
+            var evtTitle = booking.Event?.Title ?? "(okänt event)";
+            await _audit.LogBookingAsync(booking.Id, "Avbokad via länk", booking.Email,
+                $"Användaren {booking.Email} avbokade sin plats till eventet '{evtTitle}' via avbokningslänken.");
+
+            return (true, "Bokningen har avbokats.");
+        }
+
 
         /// <summary>
         /// Promotes a user from the reserve list if a slot becomes available.
