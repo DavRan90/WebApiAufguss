@@ -181,7 +181,7 @@
         <div class="row mb-3">
             <div class="col-md-8 offset-md-4">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="createnews" @bind="createNews" disabled>
+                    <input class="form-check-input" type="checkbox" id="createnews" @bind="createNews">
                     <label class="form-check-label" for="createnews">
                         Skapa nyhet
                         <span class="ms-1" data-bs-toggle="tooltip" title="Skapar en nyhet om detta pass på startsidan">
@@ -222,6 +222,7 @@
 @inject SweetAlertService Swal
 @inject ITemplateService TemplateService
 @inject IEventService EventService
+@inject IEntryService EntryService
 
 @code {
     private bool Survey = false;
@@ -404,7 +405,18 @@
         {
             try
             {
-                var evts = await EventService.AddEventAsync(EventDtoData);
+                var evt = await EventService.AddEventAsync(EventDtoData);
+                if (createNews && !EventDtoData.Hidden)
+                {
+                    var entry = new EntryDto
+                    {
+                            Title = evt.Title + " | " + evt.Start.ToString("dd-MM-yyyy | HH:mm"),
+                            Description = evt.Description,
+                            Url = evt.Id.ToString(),
+                            Image = "https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net/upload/aufguss 2.jpg"
+                    };
+                    await EntryService.AddEntryAsync(entry);
+                }
                 await JS.InvokeVoidAsync("Swal.fire", "Lyckades", "Pass skapat!", "success");
                 navManager.NavigateTo("/Events");
             }
