@@ -95,24 +95,6 @@ namespace WebApi.Controllers
             return Ok(result.Message);
         }
 
-        //[HttpGet("cancel-booking")]
-        //public async Task<IActionResult> CancelBooking([FromQuery] string token)
-        //{
-        //    if (string.IsNullOrWhiteSpace(token))
-        //        return BadRequest("Token saknas");
-
-        //    var booking = await _context.Bookings.FirstOrDefaultAsync(b => b.CancellationToken == token);
-
-        //    if (booking == null || booking.Unbooked)
-        //        return NotFound("Ogiltig eller redan avbokad bokning");
-
-        //    booking.Unbooked = true;
-        //    booking.UnbookedAt = DateTime.UtcNow;
-
-        //    await _context.SaveChangesAsync();
-
-        //    return Ok("Bokningen har avbokats.");
-        //}
         [Authorize]
         [HttpPost("{id}/unbook")]
         public async Task<IActionResult> UnbookBooking(int id)
