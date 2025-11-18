@@ -40,5 +40,20 @@ namespace Aufguss.Services.Demo
             var ev = demoTemplates.SingleOrDefault(e => e.Id == id);
             return Task.FromResult(ev);
         }
+        public async Task<EventTemplate> CreateTemplateAsync(EventDto templateDto)
+        {
+            
+            return new EventTemplate();
+        }
+        public Task DeleteTemplateAsync(int id)
+        {
+            var booking = demoTemplates.SingleOrDefault(b => b.Id == id);
+            if (booking != null)
+            {
+                demoTemplates.Remove(booking);
+            }
+
+            return Task.CompletedTask;
+        }
     }
 }

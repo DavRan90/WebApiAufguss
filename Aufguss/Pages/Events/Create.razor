@@ -1,4 +1,5 @@
 ﻿@page "/Events/Create"
+@page "/Events/Create/{StartDate}"
 @attribute [Authorize(Roles = "Admin,SuperAdmin")]
 @using System.Text.Json.Nodes
 @using Aufguss.Models
@@ -194,7 +195,7 @@
         <div class="row mb-3">
             <div class="col-md-8 offset-md-4">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="template" @bind="createTemplate" disabled>
+                    <input class="form-check-input" type="checkbox" id="template" @bind="createTemplate">
                     <label class="form-check-label" for="template">
                         Skapa mall
                         <span class="ms-1" data-bs-toggle="tooltip" title="Skapar en mall baserad på denna bokning">
@@ -225,6 +226,8 @@
 @inject IEntryService EntryService
 
 @code {
+    [Parameter] public string? StartDate { get; set; }
+    public DateTime InitialDate { get; set; }
     private bool Survey = false;
     private DateTime EndDate = DateTime.Now;
     private List<EventTemplate>? Templates;
@@ -311,6 +314,18 @@
     {
         // Templates = await Http.GetFromJsonAsync<List<EventTemplate>>("api/EventTemplates");
         Templates = await TemplateService.GetTemplatesAsync();
+        if (!string.IsNullOrWhiteSpace(StartDate) &&
+            DateTime.TryParse(StartDate, out var parsed))
+        {
+            InitialDate = parsed;
+        }
+        else
+        {
+            // fallback (today or whatever you want)
+            InitialDate = DateTime.Now;
+        }
+        EventDtoData.Start = InitialDate;
+        EventDtoData.End = InitialDate;
     }
 
     private async Task CheckFormData()
@@ -417,6 +432,11 @@
                     };
                     await EntryService.AddEntryAsync(entry);
                 }
+                if (createTemplate)
+                    {
+                        // var template = await Http.PostAsJsonAsync("api/EventTemplates", EventDtoData);
+                        await TemplateService.CreateTemplateAsync(EventDtoData);
+                    }
                 await JS.InvokeVoidAsync("Swal.fire", "Lyckades", "Pass skapat!", "success");
                 navManager.NavigateTo("/Events");
             }

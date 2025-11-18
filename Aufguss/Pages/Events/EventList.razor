@@ -125,7 +125,7 @@ else
 
         <div class="d-flex justify-content-center align-items-center">
             <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(-1))">←</button>
-            <h3 class="mx-2 text-center" style="width: 15ch;">@FirstDate.ToString("MMMM yyyy")</h3>
+            <h3 class="mx-2 text-center" style="width: 15ch;">@Capitalize(FirstDate.ToString("MMMM yyyy"))</h3>
             <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(1))">→</button>
         </div>
         <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate">
@@ -133,6 +133,7 @@ else
             Draggable DragStart="OnDragStart"
             DropTask="OnDragDrop"
             DayClick="OnDayClick"
+            HighlightToday
             SaturdayColor="White"
             SundayColor="White" />
         </CalendarContainer>
@@ -276,71 +277,75 @@ else
     private async Task OnDayClick(ClickEmptyDayParameter clickedDate)
     {
         var eventDto = new EventDto();
-        eventDto.Start = clickedDate.Day.AddDays(1);
-        string json = await JSRuntime.InvokeAsync<string>("showCreateEventAlert", eventDto);
+        // eventDto.Start = clickedDate.Day.AddDays(1);
+        eventDto.Start = clickedDate.Day;
 
-        if (!string.IsNullOrEmpty(json))
-        {
-            try
-            {
-                var options = new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    };
+        NavManager.NavigateTo($"Events/Create/{DateOnly.FromDateTime(eventDto.Start):yyyy-MM-dd}");
 
-                options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)); // OR use `null` for PascalCase
+        // string json = await JSRuntime.InvokeAsync<string>("showCreateEventAlert", eventDto);
 
-                var newEvent = JsonSerializer.Deserialize<EventDto>(json, options);
-                var response = await Http.PostAsJsonAsync("api/Events", newEvent);
+        // if (!string.IsNullOrEmpty(json))
+        // {
+        //     try
+        //     {
+        //         var options = new JsonSerializerOptions
+        //             {
+        //                 PropertyNameCaseInsensitive = true
+        //             };
 
-                if (response.IsSuccessStatusCode)
-                {
-                    await JSRuntime.InvokeVoidAsync("Swal.fire", "Success", "Nytt pass tillagt!", "success");
-                    var createdEvent = await response.Content.ReadFromJsonAsync<Event>();
+        //         options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)); // OR use `null` for PascalCase
 
-                    // Add to evts
-                    evts?.Add(createdEvent!);
+        //         var newEvent = JsonSerializer.Deserialize<EventDto>(json, options);
+        //         var response = await Http.PostAsJsonAsync("api/Events", newEvent);
 
-                    // Add to ModelTasks so it shows up in the calendar
-                    var newTask = new Tasks
-                        {
-                            ID = createdEvent.Id,
-                            Caption = (createdEvent.Gender, createdEvent.Hidden) switch
-                            {
-                                (Gender.Male, false) => "[Herrar] " + createdEvent.Title,
-                                (Gender.Female, false) => "[Damer] " + createdEvent.Title,
-                                (Gender.Male, true) => "[Herrar] " + createdEvent.Title + " [Dold]",
-                                (Gender.Female, true) => "[Damer] " + createdEvent.Title + " [Dold]",
-                                _ => "lightgray"
-                            },
-                            DateStart = createdEvent.Start,
-                            DateEnd = createdEvent.Start,
-                            Color = (createdEvent.Gender, createdEvent.Hidden) switch
-                            {
-                                (Gender.Male, false) => "#7aa7c7",
-                                (Gender.Female, false) => "#d58db5",
-                                (Gender.Male, true) => "#e3f2fd",     // lighter blue for hidden Man
-                                (Gender.Female, true) => "#fce4ec",   // lighter pink for hidden Woman
-                                _ => "lightgray"
-                            },
+        //         if (response.IsSuccessStatusCode)
+        //         {
+        //             await JSRuntime.InvokeVoidAsync("Swal.fire", "Success", "Nytt pass tillagt!", "success");
+        //             var createdEvent = await response.Content.ReadFromJsonAsync<Event>();
 
-                            Comment = createdEvent.Description
-                        };
+        //             // Add to evts
+        //             evts?.Add(createdEvent!);
 
-                    // Add to calendar tasks and refresh
-                    ModelTasks = ModelTasks?.Append(newTask).ToArray();
-                    await InvokeAsync(StateHasChanged);
-                }
-                else
-                {
-                    await JSRuntime.InvokeVoidAsync("alert", "Failed to create event.");
-                }
-            }
-            catch (JsonException ex)
-            {
-                Console.WriteLine($"Error deserializing booking: {ex.Message}");
-            }
-        }
+        //             // Add to ModelTasks so it shows up in the calendar
+        //             var newTask = new Tasks
+        //                 {
+        //                     ID = createdEvent.Id,
+        //                     Caption = (createdEvent.Gender, createdEvent.Hidden) switch
+        //                     {
+        //                         (Gender.Male, false) => "[Herrar] " + createdEvent.Title,
+        //                         (Gender.Female, false) => "[Damer] " + createdEvent.Title,
+        //                         (Gender.Male, true) => "[Herrar] " + createdEvent.Title + " [Dold]",
+        //                         (Gender.Female, true) => "[Damer] " + createdEvent.Title + " [Dold]",
+        //                         _ => "lightgray"
+        //                     },
+        //                     DateStart = createdEvent.Start,
+        //                     DateEnd = createdEvent.Start,
+        //                     Color = (createdEvent.Gender, createdEvent.Hidden) switch
+        //                     {
+        //                         (Gender.Male, false) => "#7aa7c7",
+        //                         (Gender.Female, false) => "#d58db5",
+        //                         (Gender.Male, true) => "#e3f2fd",     // lighter blue for hidden Man
+        //                         (Gender.Female, true) => "#fce4ec",   // lighter pink for hidden Woman
+        //                         _ => "lightgray"
+        //                     },
+
+        //                     Comment = createdEvent.Description
+        //                 };
+
+        //             // Add to calendar tasks and refresh
+        //             ModelTasks = ModelTasks?.Append(newTask).ToArray();
+        //             await InvokeAsync(StateHasChanged);
+        //         }
+        //         else
+        //         {
+        //             await JSRuntime.InvokeVoidAsync("alert", "Failed to create event.");
+        //         }
+        //     }
+        //     catch (JsonException ex)
+        //     {
+        //         Console.WriteLine($"Error deserializing booking: {ex.Message}");
+        //     }
+        // }
     }
 
 
@@ -468,4 +473,7 @@ else
 
         return evt.MaxSlots - count;
     }
+
+    string Capitalize(string text) =>
+        char.ToUpper(text[0]) + text[1..];
 }

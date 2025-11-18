@@ -100,13 +100,13 @@ else
     <p></p> *@
         <div class="d-flex justify-content-center align-items-center">
             <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(-1))">←</button>
-            <h3 class="mx-2 text-center" style="width: 15ch;">@FirstDate.ToString("MMMM yyyy")</h3>
+            <h3 class="mx-2 text-center" style="width: 15ch;">@Capitalize(FirstDate.ToString("MMMM yyyy"))</h3>
             <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(1))">→</button>
         </div>
-        <CalendarContainer TasksList="@ModelTasks" DisplayedView="ShowWeek ? DisplayedView.Weekly : DisplayedView.Monthly" FirstDate="@FirstDate">
-            <MonthlyView SaturdayColor="White"
+        <CalendarContainer TasksList="@ModelTasks" DisplayedView="ShowWeek ? DisplayedView.Weekly : DisplayedView.Monthly" FirstDate="@FirstDate" >
+            <MonthlyView SaturdayColor="White" HighlightToday
             SundayColor="White" />
-
+            
             <WeekView SaturdayColor="White"
             SundayColor="White" />
         </CalendarContainer>
@@ -304,4 +304,6 @@ else
         public int EventId { get; set; }
         public int BookingId { get; set; }
     }
+    string Capitalize(string text) =>
+        char.ToUpper(text[0]) + text[1..];
 }

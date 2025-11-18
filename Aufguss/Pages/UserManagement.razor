@@ -6,105 +6,118 @@
 
 <h1 class="mb-5">Hantera användare</h1>
 <div class="container-fluid">
-    @if (Users == null)
+
+
+    <div class="tabs mb-3">
+        <button class="@($"btn btn-sm me-2 {(activeTab == "users" ? "btn-primary" : "btn-outline-primary")}")"
+                @onclick="@(() => activeTab = "users")">
+            Användare
+        </button>
+        <button class="@($"btn btn-sm {(activeTab == "admins" ? "btn-primary" : "btn-outline-primary")}")"
+                @onclick="@(() => activeTab = "admins")">
+            Administratörer
+        </button>
+    </div>
+
+    @if (activeTab == "users")
     {
-        <p><em>Laddar...</em></p>
-    }
-    else
-    {
-        <h3>Användare</h3>
-        <table class="table table-fixed mb-5">
-            <thead>
-                <tr>
-                    <!-- ID -->
-                    <th class="col-id">ID</th>
-
-                    <!-- Medium and up: separate name columns -->
-                    <th class="col-firstname d-none d-md-table-cell">Förnamn</th>
-                    <th class="col-lastname d-none d-md-table-cell">Efternamn</th>
-
-                    <!-- Small: combined name column -->
-                    <th class="col-name d-table-cell d-md-none">Namn</th>
-
-                    <!-- Username (email) -->
-                    <th class="col-username">Användare</th>
-                    <th class="col-phone">Telefonnummer</th>
-
-                    <!-- Roles -->
-                    @* <th class="col-role">Roll</th> *@
-
-                    <!-- Actions -->
-                    <th class="col-actions"></th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach (var user in Users)
-                {
+        if(Users != null)
+        {
+            <h3>Användare</h3>
+            <table class="table table-fixed mb-5">
+                <thead>
                     <tr>
-                        <!-- ID column -->
-                        <td class="col-id">
-                            <span class="d-none d-md-inline">@user.Id</span>
-                            <a class="d-inline d-md-none" role="button" title="Kopiera ID"
-                            @onclick="() => CopyToClipboard(user.Id)">
-                                <i class="bi bi-clipboard"></i>
-                            </a>
-                        </td>
+                        <!-- ID -->
+                        <th class="col-id">ID</th>
 
-                        <!-- Förnamn - visible only on md and up -->
-                        <td class="col-firstname d-none d-md-table-cell">@user.FirstName</td>
+                        <!-- Medium and up: separate name columns -->
+                        <th class="col-firstname d-none d-md-table-cell">Förnamn</th>
+                        <th class="col-lastname d-none d-md-table-cell">Efternamn</th>
 
-                        <!-- Efternamn - visible only on md and up -->
-                        <td class="col-lastname d-none d-md-table-cell">@user.SurName</td>
+                        <!-- Small: combined name column -->
+                        <th class="col-name d-table-cell d-md-none">Namn</th>
 
-                        <!-- Combined name - visible only on small screens -->
-                        <td class="col-name d-table-cell d-md-none">
-                            <div>@user.FirstName</div>
-                            <div>@user.SurName</div>
-                        </td>
-
-                        <!-- Username / Email -->
-                        <td class="col-username">
-                            <span class="d-none d-md-inline">@user.UserName</span>
-                            <a class="d-inline d-md-none" href="mailto:@user.UserName" title="Skicka e-post">
-                                <i class="bi bi-envelope-fill"></i>
-                            </a>
-                        </td>
-
-                        <td class="col-username">
-                            <span class="d-none d-md-inline">@user.PhoneNumber</span>
-                            <a class="d-inline d-md-none" href="tel:@user.PhoneNumber" title="Ring">
-                                <i class="bi bi-telephone-fill"></i>
-                            </a>
-                        </td>
+                        <!-- Username (email) -->
+                        <th class="col-username">Användare</th>
+                        <th class="col-phone">Telefonnummer</th>
 
                         <!-- Roles -->
-                        @* <td class="col-role">@string.Join(", ", user.Roles)</td> *@
+                        @* <th class="col-role">Roll</th> *@
 
                         <!-- Actions -->
-                        <td class="col-actions">
-                            <div class="d-flex flex-column flex-md-row">
-                                <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1" title="Ändra">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Ta bort" @onclick="async () => await ShowAlert(user.Id)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </td>
+                        <th class="col-actions"></th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody>
+                    @foreach (var user in Users)
+                    {
+                        <tr>
+                            <!-- ID column -->
+                            <td class="col-id">
+                                <span class="d-none d-md-inline">@user.Id</span>
+                                <a class="d-inline d-md-none" role="button" title="Kopiera ID"
+                                @onclick="() => CopyToClipboard(user.Id)">
+                                    <i class="bi bi-clipboard"></i>
+                                </a>
+                            </td>
+
+                            <!-- Förnamn - visible only on md and up -->
+                            <td class="col-firstname d-none d-md-table-cell">@user.FirstName</td>
+
+                            <!-- Efternamn - visible only on md and up -->
+                            <td class="col-lastname d-none d-md-table-cell">@user.SurName</td>
+
+                            <!-- Combined name - visible only on small screens -->
+                            <td class="col-name d-table-cell d-md-none">
+                                <div>@user.FirstName</div>
+                                <div>@user.SurName</div>
+                            </td>
+
+                            <!-- Username / Email -->
+                            <td class="col-username">
+                                <span class="d-none d-md-inline">@user.UserName</span>
+                                <a class="d-inline d-md-none" href="mailto:@user.UserName" title="Skicka e-post">
+                                    <i class="bi bi-envelope-fill"></i>
+                                </a>
+                            </td>
+
+                            <td class="col-username">
+                                <span class="d-none d-md-inline">@user.PhoneNumber</span>
+                                <a class="d-inline d-md-none" href="tel:@user.PhoneNumber" title="Ring">
+                                    <i class="bi bi-telephone-fill"></i>
+                                </a>
+                            </td>
+
+                            <!-- Roles -->
+                            @* <td class="col-role">@string.Join(", ", user.Roles)</td> *@
+
+                            <!-- Actions -->
+                            <td class="col-actions">
+                                <div class="d-flex flex-column flex-md-row">
+                                    <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1" title="Ändra">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" title="Ta bort" @onclick="async () => await ShowAlert(user.Id)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p><em>Laddar...</em></p>
+        }
 
     }
-
-    @if (AdminUsers == null)
+    else if (activeTab == "admins" && activeTab == "admins")
     {
-        <p><em>Laddar...</em></p>
-    }
-    else
-    {
+        if(AdminUsers != null)
+        {
         <h3> Administratörer </h3>
 
         <table class="table table-fixed mb-5">
@@ -132,7 +145,7 @@
                         <td>
                             <span class="d-none d-md-inline">@admin.Id</span>
                             <a class="d-inline d-md-none" role="button" title="Kopiera ID"
-                            @onclick="() => CopyToClipboard(admin.Id)">
+                               @onclick="() => CopyToClipboard(admin.Id)">
                                 <i class="bi bi-clipboard"></i>
                             </a>
                         </td>
@@ -175,6 +188,12 @@
                 }
             </tbody>
         </table>
+        <a href="/CreateAdmin" class="btn btn-primary">Skapa admin</a>
+        }
+        else
+        {
+            <p><em>Laddar...</em></p>
+        }
     }
 
     @* <a href="/CreateAdmin" class="btn btn-primary">Lägg till administratör</a> *@
@@ -187,7 +206,7 @@
 @inject IUserService UserService
 
 @code {
-
+    private string activeTab = "users";
     private List<UserWithRolesDto>? Users;
 
     private List<UserWithRolesDto>? AdminUsers;

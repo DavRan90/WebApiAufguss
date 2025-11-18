@@ -123,11 +123,12 @@ namespace WebApi
                 {
                     policy
                         .WithOrigins(
-                            "https://aufgussdemo.azurewebsites.net",
                             "https://localhost:7003",
                             "http://localhost:7003",
-                            "https://localhost:5173", // <-- add your dev port if using Vite/React
-                            "http://localhost:5173"
+                            "https://localhost:5011",
+                            "http://localhost:5011",
+                            "https://aufgussdemo.azurewebsites.net",
+                            "https://frejabadogym.se"
                         )
                         .AllowAnyHeader()
                         .AllowAnyMethod()
