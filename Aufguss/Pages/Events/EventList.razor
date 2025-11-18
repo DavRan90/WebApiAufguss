@@ -178,8 +178,6 @@ else
 
     private async Task LoadEventsAsync()
     {
-        // evts = await Http.GetFromJsonAsync<List<Event>>("api/Events/admin");
-        // bookings = await Http.GetFromJsonAsync<List<Booking>>("api/Bookings");
         evts = await EventService.GetAllEventsAsync();
         bookings = await BookingService.GetBookingsAsync();
 
@@ -211,6 +209,9 @@ else
                 Comment = evt.Description
             };
     }).ToArray();
+
+        // Filter out the past events for the table view
+        evts = evts.Where(evt => evt.Start > DateTime.Now).ToList();
 
         await InvokeAsync(StateHasChanged);
     }

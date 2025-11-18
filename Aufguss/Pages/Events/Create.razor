@@ -385,31 +385,9 @@
             {
                 while (EndDate > EventDtoData.Start)
                 {
-                    // var res = await Http.PostAsJsonAsync("api/Events", EventDtoData);
                     var res = await EventService.AddEventAsync(EventDtoData);
 
                     EventDtoData.Start = EventDtoData.Start.AddDays(7 * frequency);
-
-                    // if (res.IsSuccessStatusCode)
-                    // {
-                    //     EventDtoData.Start = EventDtoData.Start.AddDays(7 * frequency);
-                    // }
-                    // else
-                    // {
-                    //     var strResponse = await res.Content.ReadAsStringAsync();
-                    //     Console.WriteLine("Json Response: \n" + strResponse);
-
-                    //     try
-                    //     {
-                    //         var jsonResponse = JsonNode.Parse(strResponse);
-                    //         Errors = jsonResponse?["errors"] ?? new JsonObject();
-                    //     }
-                    //     catch (Exception ex)
-                    //     {
-                    //         Console.WriteLine("Exception: " + ex.Message);
-                    //     }
-                    //     break;
-                    // }
                 }
                 await JS.InvokeVoidAsync("Swal.fire", "Lyckades", "Serie av pass skapade!", "success");
                 navManager.NavigateTo("/Events");
@@ -445,73 +423,6 @@
                 Console.WriteLine($"⚠️ SaveEvent failed: {ex.Message}");
                 await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
             }
-
-            //     var response = await Http.PostAsJsonAsync("api/Events", EventDtoData);
-
-            //     if (response.IsSuccessStatusCode)
-            //     {
-            //         if (createTemplate)
-            //         {
-            //             var template = await Http.PostAsJsonAsync("api/EventTemplates", EventDtoData);
-            //         }
-
-
-            //         var createdEvent = await response.Content.ReadFromJsonAsync<Event>();
-            //         if (createdEvent.Hidden == false && createNews == true)
-            //         {
-            //             var entry = new EntryDto
-            //                 {
-            //                     Title = createdEvent.Title + " | " + createdEvent.Start.ToString("dd-MM-yyyy | HH:mm"),
-            //                     Description = createdEvent.Description,
-            //                     Url = createdEvent.Id.ToString(),
-            //                     Image = "https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net/upload/aufguss 2.jpg"
-            //                 };
-            //             var response2 = await Http.PostAsJsonAsync("api/Entries", entry);
-
-            //             if (response2.IsSuccessStatusCode)
-            //             {
-
-            //                 navManager.NavigateTo("/");
-            //             }
-
-            //             else
-            //             {
-            //                 var strResponse = await response2.Content.ReadAsStringAsync();
-            //                 Console.WriteLine("Json Response: \n" + strResponse);
-
-            //                 try
-            //                 {
-            //                     var jsonResponse = JsonNode.Parse(strResponse);
-            //                     Errors = jsonResponse?["errors"] ?? new JsonObject();
-            //                 }
-            //                 catch (Exception ex)
-            //                 {
-            //                     Console.WriteLine("Exception: " + ex.Message);
-            //                 }
-            //             }
-            //         }
-
-
-
-            //         navManager.NavigateTo("/Events");
-            //     }
-
-            //     else
-            //     {
-            //         var strResponse = await response.Content.ReadAsStringAsync();
-            //         Console.WriteLine("Json Response: \n" + strResponse);
-
-            //         try
-            //         {
-            //             var jsonResponse = JsonNode.Parse(strResponse);
-            //             Errors = jsonResponse?["errors"] ?? new JsonObject();
-            //         }
-            //         catch (Exception ex)
-            //         {
-            //             Console.WriteLine("Exception: " + ex.Message);
-            //         }
-            //     }
-            // }
         }
     }
 }

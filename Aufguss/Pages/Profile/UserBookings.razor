@@ -25,7 +25,8 @@ else
                 <tr>
                     <th>Status</th>
                     <th>Plats</th>
-                    <th>Kön</th>
+                    @* <th>Kön</th> *@
+                    <th>Närvaro</th>
                     <th>Titel</th>
                     <th>Datum</th>
                     <th style="width: 80px;"></th> <!-- Icons column -->
@@ -59,6 +60,20 @@ else
                                 }
                             </td>
                             <td>
+                                @if (book.AttendanceConfirmed)
+                                {
+                                    <span class="badge rounded-pill text-bg-success p-2">✓</span>
+                                }
+                                else if (!book.AttendanceConfirmed && book.Start <= DateTime.Now)
+                                {
+                                    <span class="badge rounded-pill text-bg-error p-2">X</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill text-bg-warning p-2">?</span>
+                                }
+                            </td>
+                            @* <td>
                                 @if (book.Gender == 0)
                                 {
                                     <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
@@ -67,7 +82,7 @@ else
                                 {
                                     <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
                                 }
-                            </td>
+                            </td> *@
                             <td>@book.Title</td>
                             <td>@book.Start.ToString("dd/MM/yyyy | HH:mm")</td>
                             <td class="text-nowrap">
@@ -106,7 +121,7 @@ else
         <CalendarContainer TasksList="@ModelTasks" DisplayedView="ShowWeek ? DisplayedView.Weekly : DisplayedView.Monthly" FirstDate="@FirstDate" >
             <MonthlyView SaturdayColor="White" HighlightToday
             SundayColor="White" />
-            
+
             <WeekView SaturdayColor="White"
             SundayColor="White" />
         </CalendarContainer>
@@ -238,7 +253,8 @@ else
                     Status = booking.Booking.Reserve ? "Reserv" : "Inbokad",
                     Start = booking.Event.Start,
                     BookingId = booking.Booking.Id,
-                    EventId = booking.Event.Id
+                    EventId = booking.Event.Id,
+                    AttendanceConfirmed = booking.Booking.AttendanceConfirmed
                 };
             extendedBookings.Add(newBooking);
         }
@@ -303,6 +319,7 @@ else
         public DateTime Start { get; set; }
         public int EventId { get; set; }
         public int BookingId { get; set; }
+        public bool AttendanceConfirmed { get; set; }
     }
     string Capitalize(string text) =>
         char.ToUpper(text[0]) + text[1..];

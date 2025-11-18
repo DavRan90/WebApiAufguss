@@ -5,7 +5,9 @@ namespace Aufguss
 {
     public class EventDto
     {
+        [Required(ErrorMessage = "Titel är obligatoriskt")]
         public string Title { get; set; } = "";
+        [Required(ErrorMessage = "Beskrivning är obligatoriskt")]
         public string Description { get; set; } = "";
         public DateTime Start { get; set; } = DateTime.Now;
         public DateTime? End { get; set; } = DateTime.Now;

@@ -17,7 +17,7 @@ namespace Aufguss
         public int EventId { get; set; }
         public Event Event { get; set; } = null!;
         public string? CancellationToken { get; set; }
-        public bool AttendanceConfirmed { get; set; }
+        public bool AttendanceConfirmed { get; set; } = false;
         public DateTime? AttendanceConfirmedAt { get; set; }
 
         public ApplicationUser User { get; set; } = null!;
