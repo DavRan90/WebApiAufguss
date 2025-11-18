@@ -3,6 +3,7 @@
 @attribute [Authorize(Roles = "Admin,SuperAdmin")]
 @using System.Text.Json.Nodes
 @using Aufguss.Models
+@using System.ComponentModel.DataAnnotations;
 
 
 <div class="row mb-5">
@@ -16,7 +17,211 @@
             </a>
         </div>
 
-        @if (Templates != null)
+        <EditForm Model="EventDtoData" OnValidSubmit="SaveEvent" @ref="registerForm">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+            @if (Templates != null)
+            {
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Använd mall</label>
+                    <div class="col-md-8">
+                        <InputSelect class="form-control" @bind-Value="SelectedTemplateId">
+                            <option value="">-- Välj en mall --</option>
+                            @foreach (var template in Templates)
+                            {
+                                <option value="@template.Id">@template.Title (@template.Start.ToString("dd/MM-yyyy | HH:mm"))</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+            }
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Kön</label>
+
+                <div class="col-md-8">
+                    <div class="row gap-2 gap-md-1">
+                        <div class="col-12 col-md-6 d-flex align-items-center">
+                            <input type="radio"
+                            checked="@(EventDtoData.Gender == Gender.Male)"
+                            name="Gender"
+                            @onchange="@(() => EventDtoData.Gender = Gender.Male)" />
+                            <label class="btn btn-primary ms-2">Herrar</label>
+                        </div>
+
+                        <div class="col-12 col-md-6 d-flex align-items-center">
+                            <input type="radio"
+                            checked="@(EventDtoData.Gender == Gender.Female)"
+                            name="Gender"
+                            @onchange="@(() => EventDtoData.Gender = Gender.Female)" />
+                            <label class="btn btn-danger ms-2">Damer</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Titel</label>
+                <div class="col-md-8">
+                    <InputText class="form-control" @bind-Value="EventDtoData.Title" />
+                </div>
+            </div>
+            <div class="row mb-3">
+                @if (templateLoaded)
+                {
+                    <div class="alert alert-warning" role="alert">
+                        ⚠️ Tänk på att uppdatera datum och tid!
+                    </div>
+                }
+
+                <label class="col-md-4 col-form-label">Starttid</label>
+
+                <div class="col-md-8">
+                    <input type="datetime-local"
+                    class="form-control @(ValidateCss(nameof(EventDtoData.Start)))"
+                    @bind="EventDtoData.Start"
+                    @oninput="ValidateStart" />
+                    <ValidationMessage For="@(() => EventDtoData.Start)" />
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Sluttid</label>
+                <div class="col-md-8">
+                    <input type="datetime-local"
+                           class="form-control @(ValidateCss(nameof(EventDtoData.End)))"
+                           @bind="EventDtoData.End"
+                           @oninput="ValidateEnd" />
+
+                    <ValidationMessage For="@(() => EventDtoData.End)" />
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Max antal gäster</label>
+                <div class="col-md-8">
+                    <InputNumber class="form-control" @bind-Value="EventDtoData.MaxSlots"/>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Beskrivning</label>
+                <div class="col-md-8">
+                    <InputTextArea class="form-control" @bind-Value="EventDtoData.Description" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-8 offset-md-4">
+                    <div class="form-check">
+                        <InputCheckbox class="form-check-input" id="recurring" @bind-Value="EventDtoData.Recurring" />
+                        <label class="form-check-label" for="recurring">
+                            Återkommande
+                            <span class="ms-1" data-bs-toggle="tooltip" data-bs-trigger="click" title="Om återkommande pass önskas">
+                                <i class="bi bi-info-circle text-secondary"></i>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            @if (EventDtoData.Recurring)
+            {
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Frekvens</label>
+                    <div class="col-md-8">
+                        <InputSelect class="form-control" @bind-Value="frequency">
+                            <option value="">-- Välj frekvens --</option>
+                            @for (int i = 1; i < 7; i++)
+                            {
+                                <option value="@i">Efter @i veckor</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                </div>
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Slutdatum</label>
+                    <div class="col-md-8">
+                        <input type="datetime-local" class="form-control" @bind="EndDate">
+                        <span class="text-danger">@Errors["Recurring"]?[0]</span>
+                    </div>
+                </div>
+            }
+            <div class="row mb-3">
+                <div class="col-md-8 offset-md-4">
+                    <div class="form-check">
+                        <InputCheckbox class="form-check-input" id="friend" @bind-Value="EventDtoData.AllowFriendBooking"/>
+                        <label class="form-check-label" for="friend">
+                            Tillåt vänbokning
+                            <span class="ms-1" data-bs-toggle="tooltip" title="TIllåt inbokning av en registrerad aufgussvän">
+                                <i class="bi bi-info-circle text-secondary"></i>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-8 offset-md-4">
+                    <div class="form-check">
+                        <InputCheckbox class="form-check-input" id="survey" @bind-Value="EventDtoData.IncludeSurvey" disabled/>
+                        <label class="form-check-label" for="survey">
+                            Enkät
+                            <span class="ms-1" data-bs-toggle="tooltip" title="Om enkät ska göras i samband med passet">
+                                <i class="bi bi-info-circle text-secondary"></i>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-8 offset-md-4">
+                    <div class="form-check">
+                        <InputCheckbox class="form-check-input" id="hidden" @bind-Value="EventDtoData.Hidden"/>
+                        <label class="form-check-label" for="hidden">
+                            Dold
+                            <span class="ms-1" data-bs-toggle="tooltip" title="Detta pass, om dolt, syns inte bland gästernas pass">
+                                <i class="bi bi-info-circle text-secondary"></i>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-8 offset-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="createnews" @bind="createNews">
+                        <label class="form-check-label" for="createnews">
+                            Skapa nyhet
+                            <span class="ms-1" data-bs-toggle="tooltip" title="Skapar en nyhet om detta pass på startsidan">
+                                <i class="bi bi-info-circle text-secondary"></i>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-8 offset-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="template" @bind="createTemplate">
+                        <label class="form-check-label" for="template">
+                            Skapa mall
+                            <span class="ms-1" data-bs-toggle="tooltip" title="Skapar en mall baserad på denna bokning">
+                                <i class="bi bi-info-circle text-secondary"></i>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="offset-md-4 col-md-4 d-grid">
+                    <button class="btn btn-primary" type="submit">Skapa</button>
+                </div>
+                <div class="col-md-4 d-grid">
+                    <a class="btn btn-outline-primary" href="/Events">Avbryt</a>
+                </div>
+            </div>
+
+        </EditForm>
+
+        @* @if (Templates != null)
         {
             <div class="row mb-3">
                 <label class="col-md-4 col-form-label">Använd mall</label>
@@ -213,7 +418,7 @@
             <div class="col-md-4 d-grid">
                 <a class="btn btn-outline-primary" href="/Events">Avbryt</a>
             </div>
-        </div>
+        </div> *@
     </div>
 </div>
 
@@ -226,6 +431,8 @@
 @inject IEntryService EntryService
 
 @code {
+
+    private EditForm registerForm;
     [Parameter] public string? StartDate { get; set; }
     public DateTime InitialDate { get; set; }
     private bool Survey = false;
@@ -256,91 +463,115 @@
             }
         }
     }
+    
+        private void ValidateStart(ChangeEventArgs e)
+        {
+            registerForm.EditContext?.NotifyFieldChanged(
+                new FieldIdentifier(EventDtoData, nameof(EventDtoData.Start)));
+        }
+    private void ValidateEnd(ChangeEventArgs e)
+    {
+        registerForm.EditContext?.NotifyFieldChanged(
+            new FieldIdentifier(EventDtoData, nameof(EventDtoData.End)));
+    }
+
+        // This adds the red border class automatically
+        private string ValidateCss(string fieldName)
+        {
+            if (registerForm?.EditContext == null)
+                return "";
+
+            var field = new FieldIdentifier(EventDtoData, fieldName);
+            bool hasError = registerForm.EditContext.GetValidationMessages(field).Any();
+
+            return hasError ? "is-invalid" : "";
+        }
+    
 
 
     private void ApplyTemplate()
     {
-        if (SelectedTemplateId.HasValue)
+    if (SelectedTemplateId.HasValue)
+    {
+        templateLoaded = true;
+        var selectedTemplate = Templates.FirstOrDefault(t => t.Id == SelectedTemplateId.Value);
+        if (selectedTemplate is not null)
         {
-            templateLoaded = true;
-            var selectedTemplate = Templates.FirstOrDefault(t => t.Id == SelectedTemplateId.Value);
-            if (selectedTemplate is not null)
-            {
-                EventDtoData.Title = selectedTemplate.Title;
-                EventDtoData.Description = selectedTemplate.Description;
-                EventDtoData.Gender = selectedTemplate.Gender;
-                EventDtoData.Start = selectedTemplate.Start;
-                EventDtoData.End = selectedTemplate.End;
-                EventDtoData.MaxSlots = selectedTemplate.MaxSlots;
-                EventDtoData.Recurring = selectedTemplate.Recurring;
-                EventDtoData.Hidden = selectedTemplate.Hidden;
-                EventDtoData.AllowFriendBooking = selectedTemplate.AllowFriendBooking;
-                StateHasChanged();
-            }
+            EventDtoData.Title = selectedTemplate.Title;
+            EventDtoData.Description = selectedTemplate.Description;
+            EventDtoData.Gender = selectedTemplate.Gender;
+            EventDtoData.Start = selectedTemplate.Start;
+            EventDtoData.End = selectedTemplate.End;
+            EventDtoData.MaxSlots = selectedTemplate.MaxSlots;
+            EventDtoData.Recurring = selectedTemplate.Recurring;
+            EventDtoData.Hidden = selectedTemplate.Hidden;
+            EventDtoData.AllowFriendBooking = selectedTemplate.AllowFriendBooking;
+            StateHasChanged();
         }
+    }
     }
 
     private async Task OnTemplateSelected(ChangeEventArgs e)
     {
-        Console.WriteLine("🚀 OnTemplateSelected triggered");
+    Console.WriteLine("🚀 OnTemplateSelected triggered");
 
-        if (int.TryParse(e.Value?.ToString(), out var templateId))
+    if (int.TryParse(e.Value?.ToString(), out var templateId))
+    {
+        SelectedTemplateId = templateId;
+
+        var selectedTemplate = Templates.FirstOrDefault(t => t.Id == templateId);
+
+        if (selectedTemplate is not null)
         {
-            SelectedTemplateId = templateId;
+            Console.WriteLine($"Template found: {selectedTemplate.Title}");
 
-            var selectedTemplate = Templates.FirstOrDefault(t => t.Id == templateId);
-
-            if (selectedTemplate is not null)
-            {
-                Console.WriteLine($"Template found: {selectedTemplate.Title}");
-
-                EventDtoData.Title = selectedTemplate.Title;
-                EventDtoData.Description = selectedTemplate.Description;
-                EventDtoData.Gender = selectedTemplate.Gender;
-                EventDtoData.Start = selectedTemplate.Start;
-                EventDtoData.End = selectedTemplate.End;
-                EventDtoData.MaxSlots = selectedTemplate.MaxSlots;
-                EventDtoData.Recurring = selectedTemplate.Recurring;
-                EventDtoData.Hidden = selectedTemplate.Hidden;
-                EventDtoData.AllowFriendBooking = selectedTemplate.AllowFriendBooking;
-            }
-
-            await InvokeAsync(StateHasChanged);
+            EventDtoData.Title = selectedTemplate.Title;
+            EventDtoData.Description = selectedTemplate.Description;
+            EventDtoData.Gender = selectedTemplate.Gender;
+            EventDtoData.Start = selectedTemplate.Start;
+            EventDtoData.End = selectedTemplate.End;
+            EventDtoData.MaxSlots = selectedTemplate.MaxSlots;
+            EventDtoData.Recurring = selectedTemplate.Recurring;
+            EventDtoData.Hidden = selectedTemplate.Hidden;
+            EventDtoData.AllowFriendBooking = selectedTemplate.AllowFriendBooking;
         }
+
+        await InvokeAsync(StateHasChanged);
+    }
     }
 
 
     protected override async Task OnInitializedAsync()
     {
-        // Templates = await Http.GetFromJsonAsync<List<EventTemplate>>("api/EventTemplates");
-        Templates = await TemplateService.GetTemplatesAsync();
-        if (!string.IsNullOrWhiteSpace(StartDate) &&
-            DateTime.TryParse(StartDate, out var parsed))
-        {
-            InitialDate = parsed;
-        }
-        else
-        {
-            // fallback (today or whatever you want)
-            InitialDate = DateTime.Now;
-        }
-        EventDtoData.Start = InitialDate;
-        EventDtoData.End = InitialDate;
+    // Templates = await Http.GetFromJsonAsync<List<EventTemplate>>("api/EventTemplates");
+    Templates = await TemplateService.GetTemplatesAsync();
+    if (!string.IsNullOrWhiteSpace(StartDate) &&
+        DateTime.TryParse(StartDate, out var parsed))
+    {
+        InitialDate = parsed;
+    }
+    else
+    {
+        // fallback (today or whatever you want)
+        InitialDate = DateTime.Now;
+    }
+    EventDtoData.Start = InitialDate;
+    EventDtoData.End = InitialDate;
     }
 
     private async Task CheckFormData()
     {
-        if (EventDtoData.End <= EventDtoData.Start)
-        {
-            Errors["End"] = new JsonArray("Sluttid måste vara efter starttid.");
-            // return;
-        }
+        // if (EventDtoData.End <= EventDtoData.Start)
+        // {
+        //     Errors["End"] = new JsonArray("Sluttid måste vara efter starttid.");
+        //     // return;
+        // }
 
-        if (EventDtoData.Start <= DateTime.Now)
-        {
-            Errors["Start"] = new JsonArray("Starttiden har redan passerat");
-            // return;
-        }
+        // if (EventDtoData.Start <= DateTime.Now)
+        // {
+        //     Errors["Start"] = new JsonArray("Starttiden har redan passerat");
+        //     // return;
+        // }
 
         if (EventDtoData.Recurring)
         {
@@ -425,4 +656,46 @@
             }
         }
     }
+    public class FutureDateAttribute : ValidationAttribute
+    {
+        public FutureDateAttribute()
+        {
+            ErrorMessage = "Starttiden måste vara i framtiden.";
+        }
+
+        public override bool IsValid(object value)
+        {
+            if (value is DateTime dt)
+            {
+                return dt > DateTime.Now;
+            }
+
+            return true; // Ignore null; use [Required] if needed
+        }
+    }
+    public class EndAfterStartAttribute : ValidationAttribute
+    {
+        public EndAfterStartAttribute()
+        {
+            ErrorMessage = "Sluttiden måste vara efter starttiden.";
+        }
+
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        {
+            var instance = validationContext.ObjectInstance;
+            var startProp = validationContext.ObjectType.GetProperty("Start");
+
+            if (startProp == null)
+                return ValidationResult.Success;
+
+            var startValue = (DateTime)startProp.GetValue(instance);
+            var endValue = (DateTime)value;
+
+            if (endValue <= startValue)
+                return new ValidationResult(ErrorMessage);
+
+            return ValidationResult.Success;
+        }
+    }
+
 }
