@@ -50,6 +50,23 @@ namespace Aufguss.Services.API
             return await response.Content.ReadFromJsonAsync<Booking>()
                    ?? throw new Exception("Failed to deserialize booking");
         }
+        public async Task<Booking> AddMultiBookingAsync(BookingDto BookingDtoData)
+        {
+            var response = await _http.PostAsJsonAsync("api/Bookings/Multi", BookingDtoData);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                var message = error != null && error.ContainsKey("message")
+                    ? error["message"]
+                    : "Ett okänt fel uppstod vid bokning.";
+
+                throw new Exception(message);
+            }
+
+            return await response.Content.ReadFromJsonAsync<Booking>()
+                   ?? throw new Exception("Failed to deserialize booking");
+        }
         public async Task EditBookingAsync(int id, BookingDto bookingDto)
         {
             var response = await _http.PutAsJsonAsync($"api/bookings/{id}", bookingDto);

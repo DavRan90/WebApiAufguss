@@ -220,7 +220,8 @@ namespace WebApi.Controllers
 
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> AcceptInvite(int id, [FromBody] InviteDto dto)
+        //public async Task<IActionResult> AcceptInvite(int id, [FromBody] InviteDto dto)
+        public async Task<IActionResult> AcceptInvite(int id)
         {
             var invite = await _context.Invites.FirstOrDefaultAsync(i => i.Id == id);
             if (invite == null)

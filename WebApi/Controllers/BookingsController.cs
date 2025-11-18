@@ -126,6 +126,87 @@ namespace WebApi.Controllers
 
             return Ok(new { message = result.Message });
         }
+
+        [HttpPost("Multi")]
+        [Authorize]
+        public async Task<IActionResult> CreateMultiBooking([FromBody] BookingDto dto)
+        {
+            try
+            {
+                // 1️⃣ Get logged-in user ID
+                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (userId == null)
+                    return Unauthorized(new { message = "User not authenticated." });
+
+                // 2️⃣ Load the user from DB
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user == null)
+                    return Unauthorized(new { message = "User not found in database." });
+
+                // 3️⃣ Populate DTO with authenticated user data
+                dto.UserId = user.Id;
+                dto.Name = $"{user.FirstName} {user.SurName}";
+                dto.Email = user.Email!;
+                dto.Tel = user.PhoneNumber!;
+                dto.BookedAt = DateTime.UtcNow;
+
+               
+
+                // 4️⃣ Begin transaction
+                using var tx = await _context.Database.BeginTransactionAsync();
+
+                // 5️⃣ Create main booking
+                var result = await _bookingManager.CreateBookingAsync(dto);
+
+                if (!result.Success)
+                {
+                    await tx.RollbackAsync();
+                    return BadRequest(new { message = result.Message });
+                }
+
+                
+
+                // 6️⃣ If friend should be booked
+                if (user.AufgussFriendId != null)
+                {
+                    var friend = await _context.Users
+                        .FirstOrDefaultAsync(u => u.Id == user.AufgussFriendId);
+
+                    if (friend != null)
+                    {
+                        var friendDto = new BookingDto
+                        {
+                            EventId = dto.EventId,
+                            UserId = friend.Id,
+                            Name = $"{friend.FirstName} {friend.SurName}",
+                            Email = friend.Email!,
+                            Tel = friend.PhoneNumber!,
+                            BookedAt = DateTime.UtcNow
+                        };
+
+                        var friendResult = await _bookingManager.CreateBookingAsync(friendDto);
+                        if (!friendResult.Success)
+                        {
+                            await tx.RollbackAsync();
+                            return BadRequest(new { message = friendResult.Message });
+                        }
+                    }
+                }
+
+                // 7️⃣ Commit
+                await tx.CommitAsync();
+
+                
+                return Ok(new { message = result.Message });
+                //return Ok(mainBooking);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+
         [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> EditBooking(int id, BookingDto dto)

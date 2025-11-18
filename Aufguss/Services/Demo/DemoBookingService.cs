@@ -224,6 +224,56 @@ namespace Aufguss.Services.Demo
 
             return newBooking;
         }
+        public async Task<Booking> AddMultiBookingAsync(BookingDto bookingDto)
+        {
+            _settings = await _settingsService.GetSettingsAsync();
+            await EnsureEventsLoadedAsync();
+            await EnsureSettingsLoadedAsync();
+
+            var bookingEvent = _events.FirstOrDefault(e => e.Id == bookingDto.EventId);
+            int maxSlots = bookingEvent?.MaxSlots ?? 3;
+
+            // 2. Count active bookings for this user
+            int countActiveBookings = _bookings.Count(b =>
+                b.Email == bookingDto.Email &&
+                !b.Unbooked &&
+                !b.Reserve &&
+                // Here you could filter by event date > now if you have event info, else skip
+                true);
+
+            // 3. Check against max allowed bookings
+            if (countActiveBookings >= _settings.MaxBookingsAufguss)
+            {
+
+                throw new Exception($"För många aktiva bokningar, max {_settings.MaxBookingsAufguss}");
+            }
+
+            // 4. Check event max slots and existing bookings for that event
+
+            int existingBookings = _bookings.Count(b =>
+                b.EventId == bookingDto.EventId &&
+                !b.Unbooked &&
+                !b.Reserve);
+
+            bool isReserve = existingBookings >= maxSlots;
+
+            // 5. Create booking
+            var newBooking = new Booking
+            {
+                Id = _bookings.Any() ? _bookings.Max(b => b.Id) + 1 : 1,
+                UserId = bookingDto.UserId,
+                Name = bookingDto.Name,
+                Email = bookingDto.Email,
+                Tel = bookingDto.Tel,
+                BookedAt = DateTime.Now,
+                Reserve = isReserve,
+                EventId = bookingDto.EventId,
+            };
+
+            _bookings.Add(newBooking);
+
+            return newBooking;
+        }
 
         public Task EditBookingAsync(int id, BookingDto bookingDto)
         {

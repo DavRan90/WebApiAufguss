@@ -56,7 +56,7 @@ namespace Aufguss.Services.API
         }
         public async Task<string> AcceptInviteAsync(int id, InviteDto dto)
         {
-            var response = await _http.PutAsync($"api/Invites/{id}", null);
+            var response = await _http.PutAsJsonAsync($"api/Invites/{id}", dto);
 
             if (response.IsSuccessStatusCode)
                 return await response.Content.ReadAsStringAsync();

@@ -463,27 +463,26 @@
 
         try
         {
-            // Add main booking
-            await BookingService.AddBookingAsync(BookingDtoData);
 
             // If friend booking is requested and friend exists
-            if (BookFriend && AufgussFriend != null)
+            if (BookFriend)
             {
-                FriendBookingDtoData.EventId = Id;
-                FriendBookingDtoData.BookedAt = DateTime.UtcNow;
-                FriendBookingDtoData.Name = $"{AufgussFriend.FirstName} {AufgussFriend.SurName}";
-                FriendBookingDtoData.Email = AufgussFriend.Email ?? "";
-                FriendBookingDtoData.Tel = AufgussFriend.PhoneNumber ?? "";
-                FriendBookingDtoData.UserId = AufgussFriend.Id;
+                // FriendBookingDtoData.EventId = Id;
+                // FriendBookingDtoData.BookedAt = DateTime.UtcNow;
+                // FriendBookingDtoData.Name = $"{AufgussFriend.FirstName} {AufgussFriend.SurName}";
+                // FriendBookingDtoData.Email = AufgussFriend.Email ?? "";
+                // FriendBookingDtoData.Tel = AufgussFriend.PhoneNumber ?? "";
+                // FriendBookingDtoData.UserId = AufgussFriend.Id;
 
-                // Log friend payload
-                Console.WriteLine("Friend booking payload: " + JsonSerializer.Serialize(FriendBookingDtoData));
+                // // Log friend payload
+                // Console.WriteLine("Friend booking payload: " + JsonSerializer.Serialize(FriendBookingDtoData));
 
-                await BookingService.AddBookingAsync(FriendBookingDtoData);
-                await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", $"Du och {FriendBookingDtoData.Name} är nu inbokade till passet!", "success");
+                await BookingService.AddMultiBookingAsync(BookingDtoData);
+                await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", $"Du och din vän är nu inbokade till passet!", "success");
             }
             else
             {
+                await BookingService.AddBookingAsync(BookingDtoData);
                 await JS.InvokeVoidAsync("Swal.fire", "Bokning tillagd", "Du är nu inbokad till passet!", "success");
             }
 
