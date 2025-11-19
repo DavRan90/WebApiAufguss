@@ -88,17 +88,21 @@ namespace WebApi.Services
             await _audit.LogBookingAsync(booking.Id, logAction, booking.Email, logDetails);
 
             // Send confirmation email
-            var cancelUrl = $"https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net/api/bookings/cancel-booking?token={booking.CancellationToken}";
+            // Send confirmation email
+            //var cancelUrl = $"https://frejaaufguss.se/unbook/{booking.CancellationToken}";
+            var cancelUrl = $"https://aufgussdemo.azurewebsites.net/unbook/{booking.CancellationToken}";
+            //var cancelUrl = $"https://localhost:7003/unbook/{booking.CancellationToken}";
             var statusText = isReserve ? "Du är placerad på reservlistan till" : "Du är inbokad till";
 
             var html = $@"
-                <div style='font-family: Arial, sans-serif; font-size: 16px; color: #333;'>
-                    <p><strong>Tack för din bokning {booking.Name}!</strong></p>
-                    <p>{statusText} <strong>{currEvent.Title}</strong> den {currEvent.Start:yyyy-MM-dd HH:mm}.</p>
-                    <p>Om du vill avboka din plats, klicka på länken nedan:</p>
-                    <p><a href='{cancelUrl}'>Avboka din plats</a></p>
-                    <p><strong>Vi ses på Freja Bad & Gym!</strong></p>
-                </div>";
+                        <div style='font-family: Arial, sans-serif; font-size: 16px; color: #333;'>
+                            <p><strong>Tack för din bokning {booking.Name}!</strong></p>
+                            <p>{statusText} <strong>{currEvent.Title}</strong> den {currEvent.Start:yyyy-MM-dd HH:mm}.</p>
+                            <p>Om du vill avboka din plats klickar du på länken nedan. Du måste sedan bekräfta på webbsidan.</p>
+                            <p><a href='{cancelUrl}'>Avboka din plats</a></p>
+                            <p><strong>Vi ses på Freja Bad & Gym!</strong></p>
+                        </div>";
+
 
             try
             {
@@ -226,16 +230,18 @@ namespace WebApi.Services
             booking.UnbookedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            // Check if anyone can be promoted from reserve list
             await CheckReserveListAsync(booking);
 
-            // Log audit
-            var evtTitle = booking.Event?.Title ?? "(okänt event)";
-            await _audit.LogBookingAsync(booking.Id, "Avbokad via länk", booking.Email,
-                $"Användaren {booking.Email} avbokade sin plats till eventet '{evtTitle}' via avbokningslänken.");
+            await _audit.LogBookingAsync(
+                booking.Id,
+                "Avbokad via bekräftelse",
+                booking.Email,
+                $"Användaren {booking.Email} avbokade sin plats till eventet '{booking.Event?.Title}' via bekräftelsesidan."
+            );
 
             return (true, "Bokningen har avbokats.");
         }
+
 
 
         /// <summary>
@@ -272,7 +278,8 @@ namespace WebApi.Services
                         // Send promotion email (outside transaction)
                         try
                         {
-                            var cancelUrl = $"https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net/api/bookings/cancel-booking?token={promoted.CancellationToken}";
+                            var cancelUrl = $"https://frejabadogym.se/unbook/{booking.CancellationToken}";
+
                             var html = $@"
                                 <div style='font-family: Arial, sans-serif; font-size: 16px; color: #333;'>
                                     <p><strong>Grattis {promoted.Name}!</strong></p>
@@ -303,5 +310,20 @@ namespace WebApi.Services
                 throw;
             }
         }
+        public async Task<(bool Success, string Message, Booking? Booking)> ValidateTokenAsync(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+                return (false, "Token saknas", null);
+
+            var booking = await _context.Bookings
+                .Include(b => b.Event)
+                .FirstOrDefaultAsync(b => b.CancellationToken == token);
+
+            if (booking == null || booking.Unbooked)
+                return (false, "Ogiltig eller redan avbokad bokning", null);
+
+            return (true, "Token är giltig", booking);
+        }
+
     }
 }

@@ -84,16 +84,55 @@ namespace WebApi.Controllers
             return Ok(booking);
         }
         [AllowAnonymous]
-        [HttpGet("cancel-booking")]
-        public async Task<IActionResult> CancelBooking([FromQuery] string token)
+        [HttpGet("validate-token")]
+        public async Task<IActionResult> ValidateToken(string token)
         {
-            var result = await _bookingManager.CancelBookingByTokenAsync(token);
+            var booking = await _context.Bookings
+                .Include(b => b.Event)
+                .FirstOrDefaultAsync(b => b.CancellationToken == token);
 
+            if (booking == null || booking.Unbooked)
+                return BadRequest("Invalid token");
+
+            return Ok(new
+            {
+                booking.Name,
+                EventTitle = booking.Event.Title,
+                booking.Event.Start
+            });
+        }
+
+        [AllowAnonymous]
+        [HttpPost("cancel-booking")]
+        public async Task<IActionResult> CancelBooking([FromBody] CancelRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Token))
+                return BadRequest("Missing token");
+
+            var result = await _bookingManager.CancelBookingByTokenAsync(request.Token);
             if (!result.Success)
                 return BadRequest(result.Message);
 
-            return Ok(result.Message);
+            return Ok(new { Message = result.Message });
         }
+
+        public class CancelRequest
+        {
+            public string Token { get; set; } = "";
+        }
+
+
+        //[AllowAnonymous]
+        //[HttpGet("cancel-booking")]
+        //public async Task<IActionResult> CancelBooking([FromQuery] string token)
+        //{
+        //    var result = await _bookingManager.CancelBookingByTokenAsync(token);
+
+        //    if (!result.Success)
+        //        return BadRequest(result.Message);
+
+        //    return Ok(result.Message);
+        //}
 
         [Authorize]
         [HttpPost("{id}/unbook")]

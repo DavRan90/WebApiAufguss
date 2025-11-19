@@ -49,7 +49,7 @@ namespace WebApi
 
             // 1. Add EF Core
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("MyPC")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("Azure")));
 
             // 2. Add Identity
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()

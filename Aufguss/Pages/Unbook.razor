@@ -1,0 +1,106 @@
+﻿@page "/unbook/{Token}"
+
+@using System.Net.Http.Json
+
+<h3>Avboka din plats</h3>
+
+@if (Loading)
+{
+    <p>Laddar...</p>
+}
+else if (Error != null)
+{
+    <div class="alert alert-danger">@Error</div>
+}
+else if (SuccessMessage != null)
+{
+    <div class="alert alert-success">@SuccessMessage</div>
+}
+else
+{
+    <div class="card p-3 mt-3">
+        <p>
+            <strong>@BookingInfo.Name</strong>, du är bokad till:<br />
+            <strong>@BookingInfo.EventTitle</strong><br />
+            Datum: @BookingInfo.Start.ToString("yyyy-MM-dd HH:mm")
+        </p>
+
+        <p>Vill du avboka din plats?</p>
+
+        <button class="btn btn-danger" @onclick="ConfirmUnbooking" disabled="@Processing">
+            @if (Processing)
+            {
+                <span>Bearbetar...</span>
+            }
+            else
+            {
+                <span>Avboka</span>
+            }
+        </button>
+    </div>
+}
+
+@inject HttpClient Http
+
+@code {
+    [Parameter] public string? Token { get; set; }
+
+    private bool Loading = true;
+    private bool Processing = false;
+    private string? Error;
+    private string? SuccessMessage;
+
+    private BookingValidationResponse? BookingInfo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Token))
+        {
+            Error = "Avbokningslänken är ogiltig.";
+            Loading = false;
+            return;
+        }
+
+        try
+        {
+            BookingInfo = await Http.GetFromJsonAsync<BookingValidationResponse>(
+                $"api/bookings/validate-token?token={Token}");
+
+            if (BookingInfo == null)
+            {
+                Error = "Avbokningslänken är ogiltig eller bokningen har redan avbokats.";
+            }
+        }
+        catch
+        {
+            Error = "Det gick inte att hämta bokningen.";
+        }
+
+        Loading = false;
+    }
+
+    private async Task ConfirmUnbooking()
+    {
+        Processing = true;
+
+        var response = await Http.PostAsJsonAsync("api/bookings/cancel-booking", new { Token });
+
+        if (response.IsSuccessStatusCode)
+        {
+            SuccessMessage = "Din bokning har avbokats.";
+        }
+        else
+        {
+            Error = "Det gick inte att avboka bokningen.";
+        }
+
+        Processing = false;
+    }
+
+    public class BookingValidationResponse
+    {
+        public string Name { get; set; } = "";
+        public string EventTitle { get; set; } = "";
+        public DateTime Start { get; set; }
+    }
+}

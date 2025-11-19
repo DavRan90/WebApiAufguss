@@ -162,6 +162,8 @@ else
     {
         var createdFaq = await FaqService.AddFaqAsync(FaqDtoData);
         faqs.Add(createdFaq);
+        FaqDtoData = new FaqDto();
+
     }
     private async Task EditAlert(int id)
     {
