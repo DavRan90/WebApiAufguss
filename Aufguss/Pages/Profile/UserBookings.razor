@@ -26,9 +26,12 @@ else
                     <th>Status</th>
                     <th>Plats</th>
                     @* <th>Kön</th> *@
-                    <th>Närvaro</th>
+                    @* <th>Närvaro</th> *@
+                    <th>
+                        <i class="bi bi-person-check"></i>
+                    </th>
                     <th>Titel</th>
-                    <th>Datum</th>
+                    <th>När</th>
                     <th style="width: 80px;"></th> <!-- Icons column -->
                 </tr>
             </thead>
@@ -38,11 +41,11 @@ else
                     @foreach (var book in extendedBookings)
                     {
                         <tr style="cursor: pointer;"
-                        @onclick="@(() => NavManager.NavigateTo($"/Booking/{book.BookingId}"))">
+                            @onclick="@(() => NavManager.NavigateTo($"/Booking/{book.BookingId}"))">
                             <td>
                                 @if (book.Status == "Inbokad")
                                 {
-                                    <span class="badge rounded-pill text-bg-success p-2">Inbokad</span>
+                                    <span class="badge rounded-pill text-bg-success p-2">Bokad</span>
                                 }
                                 else
                                 {
@@ -84,17 +87,18 @@ else
                                 }
                             </td> *@
                             <td>@book.Title</td>
-                            <td>@book.Start.ToString("dd/MM/yyyy | HH:mm")</td>
-                            <td class="text-nowrap">
-                                <div class="d-flex flex-column flex-md-row">
-                                    <button class="btn btn-sm btn-outline-danger"
-                                    title="Ta bort"
-                                    @onclick:stopPropagation
-                                    @onclick="async () => await ShowAlert(book)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
+                            <td>@book.Start.ToString("dd MMM HH:mm", System.Globalization.CultureInfo.InvariantCulture)</td>
+                                            <td class="text-nowrap">
+                    <div class="d-flex flex-column flex-md-row align-items-start">
+                        <button class="btn btn-sm btn-outline-danger flex-grow-0 w-auto"
+                                title="Ta bort"
+                                @onclick:stopPropagation
+                                @onclick="async () => await ShowAlert(book)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+
                         </tr>
                     }
                 }
@@ -118,12 +122,12 @@ else
             <h3 class="mx-2 text-center" style="width: 15ch;">@Capitalize(FirstDate.ToString("MMMM yyyy"))</h3>
             <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(1))">→</button>
         </div>
-        <CalendarContainer TasksList="@ModelTasks" DisplayedView="ShowWeek ? DisplayedView.Weekly : DisplayedView.Monthly" FirstDate="@FirstDate" >
+        <CalendarContainer TasksList="@ModelTasks" DisplayedView="ShowWeek ? DisplayedView.Weekly : DisplayedView.Monthly" FirstDate="@FirstDate">
             <MonthlyView SaturdayColor="White" HighlightToday
-            SundayColor="White" />
+                         SundayColor="White" />
 
             <WeekView SaturdayColor="White"
-            SundayColor="White" />
+                      SundayColor="White" />
         </CalendarContainer>
     }
 }
@@ -269,13 +273,13 @@ else
                     DateStart = be.Event.Start,
                     DateEnd = be.Event.End ?? be.Event.Start,
                     Color = be.Booking.Reserve
-                                            ? "lightyellow" // Highlight reserved bookings with yellow (for example)
-                                            : be.Event.Gender switch
-                                            {
-                                                Gender.Male => "lightblue",
-                                                Gender.Female => "lightpink",
-                                                _ => "lightgray"
-                                            },
+                                                ? "lightyellow" // Highlight reserved bookings with yellow (for example)
+                                                : be.Event.Gender switch
+                                                {
+                                                    Gender.Male => "lightblue",
+                                                    Gender.Female => "lightpink",
+                                                    _ => "lightgray"
+                                                },
                     Comment = be.Event.Description
                 })
             .ToArray();
