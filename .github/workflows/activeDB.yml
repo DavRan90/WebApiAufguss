@@ -1,8 +1,8 @@
 name: Keep Azure DB Active
 
 on:
-  schedule:
-    - cron: "*/15 * * * *"   # Runs every 15 minutes (adjust as needed)
+  #schedule:
+    #- cron: "*/15 * * * *"   # Runs every 15 minutes (adjust as needed)
   workflow_dispatch:         # Allow manual run
 
 jobs:
