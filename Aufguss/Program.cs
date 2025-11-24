@@ -1,8 +1,10 @@
 using System.Globalization;
 using Aufguss.Services;
 using Aufguss.Services.API;
+using Aufguss.Services.Aufguss.Services;
 using Aufguss.Services.Demo;
 using Aufguss.Services.Interface;
+using Blazored.LocalStorage;
 using CurrieTechnologies.Razor.SweetAlert2;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -27,6 +29,7 @@ public class Program
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
         builder.Services.AddSweetAlert2();
+        builder.Services.AddBlazoredLocalStorage();
 
         bool useDemo = builder.Configuration.GetValue<bool>("UseDemoData");
 
@@ -63,28 +66,33 @@ public class Program
             builder.Services.AddScoped<IEmailSender, ApiEmailSender>(); // only Api right now
             builder.Services.AddScoped<ILogService, ApiLogService>();
             builder.Services.AddScoped<ISurveyService, ApiSurveyService>();
+            //builder.Services.AddScoped<IRefreshService, ApiRefreshService>();
+            builder.Services.AddScoped<IRefreshService, TokenRefreshService>();
+
+
+
         }
 
         builder.Services.AddScoped<Services.AuthorizationMessageHandler>();
 
-        builder.Services.AddHttpClient("AuthenticatedClient", client =>
-        {
-            client.BaseAddress = new Uri("https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net");
-        }).AddHttpMessageHandler<Services.AuthorizationMessageHandler>();
-
-
-        builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net") });
-
-
-
-
         //builder.Services.AddHttpClient("AuthenticatedClient", client =>
         //{
-        //    client.BaseAddress = new Uri("https://localhost:7162");
+        //    client.BaseAddress = new Uri("https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net");
         //}).AddHttpMessageHandler<Services.AuthorizationMessageHandler>();
 
 
-        //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7162") });
+        //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://aufgussapi-d6f4dae9g9h3a2h8.northeurope-01.azurewebsites.net") });
+
+
+
+
+        builder.Services.AddHttpClient("AuthenticatedClient", client =>
+        {
+            client.BaseAddress = new Uri("https://localhost:7162");
+        }).AddHttpMessageHandler<Services.AuthorizationMessageHandler>();
+
+
+        builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7162") });
 
 
         //builder.Services.AddOidcAuthentication(options =>

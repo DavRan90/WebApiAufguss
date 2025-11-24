@@ -88,16 +88,16 @@ else
                             </td> *@
                             <td>@book.Title</td>
                             <td>@book.Start.ToString("dd MMM HH:mm", System.Globalization.CultureInfo.InvariantCulture)</td>
-                                            <td class="text-nowrap">
-                    <div class="d-flex flex-column flex-md-row align-items-start">
-                        <button class="btn btn-sm btn-outline-danger flex-grow-0 w-auto"
-                                title="Ta bort"
-                                @onclick:stopPropagation
-                                @onclick="async () => await ShowAlert(book)">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                </td>
+                            <td class="text-nowrap">
+                                <div class="d-flex flex-column flex-md-row align-items-start">
+                                    <button class="btn btn-sm btn-outline-danger flex-grow-0 w-auto"
+                                            title="Ta bort"
+                                    @onclick:stopPropagation
+                                            @onclick="async () => await ShowAlert(book)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
 
                         </tr>
                     }
@@ -273,13 +273,13 @@ else
                     DateStart = be.Event.Start,
                     DateEnd = be.Event.End ?? be.Event.Start,
                     Color = be.Booking.Reserve
-                                                ? "lightyellow" // Highlight reserved bookings with yellow (for example)
-                                                : be.Event.Gender switch
-                                                {
-                                                    Gender.Male => "lightblue",
-                                                    Gender.Female => "lightpink",
-                                                    _ => "lightgray"
-                                                },
+                                                    ? "lightyellow" // Highlight reserved bookings with yellow (for example)
+                                                    : be.Event.Gender switch
+                                                    {
+                                                        Gender.Male => "lightblue",
+                                                        Gender.Female => "lightpink",
+                                                        _ => "lightgray"
+                                                    },
                     Comment = be.Event.Description
                 })
             .ToArray();

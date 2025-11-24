@@ -28,7 +28,7 @@
                 <thead>
                     <tr>
                         <!-- ID -->
-                        <th class="col-id">ID</th>
+                        @* <th class="col-id">ID</th> *@
 
                         <!-- Medium and up: separate name columns -->
                         <th class="col-firstname d-none d-md-table-cell">Förnamn</th>
@@ -54,13 +54,13 @@
                     {
                         <tr>
                             <!-- ID column -->
-                            <td class="col-id">
+                            @* <td class="col-id">
                                 <span class="d-none d-md-inline">@user.Id</span>
                                 <a class="d-inline d-md-none" role="button" title="Kopiera ID"
                                 @onclick="() => CopyToClipboard(user.Id)">
                                     <i class="bi bi-clipboard"></i>
                                 </a>
-                            </td>
+                            </td> *@
 
                             <!-- Förnamn - visible only on md and up -->
                             <td class="col-firstname d-none d-md-table-cell">@user.FirstName</td>
@@ -93,7 +93,20 @@
                             @* <td class="col-role">@string.Join(", ", user.Roles)</td> *@
 
                             <!-- Actions -->
-                            <td class="col-actions">
+                            <td class="text-nowrap">
+                                <div class="d-flex flex-column flex-md-row align-items-end">
+                                    <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1" title="Ändra">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger flex-grow-0 w-auto"
+                                            title="Ta bort"
+                                    @onclick:stopPropagation
+                                            @onclick="async () => await ShowAlert(user.Id)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                            @* <td class="col-actions text-nowrap">
                                 <div class="d-flex flex-column flex-md-row">
                                     <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1" title="Ändra">
                                         <i class="bi bi-pencil"></i>
@@ -102,7 +115,7 @@
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
-                            </td>
+                            </td> *@
                         </tr>
                     }
                 </tbody>

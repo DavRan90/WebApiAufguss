@@ -1,4 +1,5 @@
 ﻿@page "/login"
+@using Aufguss.Services.Aufguss.Services
 @inject HttpClient Http
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
@@ -57,7 +58,8 @@
                 await JS.InvokeVoidAsync("localStorage.setItem", "authToken", token);
                 await JS.InvokeVoidAsync("localStorage.setItem", "refreshToken", result.RefreshToken);
 
-                ((Services.CustomAuthStateProvider)AuthProvider).NotifyUserAuthentication(token);
+                await ((CustomAuthStateProvider)AuthProvider).MarkUserAsAuthenticatedAsync(token, result.RefreshToken);
+
 
                 Navigation.NavigateTo("/");
             }

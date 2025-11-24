@@ -46,7 +46,7 @@ namespace WebApi
             builder.Services.AddSingleton<IBackgroundEmailQueue, BackgroundEmailQueue>();
             builder.Services.AddHostedService<EmailBackgroundService>();
             builder.Services.AddScoped<IEmailSender, EmailSender>();
-
+            
             // 1. Add EF Core
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("MyPC")));
@@ -163,7 +163,7 @@ namespace WebApi
 
             app.UseCors("AllowFrontend"); // CORS must come before auth!
 
-            app.UseAuthentication();      // Then authentication
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseStaticFiles();

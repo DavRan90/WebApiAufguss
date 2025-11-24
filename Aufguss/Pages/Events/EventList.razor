@@ -122,21 +122,57 @@ else
     }
     else
     {
-
-        <div class="d-flex justify-content-center align-items-center">
+        @* <div class="d-flex justify-content-center align-items-center">
             <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(-1))">←</button>
             <h3 class="mx-2 text-center" style="width: 15ch;">@Capitalize(FirstDate.ToString("MMMM yyyy"))</h3>
             <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(1))">→</button>
+        </div> *@
+        <div class="calendar-with-weeknumbers">
+            <div class="calendar-controls d-flex justify-content-center align-items-center mb-2">
+                <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(-1))">←</button>
+                <h3 class="mx-2 text-center" style="width: 15ch;">@Capitalize(FirstDate.ToString("MMMM yyyy"))</h3>
+                <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(1))">→</button>
+            </div>
+
+            <div id="calendarGrid" class="calendar-layout">
+
+                <div class="week-gutter" id="weekGutter">
+                    @foreach (var wk in MonthWeekStarts)
+                    {
+                        <div class="week-gutter-item">V@($"{GetIsoWeek(wk):D2}")</div>
+                    }
+                </div>
+
+                <div class="calendar-container-wrapper w-100" id="calendarWrapper">
+                    <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="FirstDate">
+                        <MonthlyView TaskClick="OnTaskClick"
+                                     Draggable DragStart="OnDragStart"
+                                     DropTask="OnDragDrop"
+                                     DayClick="OnDayClick"
+                                     HighlightToday
+                                     SaturdayColor="White"
+                                     SundayColor="White" />
+                    </CalendarContainer>
+                </div>
+
+            </div>
+
+
+            
         </div>
-        <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate">
+
+
+
+        @* <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly">
             <MonthlyView TaskClick="OnTaskClick"
             Draggable DragStart="OnDragStart"
+            
             DropTask="OnDragDrop"
             DayClick="OnDayClick"
             HighlightToday
             SaturdayColor="White"
             SundayColor="White" />
-        </CalendarContainer>
+        </CalendarContainer> *@
 
         <p class="btn btn-sm bg-primary-subtle mt-2">Herrar</p>
         <p class="btn btn-sm bg-danger-subtle mt-2">Damer</p>
@@ -160,6 +196,9 @@ else
     // Calendar
     private DateTime FirstDate = DateTime.Today;  // or whatever month you want to start
 
+    private ElementReference CalendarGridRef;
+    private List<DateTime> MonthWeekStarts = new();
+
     private List<Event>? evts;
     private List<Booking>? bookings;
 
@@ -167,13 +206,70 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        ComputeMonthWeekStarts();
         await LoadEventsAsync();
     }
 
     public void ChangeMonth(int change)
     {
         FirstDate = FirstDate.AddMonths(change);
+        
+        ComputeMonthWeekStarts();
         StateHasChanged();
+        _ = InvokeAsync(() => SyncGutterHeights());
+        
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        // await JSRuntime.InvokeVoidAsync("blazorCalendar.syncWeekGutter", "calendarWrapper", "weekGutter");
+        await JSRuntime.InvokeVoidAsync(
+    "blazorCalendar.syncWeekGutter",
+    "calendarGrid",
+    "weekGutter"
+    );
+
+    }
+
+
+    private void ComputeMonthWeekStarts()
+    {
+        MonthWeekStarts.Clear();
+
+        // Determine the first calendar cell shown in month view:
+        // Start with the first day of the month
+        var firstOfMonth = new DateTime(FirstDate.Year, FirstDate.Month, 1);
+
+        // We want ISO weeks with Monday as first day — so find the Monday on or before
+        // the first visible calendar cell (which may be in previous month)
+        // Find start of the week containing firstOfMonth, with Monday as start:
+        int diff = ((int)firstOfMonth.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+        var firstCell = firstOfMonth.AddDays(-diff);
+
+        // Calendar typically renders 6 rows in month view (to cover all month start positions).
+        // We compute 6 week starts by advancing by 7 days each time; filter out duplicates.
+        for (int i = 0; i < 6; i++)
+        {
+            MonthWeekStarts.Add(firstCell.AddDays(i * 7));
+        }
+    }
+
+    int GetIsoWeek(DateTime date) => ISOWeek.GetWeekOfYear(date);
+
+    // JS interop to size the gutter rows
+    
+
+    private async Task SyncGutterHeights()
+    {
+        try
+        {
+            // call JS with id of calendar wrapper and number of rows (week items)
+            await JSRuntime.InvokeVoidAsync("blazorCalendar.syncWeekGutter", "calendarGrid", "weekGutter", MonthWeekStarts.Count);
+        }
+        catch
+        {
+            // swallow - if the JS not loaded yet it will be retried on next render
+        }
     }
 
     private async Task LoadEventsAsync()
@@ -184,7 +280,7 @@ else
         ModelTasks = evts.Select(evt =>
     {
         bool sessionFull = evt.MaxSlots == bookings.Where(b => b.EventId == evt.Id && !b.Reserve && !b.Unbooked).Count(); ;
-
+        
         return new BlazorCalendar.Models.Tasks
             {
                 ID = evt.Id,
@@ -206,7 +302,8 @@ else
                     (false, Gender.Female, true) => "lightyellow",
                     _ => "lightgray"
                 },
-                Comment = evt.Description
+                // Comment = evt.Description
+                Comment = ISOWeek.GetWeekOfYear(evt.Start).ToString()
             };
     }).ToArray();
 
@@ -215,6 +312,7 @@ else
 
         await InvokeAsync(StateHasChanged);
     }
+
 
     private async Task OnTaskClick(ClickTaskParameter clickInfo)
     {
