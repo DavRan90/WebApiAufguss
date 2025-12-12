@@ -7,7 +7,7 @@
 
 <PageTitle>Boka Aufguss</PageTitle>
 
-<h3>Tillgängliga pass</h3>
+<h1>Tillgängliga pass</h1>
 
 @if (events == null)
 {
@@ -21,7 +21,8 @@ else
     <p></p>
     if (!ShowCalendar)
     {
-        <table class="table mb-5">
+        <div class="table-rounded">
+        <table class="table table-info mb-5">
             <thead>
                 <tr>
                     <th>Kön</th>
@@ -95,9 +96,11 @@ else
                 }
             </tbody>
         </table>
+        </div>
     }
     else
     {
+        <div class="card">
         <div class="d-flex justify-content-center align-items-center">
             <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(-1))">←</button>
             <h3 class="mx-2 text-center" style="width: 15ch;">@Capitalize(FirstDate.ToString("MMMM yyyy"))</h3>
@@ -106,7 +109,7 @@ else
         <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate">
             <MonthlyView TaskClick="OnTaskClick" SaturdayColor="White" SundayColor="White" HighlightToday />
         </CalendarContainer>
-
+        </div>
         <p class="btn btn-sm bg-primary-subtle mt-2">Herrar</p>
         <p class="btn btn-sm bg-danger-subtle mt-2">Damer</p>
         <p class="btn btn-sm bg-warning-subtle mt-2">Fullbokat</p>

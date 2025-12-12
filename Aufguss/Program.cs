@@ -68,12 +68,12 @@ public class Program
             builder.Services.AddScoped<ISurveyService, ApiSurveyService>();
             //builder.Services.AddScoped<IRefreshService, ApiRefreshService>();
             builder.Services.AddScoped<IRefreshService, TokenRefreshService>();
-
+            
 
 
         }
-
         builder.Services.AddScoped<Services.AuthorizationMessageHandler>();
+
 
         //builder.Services.AddHttpClient("AuthenticatedClient", client =>
         //{

@@ -1,3 +1,59 @@
+body {
+    background-image: url('/images/steamimage.png');
+    background-size: cover; /* Scale to fill */
+    background-repeat: no-repeat; /* Prevent tiling */
+    background-position: center; /* Center the image */
+    background-attachment: fixed; /* Optional: parallax-like effect */
+}
+h1 {
+    font-weight: bold;
+}
+
+.card {
+    background: rgba(252, 248, 235, 0.96);
+    border-radius: 20px;
+    padding: 20px 24px 24px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+    font-size: 14px;
+    border-top: 4px solid #F27F31;
+}
+
+.table-rounded table {
+    border-radius: 12px;
+    overflow: hidden;
+    border-collapse: separate !important;
+    border-spacing: 0;
+    margin-bottom: 0 !important;
+}
+
+.table-rounded thead tr:first-child th:first-child {
+    border-top-left-radius: 12px;
+}
+
+.table-rounded thead tr:first-child th:last-child {
+    border-top-right-radius: 12px;
+}
+
+.table-rounded tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 12px;
+}
+
+.table-rounded tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 12px;
+}
+
+.table-rounded {
+    background: rgba(255,255,255,0.8);
+    border-radius: 12px;
+    border: solid;
+    border-color: black;
+    border-style: solid;
+    border-width: 1px;
+    padding: 0;
+    overflow: hidden;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
 @media (min-width: 768px) {
     .nav-scrollable {
         height: calc(100vh - 80px); /* Adjust to match height of top-row/header */

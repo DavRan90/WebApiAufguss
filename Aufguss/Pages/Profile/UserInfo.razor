@@ -7,7 +7,7 @@
 
 <PageTitle>Uppgifter</PageTitle>
 
-<h3>Dina uppgifter</h3>
+
 
 @if (CurrentUser == null)
 {
@@ -15,15 +15,11 @@
 }
 else
 {
+    <div class="card mb-5">
+        <h3>Dina uppgifter</h3>
     <EditForm Model="CurrentUser" OnValidSubmit="SaveUser">
         <DataAnnotationsValidator />
         <ValidationSummary />
-        @* <div class="row mb-3 mt-5">
-            <label class="col-md-2 col-form-label">Id</label>
-            <div class="col-md-4">
-                <p class="form-control bg-body-tertiary">@CurrentUser.Id</p>
-            </div>
-        </div> *@
         <div class="row mb-3">
             <label class="col-md-2 col-form-label">Förnamn</label>
             <div class="col-md-4 mb-3">
@@ -86,10 +82,12 @@ else
             </div>
         </div>
     </EditForm>
-
-    <h3 class="mt-5 mb-5">Mottagna inbjudningar</h3>
+    </div>
+    <div class="card mb-5">
+    <h3 class="mb-5">Mottagna inbjudningar</h3>
     <div style="min-height: 200px;">
-        <table class="table mb-5">
+        <div class="table-rounded">
+        <table class="table table-info mb-5">
             <thead>
                 <tr>
                     <th class="col-id">Id</th>
@@ -128,11 +126,14 @@ else
                 }
             </tbody>
         </table>
+            </div>
     </div>
-
+    </div>
+    <div class="card mb-5">
     <h3 class="mb-5">Skickade inbjudningar</h3>
     <div style="min-height: 200px;">
-        <table class="table mb-5">
+                <div class="table-rounded">
+        <table class="table table-info mb-5">
             <thead>
                 <tr>
                     <th class="col-id">Id</th>
@@ -169,7 +170,8 @@ else
             </tbody>
         </table>
     </div>
-
+    </div>
+    </div>
 }
 
 @inject HttpClient Http

@@ -4,7 +4,7 @@
 @using System.Text.Json.Nodes
 
 <PageTitle>Inställningar</PageTitle>
-
+<div class="card">
 <h3 class="mb-5">Ändra inställningar för saker och ting</h3>
 
 <EditForm Model="SiteSettingsData" OnValidSubmit="SaveSettings">
@@ -90,7 +90,7 @@
         </div>
     </div>
 </EditForm>
-
+</div>
 @inject HttpClient Http
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager navManager
