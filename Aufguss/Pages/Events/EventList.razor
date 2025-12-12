@@ -28,97 +28,108 @@ else
     if (!ShowCalendar)
     {
         <a class="btn btn-primary mb-3 me-2" href="/Events/Create">Skapa ny bokning</a>
-        <table class="table mb-5">
-            <thead>
-                <tr>
-                    <th>Kön</th>
-                    <th>Titel</th>
-                    <th>Platser</th>
-                    <th>Datum</th>
-                    <th>Dold</th>
-                    <th style="width: 80px;"></th> <!-- Icons column -->
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var evt in evts)
-                {
-                    <tr style="cursor: pointer;"
-                    @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
-
-                        @* <td>@evt.Id</td> *@
-                        <td>
-                            @if (evt.Gender == 0)
-                            {
-                                <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
-                            }
-                            else
-                            {
-                                <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
-                            }
-                        </td>
-                        <td>@evt.Title</td>
-                        <td style="min-width: 5px;">
-                            @{
-                                int remaining = SpotsRemaining(evt.Id);
-                                int total = evt.MaxSlots;
-                                int booked = total - remaining;
-                                int percent = (int)(((double)booked / total) * 100);
-
-                                string progressColor = percent switch
-                                {
-                                    >= 100 => "bg-danger",
-                                    >= 70 => "bg-warning",
-                                    _ => "bg-success"
-                                };
-                            }
-
-                            <div class="progress position-relative" style="height: 20px;">
-                                <!-- Colored fill bar -->
-                                <div class="progress-bar @progressColor"
-                                role="progressbar"
-                                style="width: @percent%;"
-                                aria-valuenow="@percent"
-                                aria-valuemin="0"
-                                aria-valuemax="100">
-                                </div>
-
-                                <!-- Centered text on top of the bar -->
-                                <span class="position-absolute top-50 start-50 translate-middle text-black fw-bold">
-                                    @booked / @total
-                                </span>
-                            </div>
-                        </td>
-                        <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
-                        <td>
-                            @if (evt.Hidden)
-                            {
-                                <button class="btn btn-sm btn-success" @onclick:stopPropagation @onclick="async () => await SaveEvent(evt.Id)">Ja</button>
-                            }
-                            else
-                            {
-                                <button class="btn btn-sm btn-warning" @onclick:stopPropagation @onclick="async () => await SaveEvent(evt.Id)">Nej</button>
-                            }
-                        </td>
-                        <td class="text-nowrap">
-                            <div class="d-flex flex-column flex-md-row">
-                                <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
-                                title="Ändra"
-                                @onclick:stopPropagation
-                                @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger"
-                                title="Ta bort"
-                                @onclick:stopPropagation
-                                @onclick="async () => await ShowAlert(evt.Id)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </td>
+        <div class="table-rounded">
+            <table class="table table-info mb-5">
+                <thead>
+                    <tr>
+                        <th>Kön</th>
+                        <th>Titel</th>
+                        <th>Platser</th>
+                        <th>Datum</th>
+                        <th>Dold</th>
+                        <th style="width: 80px;"></th> <!-- Icons column -->
                     </tr>
-                }
+                </thead>
+                <tbody>
+                    @* @if (bookings != null)
+                    { *@
+                        @foreach (var evt in evts)
+                        {
+                            <tr style="cursor: pointer;"
+                            @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
+
+                                @* <td>@evt.Id</td> *@
+                                <td>
+                                    @if (evt.Gender == 0)
+                                    {
+                                        <span class="badge rounded-pill text-bg-primary p-2">Herrar</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge rounded-pill text-bg-danger p-2">Damer</span>
+                                    }
+                                </td>
+                                <td>@evt.Title</td>
+                                <td style="min-width: 5px;">
+                                    @{
+                                        int remaining = SpotsRemaining(evt.Id);
+                                        int total = evt.MaxSlots;
+                                        int booked = total - remaining;
+                                        int percent = (int)(((double)booked / total) * 100);
+
+                                        string progressColor = percent switch
+                                        {
+                                            >= 100 => "bg-danger",
+                                            >= 70 => "bg-warning",
+                                            _ => "bg-success"
+                                        };
+                                    }
+
+                                    <div class="progress position-relative" style="height: 20px;">
+                                        <!-- Colored fill bar -->
+                                        <div class="progress-bar @progressColor"
+                                        role="progressbar"
+                                        style="width: @percent%;"
+                                        aria-valuenow="@percent"
+                                        aria-valuemin="0"
+                                        aria-valuemax="100">
+                                        </div>
+
+                                        <!-- Centered text on top of the bar -->
+                                        <span class="position-absolute top-50 start-50 translate-middle text-black fw-bold">
+                                            @booked / @total
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                                <td>
+                                    @if (evt.Hidden)
+                                    {
+                                        <button class="btn btn-sm btn-success" @onclick:stopPropagation @onclick="async () => await SaveEvent(evt.Id)">Ja</button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-warning" @onclick:stopPropagation @onclick="async () => await SaveEvent(evt.Id)">Nej</button>
+                                    }
+                                </td>
+                                <td class="text-nowrap">
+                                    <div class="d-flex flex-column flex-md-row">
+                                        <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
+                                        title="Ändra"
+                                        @onclick:stopPropagation
+                                        @onclick="@(() => NavManager.NavigateTo($"/Events/Edit/{evt.Id}"))">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger"
+                                        title="Ta bort"
+                                        @onclick:stopPropagation
+                                        @onclick="async () => await ShowAlert(evt.Id)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    @* }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-muted text-start">Det finns inga bokningar ännu</td>
+                        </tr>
+                    } *@
             </tbody>
         </table>
+        </div>
     }
     else
     {
@@ -127,6 +138,7 @@ else
             <h3 class="mx-2 text-center" style="width: 15ch;">@Capitalize(FirstDate.ToString("MMMM yyyy"))</h3>
             <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(1))">→</button>
         </div> *@
+        <div class="card">
         <div class="calendar-with-weeknumbers">
             <div class="calendar-controls d-flex justify-content-center align-items-center mb-2">
                 <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(-1))">←</button>
@@ -157,7 +169,7 @@ else
 
             </div>
 
-
+            </div>
             
         </div>
 

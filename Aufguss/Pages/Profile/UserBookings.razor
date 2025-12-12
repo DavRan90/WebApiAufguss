@@ -5,7 +5,7 @@
 
 <PageTitle>Dina bokningar</PageTitle>
 
-<h3>Dina bokningar</h3>
+<h1>Dina bokningar</h1>
 
 @if (events == null)
 {
@@ -20,7 +20,9 @@ else
 
     if (!ShowCalendar)
     {
-        <table class="table mb-5">
+      
+            <div class="table-rounded">
+        <table class="table table-info mb-5">
             <thead>
                 <tr>
                     <th>Status</th>
@@ -110,6 +112,7 @@ else
                 }
             </tbody>
         </table>
+            </div>
     }
     else
     {

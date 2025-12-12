@@ -7,6 +7,7 @@
 <div class="row mb-5">
     <div class="col-lg-8">
         <h1 class=mb-5>Ändra aktivitet</h1>
+        <div class="card">
         <div class="col-md-4 d-grid mb-5">
             <a class="btn btn-outline-primary rounded-circle" href="/Events"
                style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;">
@@ -14,125 +15,125 @@
             </a>
         </div>
         @if (eventData == null)
-        {
-            <p><em>Laddar...</em></p>
-        }
+            {
+                <p><em>Laddar...</em></p>
+            }
 
-        else
-        {
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Id</label>
-                <div class="col-md-8">
-                    <input class="form-control-plaintext" readonly value="@Id">
+            else
+            {
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Id</label>
+                    <div class="col-md-8">
+                        <input class="form-control-plaintext" readonly value="@Id">
+                    </div>
                 </div>
-            </div>
 
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Kön</label>
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Kön</label>
 
-                <div class="col-md-8">
-                    <div class="row gap-2 gap-md-1">
-                        <div class="col-12 col-md-6 d-flex align-items-center">
-                            <input type="radio"
-                            checked="@(EventDtoData.Gender == Gender.Male)"
-                            name="Gender"
-                            @onchange="@(() => EventDtoData.Gender = Gender.Male)" />
-                            <label class="btn btn-primary ms-2">Herrar</label>
+                    <div class="col-md-8">
+                        <div class="row gap-2 gap-md-1">
+                            <div class="col-12 col-md-6 d-flex align-items-center">
+                                <input type="radio"
+                                checked="@(EventDtoData.Gender == Gender.Male)"
+                                name="Gender"
+                                @onchange="@(() => EventDtoData.Gender = Gender.Male)" />
+                                <label class="btn btn-primary ms-2">Herrar</label>
+                            </div>
+
+                            <div class="col-12 col-md-6 d-flex align-items-center">
+                                <input type="radio"
+                                checked="@(EventDtoData.Gender == Gender.Female)"
+                                name="Gender"
+                                @onchange="@(() => EventDtoData.Gender = Gender.Female)" />
+                                <label class="btn btn-danger ms-2">Damer</label>
+                            </div>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="col-12 col-md-6 d-flex align-items-center">
-                            <input type="radio"
-                            checked="@(EventDtoData.Gender == Gender.Female)"
-                            name="Gender"
-                            @onchange="@(() => EventDtoData.Gender = Gender.Female)" />
-                            <label class="btn btn-danger ms-2">Damer</label>
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Titel</label>
+                    <div class="col-md-8">
+                        <input class="form-control" @bind="EventDtoData.Title">
+                        <span class="text-danger">@Errors["Title"]?[0]</span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Start</label>
+                    <div class="col-md-8">
+                        <input type="datetime-local" class="form-control" @bind="EventDtoData.Start">
+                        <span class="text-danger">@Errors["Start"]?[0]</span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Slut</label>
+                    <div class="col-md-8">
+                        <input type="datetime-local" class="form-control" @bind="EventDtoData.End">
+                        <span class="text-danger">@Errors["End"]?[0]</span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Max antal gäster</label>
+                    <div class="col-md-8">
+                        <input class="form-control" type="number" @bind="EventDtoData.MaxSlots">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-md-4 col-form-label">Beskrivning</label>
+                    <div class="col-md-8">
+                        <textarea class="form-control" @bind="EventDtoData.Description"></textarea>
+                        <span class="text-danger">@Errors["Description"]?[0]</span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-8 offset-md-4">
+                        <div>
+                            <input type="checkbox" id="gridCheck2" @bind="EventDtoData.Hidden">
+                            <label style="vertical-align: top;" class="form-check-label m-1" for="gridCheck2">
+                                Dold
+                            </label>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Titel</label>
-                <div class="col-md-8">
-                    <input class="form-control" @bind="EventDtoData.Title">
-                    <span class="text-danger">@Errors["Title"]?[0]</span>
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Start</label>
-                <div class="col-md-8">
-                    <input type="datetime-local" class="form-control" @bind="EventDtoData.Start">
-                    <span class="text-danger">@Errors["Start"]?[0]</span>
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Slut</label>
-                <div class="col-md-8">
-                    <input type="datetime-local" class="form-control" @bind="EventDtoData.End">
-                    <span class="text-danger">@Errors["End"]?[0]</span>
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Max antal gäster</label>
-                <div class="col-md-8">
-                    <input class="form-control" type="number" @bind="EventDtoData.MaxSlots">
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Beskrivning</label>
-                <div class="col-md-8">
-                    <textarea class="form-control" @bind="EventDtoData.Description"></textarea>
-                    <span class="text-danger">@Errors["Description"]?[0]</span>
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <div class="col-md-8 offset-md-4">
-                    <div>
-                        <input type="checkbox" id="gridCheck2" @bind="EventDtoData.Hidden">
-                        <label style="vertical-align: top;" class="form-check-label m-1" for="gridCheck2">
-                            Dold
-                        </label>
+                <div class="row mb-3">
+                    <div class="col-md-8 offset-md-4">
+                        <div>
+                            <input type="checkbox" id="gridCheck3" @bind="EventDtoData.IncludeSurvey" disabled>
+                            <label style="vertical-align: top;" class="form-check-label m-1" for="gridCheck3">
+                                Inkludera enkät
+                            </label>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="row mb-3">
-                <div class="col-md-8 offset-md-4">
-                    <div>
-                        <input type="checkbox" id="gridCheck3" @bind="EventDtoData.IncludeSurvey" disabled>
-                        <label style="vertical-align: top;" class="form-check-label m-1" for="gridCheck3">
-                            Inkludera enkät
-                        </label>
+                <div class="row mb-3">
+                    <div class="col-md-8 offset-md-4">
+                        <div>
+                            <input type="checkbox" id="gridCheck4" @bind="EventDtoData.AllowFriendBooking">
+                            <label style="vertical-align: top;" class="form-check-label m-1" for="gridCheck4">
+                                Tillåt vänbokning
+                            </label>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="row mb-3">
-                <div class="col-md-8 offset-md-4">
-                    <div>
-                        <input type="checkbox" id="gridCheck4" @bind="EventDtoData.AllowFriendBooking">
-                        <label style="vertical-align: top;" class="form-check-label m-1" for="gridCheck4">
-                            Tillåt vänbokning
-                        </label>
+                <div class="row">
+                    <div class="offset-md-4 col-md-4 d-grid">
+                        <button class="btn btn-primary" @onclick="SaveEvent">Spara</button>
+                    </div>
+                    <div class="col-md-4 d-grid">
+                        <a class="btn btn-outline-primary" href="/Events">Avbryt</a>
                     </div>
                 </div>
-            </div>
-
-            <div class="row">
-                <div class="offset-md-4 col-md-4 d-grid">
-                    <button class="btn btn-primary" @onclick="SaveEvent">Spara</button>
-                </div>
-                <div class="col-md-4 d-grid">
-                    <a class="btn btn-outline-primary" href="/Events">Avbryt</a>
-                </div>
-            </div>
-        }
-
+            }
+        </div>
     </div>
 </div>
 
@@ -145,98 +146,109 @@
 
 @if (Bookings != null)
 {
-    <table class="table mb-5">
-        <thead>
-            <tr>
+    <div class="table-rounded">
+        <table class="table mb-5">
+            <thead>
+                <tr>
 
-                @* <th>ID</th> *@
-                <th>Namn</th>
-                <th>Mail</th>
-                <th>Tel</th>
-                @* <th>Datum</th> *@
-                <th>Reserv</th>
-                <th>Avbokad</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var booking in Bookings.Where(b => !b.Unbooked && !b.Reserve || (Value && b.Unbooked) || (ShowReserve && b.Reserve)))
-            {
-                @* <tr> *@
-                <tr style="cursor: pointer;"
-                @onclick="@(() => NavManager.NavigateTo($"/Booking/{booking.Id}"))">
-                    @* <td>@booking.UserId</td> *@
-                    @* <td>@booking.Id</td> *@
-                    <td>@booking.Name</td>
-                    <!-- Email -->
-                    <td>
-                        <!-- Full email on medium and up -->
-                        <span class="d-none d-md-inline">@booking.Email</span>
+                    @* <th>ID</th> *@
+                    <th>Namn</th>
+                    <th>Mail</th>
+                    <th>Tel</th>
+                    @* <th>Datum</th> *@
+                    <th>Reserv</th>
+                    <th>Avbokad</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Bookings != null && Bookings.Any())
+                {
+                    @foreach (var booking in Bookings.Where(b => !b.Unbooked && !b.Reserve || (Value && b.Unbooked) || (ShowReserve && b.Reserve)))
+                    {
+                        @* <tr> *@
+                        <tr style="cursor: pointer;"
+                        @onclick="@(() => NavManager.NavigateTo($"/Booking/{booking.Id}"))">
+                            @* <td>@booking.UserId</td> *@
+                            @* <td>@booking.Id</td> *@
+                            <td>@booking.Name</td>
+                            <!-- Email -->
+                            <td>
+                                <!-- Full email on medium and up -->
+                                <span class="d-none d-md-inline">@booking.Email</span>
 
-                        <!-- Icon + mailto on small screens -->
-                        <a class="d-inline d-md-none" href="mailto:@booking.Email" title="Skicka e-post">
-                            <i class="bi bi-envelope-fill"></i>
-                        </a>
-                    </td>
+                                <!-- Icon + mailto on small screens -->
+                                <a class="d-inline d-md-none" href="mailto:@booking.Email" title="Skicka e-post">
+                                    <i class="bi bi-envelope-fill"></i>
+                                </a>
+                            </td>
 
-                    <!-- Phone -->
-                    <td>
-                        <!-- Full phone on medium and up -->
-                        <span class="d-none d-md-inline">@booking.Tel</span>
+                            <!-- Phone -->
+                            <td>
+                                <!-- Full phone on medium and up -->
+                                <span class="d-none d-md-inline">@booking.Tel</span>
 
-                        <!-- Icon + tel on small screens -->
-                        <a class="d-inline d-md-none" href="tel:@booking.Tel" title="Ring">
-                            <i class="bi bi-telephone-fill"></i>
-                        </a>
-                    </td>
-                    @* <td>@booking.BookedAt.ToString("dd/MM/yyyy | HH:mm")</td> *@
-                    <td>
-                        @if (booking.Reserve)
-                        {
-                            <span class="badge rounded-pill text-bg-primary p-2">Ja</span>
-                        }
-                        else
-                        {
-                            <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
-                        }
-                    </td>
-                    <td>
-                        @if (booking.Unbooked)
-                        {
-                            <span class="badge rounded-pill text-bg-primary p-2">Ja</span>
-                        }
-                        else
-                        {
-                            <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
-                        }
-                    </td>
-                    <td class="text-nowrap">
-                        <div class="d-flex flex-column flex-md-row">
-                            @* <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
+                                <!-- Icon + tel on small screens -->
+                                <a class="d-inline d-md-none" href="tel:@booking.Tel" title="Ring">
+                                    <i class="bi bi-telephone-fill"></i>
+                                </a>
+                            </td>
+                            @* <td>@booking.BookedAt.ToString("dd/MM/yyyy | HH:mm")</td> *@
+                            <td>
+                                @if (booking.Reserve)
+                                {
+                                    <span class="badge rounded-pill text-bg-primary p-2">Ja</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
+                                }
+                            </td>
+                            <td>
+                                @if (booking.Unbooked)
+                                {
+                                    <span class="badge rounded-pill text-bg-primary p-2">Ja</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill text-bg-warning p-2">Nej</span>
+                                }
+                            </td>
+                            <td class="text-nowrap">
+                                <div class="d-flex flex-column flex-md-row">
+                                    @* <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
                             title="Ändra"
                             @onclick="async () => await EditBooking(booking.Id)">
                                 <i class="bi bi-pencil"></i>
                             </button> *@
-                            <button class="btn btn-sm btn-outline-warning mb-1 mb-md-0 me-md-1"
-                            title="Avboka"
-                            @onclick:stopPropagation
-                            @onclick="async () => await Unbook(booking.Id)">
-                                <i class="bi bi-x"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger"
-                            title="Ta bort"
-                            @onclick:stopPropagation
-                            @onclick="async () => await ShowAlert(booking.Id)">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            }
+                                    <button class="btn btn-sm btn-outline-warning mb-1 mb-md-0 me-md-1"
+                                    title="Avboka"
+                                    @onclick:stopPropagation
+                                    @onclick="async () => await Unbook(booking.Id)">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger"
+                                    title="Ta bort"
+                                    @onclick:stopPropagation
+                                    @onclick="async () => await ShowAlert(booking.Id)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-muted text-start">Det finns inga bokningar</td>
+                    </tr>
+                }
         </tbody>
     </table>
+    </div>
     @* <a class="btn btn-primary mb-3 me-2" href="/Bookings/Book/@Id">Lägg till deltagare</a> *@
-    <a class="btn btn-primary mb-3 me-2" @onclick="async () => await AddGuest(Id)">Lägg till deltagare</a>
+    <a class="btn btn-primary mb-3 me-2 mt-3" @onclick="async () => await AddGuest(Id)">Lägg till deltagare</a>
 }
 
 @inject IJSRuntime JS

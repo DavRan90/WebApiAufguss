@@ -6,8 +6,8 @@
 <PageTitle>Om Aufguss</PageTitle>
 
 <div class="card m-2 card-width mt-5">
-    <h2 class="card-header">Om Aufguss</h2>
-    <div class="card-body bg-info-subtle">
+    <h2 class="ms-5">Om Aufguss</h2>
+    <div class="card-body">
         @if (!string.IsNullOrEmpty(fileLocation))
         {
             @* <img src="@($"{fileLocation}aufguss 2.jpg")" *@
@@ -36,7 +36,7 @@
 <br />
 <br />
 <br />
-
+<div class="card">
 <h3 class="m-3">Frågor och svar</h3>
 
 @if (faqs == null)
@@ -83,7 +83,7 @@ else
         }
     </div>
 }
-
+</div>
 @inject HttpClient Http
 @inject IFaqService FaqService
 
