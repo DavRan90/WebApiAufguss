@@ -1,5 +1,6 @@
 ﻿@page "/BokaAufguss"
 @using System.Globalization
+@using Aufguss.Components
 @using Aufguss.Models
 @using BlazorCalendar
 @using BlazorCalendar.Models
@@ -100,7 +101,7 @@ else
     }
     else
     {
-        <div class="card">
+        @* <div class="card">
         <div class="d-flex justify-content-center align-items-center">
             <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(-1))">←</button>
             <h3 class="mx-2 text-center" style="width: 15ch;">@Capitalize(FirstDate.ToString("MMMM yyyy"))</h3>
@@ -109,7 +110,10 @@ else
         <CalendarContainer TasksList="@ModelTasks" DisplayedView="DisplayedView.Monthly" FirstDate="@FirstDate">
             <MonthlyView TaskClick="OnTaskClick" SaturdayColor="White" SundayColor="White" HighlightToday />
         </CalendarContainer>
-        </div>
+        </div> *@
+
+        <Calendar Tasks="ModelTasks"
+                  OnEventClick="HandleCalendarEventClick"/>
         <p class="btn btn-sm bg-primary-subtle mt-2">Herrar</p>
         <p class="btn btn-sm bg-danger-subtle mt-2">Damer</p>
         <p class="btn btn-sm bg-warning-subtle mt-2">Fullbokat</p>
@@ -293,6 +297,21 @@ else
         }
 
     }
+    private void HandleCalendarEventClick(int eventId)
+    {
+        NavManager.NavigateTo($"/BokaAufguss/Book/{eventId}");
+    }
     string Capitalize(string text) =>
         char.ToUpper(text[0]) + text[1..];
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        // await JSRuntime.InvokeVoidAsync("blazorCalendar.syncWeekGutter", "calendarWrapper", "weekGutter");
+        await JSRuntime.InvokeVoidAsync(
+    "blazorCalendar.syncWeekGutter",
+    "calendarGrid",
+    "weekGutter"
+    );
+
+    }
 }

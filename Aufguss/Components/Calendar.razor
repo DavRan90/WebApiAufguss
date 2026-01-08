@@ -1,0 +1,152 @@
+﻿@using BlazorCalendar
+@using BlazorCalendar.Models
+@using System.Globalization
+
+@* <div class="card">
+    <div class="calendar-with-weeknumbers">
+        <div class="calendar-controls d-flex justify-content-center align-items-center mb-2">
+            <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(-1))">←</button>
+            <h3 class="mx-2 text-center" style="width: 15ch;">@Capitalize(FirstDate.ToString("MMMM yyyy"))</h3>
+            <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(1))">→</button>
+        </div>
+
+        <div id="calendarGrid" class="calendar-layout">
+
+            <div class="week-gutter" id="weekGutter">
+                @foreach (var wk in MonthWeekStarts)
+                {
+                    <div class="week-gutter-item">V@($"{GetIsoWeek(wk):D2}")</div>
+                }
+            </div>
+
+            <div class="calendar-container-wrapper w-100" id="calendarWrapper">
+                <CalendarContainer TasksList="@Tasks" DisplayedView="DisplayedView.Monthly" FirstDate="FirstDate">
+                    <MonthlyView TaskClick="HandleTaskClick"
+                                 Draggable DragStart="HandleDragStart"
+                                 DropTask="HandleDragDrop"
+                                 DayClick="OnDayClick"
+                                 HighlightToday
+                                 SaturdayColor="White"
+                                 SundayColor="White" />
+                </CalendarContainer>
+            </div>
+
+        </div>
+
+    </div>
+
+</div> *@
+
+<div class="card">
+    <div class="calendar-with-weeknumbers">
+        <div class="calendar-controls d-flex justify-content-center align-items-center mb-2">
+            <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(-1))">←</button>
+            <h3 class="mx-2 text-center" style="width: 15ch;">@Capitalize(FirstDate.ToString("MMMM yyyy"))</h3>
+            <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(1))">→</button>
+        </div>
+
+        <div id="calendarGrid" class="calendar-layout">
+
+            <div class="week-gutter" id="weekGutter">
+                @foreach (var wk in MonthWeekStarts)
+                {
+                    <div class="week-gutter-item">V@($"{GetIsoWeek(wk):D2}")</div>
+                }
+            </div>
+
+            <div class="calendar-container-wrapper w-100" id="calendarWrapper">
+                <CalendarContainer TasksList="@Tasks" DisplayedView="DisplayedView.Monthly" FirstDate="FirstDate">
+                    <MonthlyView TaskClick="HandleTaskClick"
+                    Draggable DragStart="HandleDragStart"
+                    DropTask="HandleDragDrop"
+                    DayClick="OnDayClick"
+                    HighlightToday
+                    SaturdayColor="White"
+                    SundayColor="White" />
+                </CalendarContainer>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+@code {
+    int GetIsoWeek(DateTime date) => ISOWeek.GetWeekOfYear(date);
+    private List<DateTime> MonthWeekStarts = new();
+    [Parameter, EditorRequired]
+    public Tasks[] Tasks { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<int> OnEventClick { get; set; }
+
+    [Parameter]
+    public EventCallback<DragDropParameter> OnEventDrop { get; set; }
+
+    [Parameter]
+    public EventCallback<ClickEmptyDayParameter> OnDayClick { get; set; }
+
+    private DateTime FirstDate { get; set; } = DateTime.Today;
+    protected override async Task OnInitializedAsync()
+    {
+        ComputeMonthWeekStarts();
+    }
+
+    private string Capitalize(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return input;
+        return char.ToUpper(input[0]) + input.Substring(1);
+    }
+
+    private void ChangeMonth(int offset)
+    {
+        FirstDate = FirstDate.AddMonths(offset);
+        ComputeMonthWeekStarts();
+    }
+
+    private async Task HandleTaskClick(ClickTaskParameter info)
+    {
+        if (info.IDList?.Any() == true)
+            await OnEventClick.InvokeAsync(info.IDList[0]);
+    }
+
+    private Task HandleDragStart(DragDropParameter info)
+    {
+        // Optional: expose later
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleDragDrop(DragDropParameter info)
+    {
+        await OnEventDrop.InvokeAsync(info);
+    }
+
+    private async Task HandleDayClick(ClickEmptyDayParameter info)
+    {
+        await OnDayClick.InvokeAsync(info);
+    }
+
+    private void ComputeMonthWeekStarts()
+    {
+        MonthWeekStarts.Clear();
+
+        // Determine the first calendar cell shown in month view:
+        // Start with the first day of the month
+        var firstOfMonth = new DateTime(FirstDate.Year, FirstDate.Month, 1);
+
+        // We want ISO weeks with Monday as first day — so find the Monday on or before
+        // the first visible calendar cell (which may be in previous month)
+        // Find start of the week containing firstOfMonth, with Monday as start:
+        int diff = ((int)firstOfMonth.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+        var firstCell = firstOfMonth.AddDays(-diff);
+
+        // Calendar typically renders 6 rows in month view (to cover all month start positions).
+        // We compute 6 week starts by advancing by 7 days each time; filter out duplicates.
+        for (int i = 0; i < 6; i++)
+        {
+            MonthWeekStarts.Add(firstCell.AddDays(i * 7));
+        }
+    }
+}
