@@ -1,4 +1,5 @@
 ﻿@page "/Dina_bokningar"
+@using Aufguss.Components
 @using Aufguss.Models
 @using BlazorCalendar
 @using BlazorCalendar.Models
@@ -116,11 +117,13 @@ else
     }
     else
     {
+        <Calendar Tasks="ModelTasks"
+                  OnEventClick="HandleCalendarEventClick"/>
         @*     <p>Visa Veckovy</p>
     <input type="checkbox" @bind="ShowWeek" />
     <p></p>
     <p></p> *@
-        <div class="d-flex justify-content-center align-items-center">
+        @* <div class="d-flex justify-content-center align-items-center">
             <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(-1))">←</button>
             <h3 class="mx-2 text-center" style="width: 15ch;">@Capitalize(FirstDate.ToString("MMMM yyyy"))</h3>
             <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(1))">→</button>
@@ -131,7 +134,7 @@ else
 
             <WeekView SaturdayColor="White"
                       SundayColor="White" />
-        </CalendarContainer>
+        </CalendarContainer> *@
     }
 }
 
@@ -328,6 +331,21 @@ else
         public int BookingId { get; set; }
         public bool AttendanceConfirmed { get; set; }
     }
+    private void HandleCalendarEventClick(int eventId)
+    {
+        NavManager.NavigateTo($"/BokaAufguss/Book/{eventId}");
+    }
     string Capitalize(string text) =>
         char.ToUpper(text[0]) + text[1..];
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        // await JSRuntime.InvokeVoidAsync("blazorCalendar.syncWeekGutter", "calendarWrapper", "weekGutter");
+        await JSRuntime.InvokeVoidAsync(
+    "blazorCalendar.syncWeekGutter",
+    "calendarGrid",
+    "weekGutter"
+    );
+
+    }
 }

@@ -138,7 +138,12 @@ else
             <h3 class="mx-2 text-center" style="width: 15ch;">@Capitalize(FirstDate.ToString("MMMM yyyy"))</h3>
             <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(1))">→</button>
         </div> *@
-        <div class="card">
+
+
+         <Aufguss.Components.Calendar Tasks="ModelTasks"
+                  OnEventClick="HandleCalendarEventClick"/>
+
+        @* <div class="card">
         <div class="calendar-with-weeknumbers">
             <div class="calendar-controls d-flex justify-content-center align-items-center mb-2">
                 <button class="btn btn-primary m-3" @onclick="@(() => ChangeMonth(-1))">←</button>
@@ -171,7 +176,7 @@ else
 
             </div>
             
-        </div>
+        </div> *@
 
 
 
@@ -383,6 +388,11 @@ else
 
             await InvokeAsync(StateHasChanged); // Refresh UI
         }
+    }
+
+    private void HandleCalendarEventClick(int eventId)
+    {
+        NavManager.NavigateTo($"/BokaAufguss/Book/{eventId}");
     }
 
     private async Task OnDayClick(ClickEmptyDayParameter clickedDate)

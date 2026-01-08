@@ -1,0 +1,18 @@
+﻿.calendar-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.week-gutter {
+    display: flex;
+    flex-direction: column;
+    margin-right: 8px;
+}
+
+.week-gutter-item {
+    height: 100%;
+    padding: 4px 8px;
+    text-align: right;
+    font-weight: bold;
+}
