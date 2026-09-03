@@ -15,20 +15,29 @@ namespace WebApi.Services
         {
             base.OnModelCreating(builder);
 
-            // Unique constraint on PhoneNumber
             builder.Entity<ApplicationUser>()
                 .HasIndex(u => u.PhoneNumber)
                 .IsUnique();
-            builder.Entity<ApplicationUser>()
-        .HasOne(u => u.AufgussFriend)
-        .WithMany() // no collection on the other side
-        .HasForeignKey(u => u.AufgussFriendId)
-        .OnDelete(DeleteBehavior.Restrict); // prevents cascade loop
 
-            // Make sure EF knows AufgussFriendName is *not* part of the relationship
+            builder.Entity<ApplicationUser>()
+                .HasOne(u => u.AufgussFriend)
+                .WithMany()
+                .HasForeignKey(u => u.AufgussFriendId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.Entity<ApplicationUser>()
                 .Property(u => u.AufgussFriendName)
                 .HasColumnName("AufgussFriendName");
+
+            builder.Entity<SiteSettings>().HasData(new SiteSettings
+            {
+                Id = 1,
+                MaxBookingsAufguss = 2,
+                AufgussHiddenDaysInAdvance = 7,
+                MaxBookingsVattenfys = 5,
+                VattenfysHiddenDaysInAdvance = 7,
+                MaxNews = 5
+            });
         }
 
         public required DbSet<Event> Events { get; set; }

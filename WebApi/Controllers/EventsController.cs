@@ -103,10 +103,15 @@ namespace WebApi.Controllers
             {
                 Title = eventDto.Title,
                 Description = eventDto.Description,
-                Start = eventDto.Start,
-                End = eventDto.End,
+
+                Start = ToUtc(eventDto.Start),
+
+                End = eventDto.End.HasValue
+                    ? ToUtc(eventDto.End.Value)
+                    : null,
+
                 AllDay = eventDto.AllDay,
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
                 MaxSlots = eventDto.MaxSlots,
                 Recurring = eventDto.Recurring,
                 Gender = eventDto.Gender,
@@ -118,7 +123,11 @@ namespace WebApi.Controllers
             context.Events.Add(evt);
             await context.SaveChangesAsync();
 
-            await audit.LogEventAsync(evt.Id, "Skapat", null, $"Event '{evt.Title}' skapades.");
+            await audit.LogEventAsync(
+                evt.Id,
+                "Skapat",
+                null,
+                $"Event '{evt.Title}' skapades.");
 
             return Ok(evt);
         }
@@ -187,6 +196,17 @@ namespace WebApi.Controllers
                 .ToList();
 
             return Ok(logs);
+        }
+        private static DateTime ToUtc(DateTime value)
+        {
+            var stockholm = TimeZoneInfo.FindSystemTimeZoneById(
+                OperatingSystem.IsWindows()
+                    ? "W. Europe Standard Time"
+                    : "Europe/Stockholm");
+
+            return TimeZoneInfo.ConvertTimeToUtc(
+                DateTime.SpecifyKind(value, DateTimeKind.Unspecified),
+                stockholm);
         }
     }
 }
