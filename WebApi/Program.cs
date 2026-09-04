@@ -55,9 +55,9 @@ namespace WebApi
                 options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
             // 2. Add Identity
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
+            //builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+            //    .AddEntityFrameworkStores<ApplicationDbContext>()
+            //    .AddDefaultTokenProviders();
 
             // 3. Configure JWT auth
             var jwtKey = builder.Configuration["Jwt:Key"];
