@@ -59,31 +59,31 @@ namespace WebApi
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
-//            // 3. Configure JWT auth
-//            var jwtKey = builder.Configuration["Jwt:Key"];
-//            var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+            // 3. Configure JWT auth
+            var jwtKey = builder.Configuration["Jwt:Key"];
+            var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 
-//            builder.Services.AddAuthentication(options =>
-//            {
-//                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-//                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-//            })
-//.AddJwtBearer(options =>
-//{
-//    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment(); // only require HTTPS in prod
-//    options.SaveToken = true;
-//    options.TokenValidationParameters = new TokenValidationParameters
-//    {
-//        ValidateIssuer = true,
-//        ValidateAudience = false,
-//        ValidateLifetime = true,
-//        ValidateIssuerSigningKey = true,
-//        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-//        IssuerSigningKey = new SymmetricSecurityKey(
-//            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
-//        RoleClaimType = ClaimTypes.Role
-//    };
-//});
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment(); // only require HTTPS in prod
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+        RoleClaimType = ClaimTypes.Role
+    };
+});
 
             //            builder.Services.AddAuthentication(options =>
             //            {
