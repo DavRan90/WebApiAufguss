@@ -160,12 +160,12 @@ namespace WebApi
 
             var app = builder.Build();
 
-            using (var scope = app.Services.CreateScope())
-            {
-                IdentitySeeder.SeedAsync(scope.ServiceProvider)
-                    .GetAwaiter()
-                    .GetResult();
-            }
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    IdentitySeeder.SeedAsync(scope.ServiceProvider)
+            //        .GetAwaiter()
+            //        .GetResult();
+            //}
 
             app.UseExceptionHandler("/error");  // Optional, adds error endpoint
             // Order is critical!
