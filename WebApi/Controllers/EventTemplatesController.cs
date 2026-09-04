@@ -42,10 +42,12 @@ namespace WebApi.Controllers
             {
                 Title = eventTemplateDto.Title,
                 Description = eventTemplateDto.Description,
-                Start = eventTemplateDto.Start,
-                End = eventTemplateDto.End,
+                Start = ToUtc(eventTemplateDto.Start),
+                End = eventTemplateDto.End.HasValue
+                    ? ToUtc(eventTemplateDto.End.Value)
+                    : null,
                 AllDay = eventTemplateDto.AllDay,
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
                 MaxSlots = eventTemplateDto.MaxSlots,
                 Recurring = eventTemplateDto.Recurring,
                 Gender = eventTemplateDto.Gender,
@@ -99,6 +101,17 @@ namespace WebApi.Controllers
             context.SaveChanges();
 
             return Ok();
+        }
+        private static DateTime ToUtc(DateTime value)
+        {
+            var stockholm = TimeZoneInfo.FindSystemTimeZoneById(
+                OperatingSystem.IsWindows()
+                    ? "W. Europe Standard Time"
+                    : "Europe/Stockholm");
+
+            return TimeZoneInfo.ConvertTimeToUtc(
+                DateTime.SpecifyKind(value, DateTimeKind.Unspecified),
+                stockholm);
         }
     }
 }

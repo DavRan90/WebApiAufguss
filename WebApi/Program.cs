@@ -1,14 +1,15 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using WebApi.Services;
-using System.Text;
-using WebApi.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using WebApi.Services.Email;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using SendGrid.Helpers.Mail;
 using System.Security.Claims;
+using System.Text;
+using WebApi.Data;
+using WebApi.Models;
+using WebApi.Services;
+using WebApi.Services.Email;
 
 namespace WebApi
 {
@@ -46,10 +47,12 @@ namespace WebApi
             builder.Services.AddSingleton<IBackgroundEmailQueue, BackgroundEmailQueue>();
             builder.Services.AddHostedService<EmailBackgroundService>();
             builder.Services.AddScoped<IEmailSender, EmailSender>();
-            
+
             // 1. Add EF Core
+            //builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            //    options.UseSqlServer(builder.Configuration.GetConnectionString("MyPCLocal")));
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("MyPC")));
+                options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
             // 2. Add Identity
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
@@ -156,6 +159,13 @@ namespace WebApi
             builder.Services.AddOpenApi();
 
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                IdentitySeeder.SeedAsync(scope.ServiceProvider)
+                    .GetAwaiter()
+                    .GetResult();
+            }
 
             app.UseExceptionHandler("/error");  // Optional, adds error endpoint
             // Order is critical!

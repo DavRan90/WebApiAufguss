@@ -45,7 +45,7 @@ namespace WebApi.Controllers
                 Description = entryDto.Description,
                 Image = entryDto.Image,
                 Url = entryDto.Url,
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
             };
 
             context.Entries.Add(entry);

@@ -50,7 +50,7 @@ namespace WebApi.Services
                                         where b.Email == bookingDto.Email &&
                                               !b.Unbooked &&
                                               !b.Reserve &&
-                                              e.Start > DateTime.Now
+                                              e.Start > DateTime.UtcNow
                                         select b).CountAsync();
 
             if (activeBookings >= settings.MaxBookingsAufguss)
@@ -69,7 +69,7 @@ namespace WebApi.Services
                 Email = bookingDto.Email,
                 Tel = bookingDto.Tel,
                 UserId = bookingDto.UserId,
-                BookedAt = DateTime.Now,
+                BookedAt = DateTime.UtcNow,
                 EventId = bookingDto.EventId,
                 CancellationToken = Guid.NewGuid().ToString("N"),
                 Reserve = isReserve,
@@ -90,8 +90,8 @@ namespace WebApi.Services
             // Send confirmation email
             // Send confirmation email
             //var cancelUrl = $"https://frejaaufguss.se/unbook/{booking.CancellationToken}";
-            var cancelUrl = $"https://aufgussdemo.azurewebsites.net/unbook/{booking.CancellationToken}";
-            //var cancelUrl = $"https://localhost:7003/unbook/{booking.CancellationToken}";
+            //var cancelUrl = $"https://aufgussdemo.azurewebsites.net/unbook/{booking.CancellationToken}";
+            var cancelUrl = $"https://localhost:7003/unbook/{booking.CancellationToken}";
             var statusText = isReserve ? "Du är placerad på reservlistan till" : "Du är inbokad till";
 
             var html = $@"
@@ -180,7 +180,7 @@ namespace WebApi.Services
                 return (false, "Bokningen hittades inte.");
 
             booking.Unbooked = true;
-            booking.UnbookedAt = DateTime.Now;
+            booking.UnbookedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             await CheckReserveListAsync(booking);

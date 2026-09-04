@@ -47,7 +47,7 @@ namespace WebApi.Controllers
                 Answer = faqDto.Answer,
                 Position = count,
                 ShowQuestion = faqDto.ShowQuestion,
-                AddedAt = DateTime.Now
+                AddedAt = DateTime.UtcNow
             };
 
             _context.Faqs.Add(faq);
