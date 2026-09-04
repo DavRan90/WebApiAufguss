@@ -103,13 +103,10 @@ namespace WebApi.Controllers
             {
                 Title = eventDto.Title,
                 Description = eventDto.Description,
-
                 Start = ToUtc(eventDto.Start),
-
                 End = eventDto.End.HasValue
                     ? ToUtc(eventDto.End.Value)
                     : null,
-
                 AllDay = eventDto.AllDay,
                 CreatedAt = DateTime.UtcNow,
                 MaxSlots = eventDto.MaxSlots,
