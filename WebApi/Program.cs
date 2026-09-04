@@ -167,9 +167,9 @@ namespace WebApi
                     .GetResult();
             }
 
-            app.UseExceptionHandler("/error");  // Optional, adds error endpoint
+            //app.UseExceptionHandler("/error");  // Optional, adds error endpoint
             // Order is critical!
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseCors("AllowFrontend"); // CORS must come before auth!
 
