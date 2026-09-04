@@ -17,9 +17,9 @@ namespace WebApi.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        private readonly NotificationService _notificationService;
+        //private readonly NotificationService _notificationService;
 
-        private readonly ResendEmailService _resendEmailService;
+        //private readonly ResendEmailService _resendEmailService;
 
         private readonly IBackgroundEmailQueue _emailQueue;
 
