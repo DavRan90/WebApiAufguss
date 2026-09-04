@@ -178,6 +178,7 @@ namespace WebApi
 
             app.UseStaticFiles();
             app.MapControllers();
+            app.MapGet("/health", () => "API is alive");
             app.Run();
             
         }
