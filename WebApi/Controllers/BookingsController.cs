@@ -35,7 +35,9 @@ namespace WebApi.Controllers
         [HttpGet("public-stats")]
         public async Task<IActionResult> GetPublicBookingStats()
         {
-            var stats = await _context.Events
+            try
+            {
+                var stats = await _context.Events
                 .Select(e => new
                 {
                     e.Id,
@@ -44,7 +46,15 @@ namespace WebApi.Controllers
                 })
                 .ToListAsync();
 
-            return Ok(stats);
+                return Ok(stats);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("PUBLIC-STATS ERROR:");
+                Console.WriteLine(ex.ToString());
+
+                throw;
+            }
         }
         [Authorize]
         [HttpGet]
