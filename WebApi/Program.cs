@@ -19,9 +19,12 @@ namespace WebApi
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseNpgsql(
+                    builder.Configuration.GetConnectionString("Postgres")));
+
             var app = builder.Build();
 
-            app.MapGet("/", () => "WebApi is running!");
             app.MapGet("/health", () => "API is alive");
 
             app.Run();
