@@ -619,6 +619,7 @@
                     var res = await EventService.AddEventAsync(EventDtoData);
 
                     EventDtoData.Start = EventDtoData.Start.AddDays(7 * frequency);
+                    EventDtoData.End = EventDtoData.End?.AddDays(7 * frequency);
                 }
                 await JS.InvokeVoidAsync("Swal.fire", "Lyckades", "Serie av pass skapade!", "success");
                 navManager.NavigateTo("/Events");

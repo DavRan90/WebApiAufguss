@@ -51,8 +51,10 @@ namespace WebApi
             // 1. Add EF Core
             //builder.Services.AddDbContext<ApplicationDbContext>(options =>
             //    options.UseSqlServer(builder.Configuration.GetConnectionString("MyPCLocal")));
+            //builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            //    options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
+                options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresLocal")));
 
             // 2. Add Identity
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()

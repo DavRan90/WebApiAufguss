@@ -75,24 +75,24 @@ public class Program
         builder.Services.AddScoped<Services.AuthorizationMessageHandler>();
 
 
-        builder.Services.AddHttpClient("AuthenticatedClient", client =>
-        {
-            client.BaseAddress = new Uri("https://webapiaufguss.onrender.com");
-        }).AddHttpMessageHandler<Services.AuthorizationMessageHandler>();
-
-
-        builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://webapiaufguss.onrender.com") });
-
-
-
-
         //builder.Services.AddHttpClient("AuthenticatedClient", client =>
         //{
-        //    client.BaseAddress = new Uri("https://localhost:7162");
+        //    client.BaseAddress = new Uri("https://webapiaufguss.onrender.com");
         //}).AddHttpMessageHandler<Services.AuthorizationMessageHandler>();
 
 
-        //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7162") });
+        //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://webapiaufguss.onrender.com") });
+
+
+
+
+        builder.Services.AddHttpClient("AuthenticatedClient", client =>
+        {
+            client.BaseAddress = new Uri("https://localhost:7162");
+        }).AddHttpMessageHandler<Services.AuthorizationMessageHandler>();
+
+
+        builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7162") });
 
 
         //builder.Services.AddOidcAuthentication(options =>
