@@ -21,16 +21,16 @@ else
         <div class="card mt-5 p-3">
             <h2 class="rounded rounded-4 m-4">@entry.Title</h2>
 
-            <div class="row align-items-center">
+            <div class="row ">
                 <!-- Image -->
-                <div class="col-12 col-lg-6">
+                <div class="col-12 col-lg-auto">
                     <img class="img-fluid p-4 rounded rounded-5"
                          src="@entry.Image"
                          alt="@entry.Title" />
                 </div>
 
                 <!-- Description -->
-                <div class="col-12 col-lg-6">
+                <div class="col-12 col-lg-auto">
                     <div class="card-body">
                         <p class="card-text linebreak m-2">
                             @entry.Description
@@ -51,7 +51,7 @@ else
             </div>
 
             <p class="card-footer m-4 rounded bg-body-tertiary">
-                Publicerad: @entry.CreatedAt.ToString("dd/MM/yyyy | HH:mm")
+                Publicerad: @entry.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy | HH:mm")
             </p>
         </div>
     }

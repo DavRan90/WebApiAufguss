@@ -90,7 +90,7 @@ else
                                 }
                             </td> *@
                             <td>@book.Title</td>
-                            <td>@book.Start.ToString("dd MMM HH:mm", System.Globalization.CultureInfo.InvariantCulture)</td>
+                                <td>@book.Start.ToLocalTime().ToString("dd MMM HH:mm", System.Globalization.CultureInfo.InvariantCulture)</td>
                             <td class="text-nowrap">
                                 <div class="d-flex flex-column flex-md-row align-items-start">
                                     <button class="btn btn-sm btn-outline-danger flex-grow-0 w-auto"

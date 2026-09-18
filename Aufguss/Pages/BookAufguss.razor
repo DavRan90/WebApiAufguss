@@ -82,7 +82,7 @@ else
                                     </span>
                                 </div>
                             </td>
-                            <td>@evt.Start.ToString("dd/MM/yyyy | HH:mm")</td>
+                                <td>@evt.Start.ToLocalTime().ToString("dd/MM/yyyy | HH:mm")</td>
                             <td style="white-space:nowrap; width:10px">
                                 <button class="btn btn-sm btn-outline-primary mb-1 mb-md-0 me-md-1"
                                 title="Boka"
